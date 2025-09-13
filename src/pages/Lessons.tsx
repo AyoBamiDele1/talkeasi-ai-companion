@@ -1,47 +1,79 @@
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Star, Mic2, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+
+interface Lesson {
+  id: string;
+  title: string;
+  description: string;
+  difficulty: string;
+  category: string;
+  duration_minutes: number;
+  is_premium: boolean;
+  completed?: boolean;
+  rating?: number;
+}
 
 const Lessons = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Mock lesson data
-  const lessons = [
-    {
-      id: 1,
-      title: "Basic Greetings",
-      duration: "5 mins",
-      difficulty: "Beginner",
-      completed: true,
-      rating: 4.5
-    },
-    {
-      id: 2,
-      title: "Ordering Food",
-      duration: "10 mins", 
-      difficulty: "Intermediate",
-      completed: false,
-      rating: 4.7
-    },
-    {
-      id: 3,
-      title: "Job Interview",
-      duration: "15 mins",
-      difficulty: "Advanced",
-      completed: false,
-      rating: 4.8
-    },
-    {
-      id: 4,
-      title: "Small Talk",
-      duration: "8 mins",
-      difficulty: "Beginner",
-      completed: true,
-      rating: 4.3
+  useEffect(() => {
+    fetchLessons();
+  }, [user]);
+
+  const fetchLessons = async () => {
+    try {
+      // Fetch all lessons
+      const { data: lessonsData, error: lessonsError } = await supabase
+        .from('lessons')
+        .select('*')
+        .order('created_at', { ascending: true });
+
+      if (lessonsError) {
+        console.error('Error fetching lessons:', lessonsError);
+        return;
+      }
+
+      // Fetch user progress to determine completed lessons
+      const { data: progressData, error: progressError } = await supabase
+        .from('user_progress')
+        .select('lesson_id, completed_at, accuracy_score, fluency_score')
+        .eq('user_id', user?.id)
+        .not('completed_at', 'is', null);
+
+      if (progressError) {
+        console.error('Error fetching progress:', progressError);
+      }
+
+      // Combine lessons with progress data
+      const lessonsWithProgress = lessonsData?.map(lesson => {
+        const progress = progressData?.find(p => p.lesson_id === lesson.id);
+        const rating = progress ? 
+          Math.round(((progress.accuracy_score || 0) + (progress.fluency_score || 0)) / 20) : 
+          undefined;
+        
+        return {
+          ...lesson,
+          completed: !!progress,
+          rating: rating && rating > 0 ? rating : undefined
+        };
+      }) || [];
+
+      setLessons(lessonsWithProgress);
+    } catch (error) {
+      console.error('Error fetching lessons:', error);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -56,9 +88,17 @@ const Lessons = () => {
     }
   };
 
-  const handleLessonStart = (lessonId: number) => {
+  const handleLessonStart = (lessonId: string) => {
     navigate(`/lesson/${lessonId}`);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-background p-6 pb-20">
@@ -78,7 +118,14 @@ const Lessons = () => {
           <Card key={lesson.id} className="relative">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg">{lesson.title}</CardTitle>
+                <div>
+                  <CardTitle className="text-lg">{lesson.title}</CardTitle>
+                  {lesson.description && (
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {lesson.description}
+                    </p>
+                  )}
+                </div>
                 {lesson.completed && (
                   <CheckCircle className="w-5 h-5 text-primary" />
                 )}
@@ -88,7 +135,7 @@ const Lessons = () => {
               <div className="flex items-center gap-4 mb-4">
                 <div className="flex items-center gap-1 text-muted-foreground">
                   <Clock className="w-4 h-4" />
-                  <span className="text-sm">{lesson.duration}</span>
+                  <span className="text-sm">{lesson.duration_minutes} min</span>
                 </div>
                 
                 <Badge 
@@ -98,10 +145,16 @@ const Lessons = () => {
                   {lesson.difficulty}
                 </Badge>
 
-                <div className="flex items-center gap-1">
-                  <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                  <span className="text-sm text-muted-foreground">{lesson.rating}</span>
-                </div>
+                <Badge variant="outline" className="text-xs">
+                  {lesson.category}
+                </Badge>
+
+                {lesson.rating && (
+                  <div className="flex items-center gap-1">
+                    <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                    <span className="text-sm text-muted-foreground">{lesson.rating}</span>
+                  </div>
+                )}
               </div>
 
               <Button 
