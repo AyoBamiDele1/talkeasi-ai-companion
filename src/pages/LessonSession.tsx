@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
+import { supabase } from '@/integrations/supabase/client';
 
 interface Message {
   id: string;
@@ -90,49 +91,74 @@ const LessonSession = () => {
 
   const handleAudioSubmission = async (audioBlob: Blob) => {
     try {
-      // TODO: Implement actual speech-to-text with OpenAI Whisper via Supabase Edge Function
-      // For now, we'll simulate the process
-      
       toast({
         title: "Processing speech...",
         description: "Converting your speech to text"
       });
 
-      // Simulate API processing delay
-      setTimeout(() => {
-        // Mock transcription and AI response
-        const mockUserText = "I'd like to order a chicken burger with fries, please.";
-        const mockCorrections = ["'I would like' is more formal than 'I'd like'"];
-        const mockAIResponse = "Great choice! Would you like anything to drink with that? Also, I noticed you could say 'I would like to order' instead of 'I'd like' for more formal speech.";
-
-        // Add user message
-        const userMessage: Message = {
-          id: Date.now().toString(),
-          type: 'user',
-          text: mockUserText,
-          timestamp: new Date(),
-          corrections: mockCorrections,
-          feedback: "Good pronunciation! Keep practicing formal expressions."
+      // Convert audio blob to base64
+      const reader = new FileReader();
+      const audioBase64 = await new Promise<string>((resolve) => {
+        reader.onloadend = () => {
+          const base64 = (reader.result as string).split(',')[1];
+          resolve(base64);
         };
+        reader.readAsDataURL(audioBlob);
+      });
 
-        // Add AI response
-        const aiMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          type: 'ai',
-          text: mockAIResponse,
-          timestamp: new Date()
-        };
+      // Transcribe audio using speech-to-text edge function
+      const transcriptionResponse = await supabase.functions.invoke('speech-to-text', {
+        body: { audio: audioBase64 }
+      });
 
-        setMessages(prev => [...prev, userMessage, aiMessage]);
-        
-        // Simulate text-to-speech for AI response
-        speakText(mockAIResponse);
-        
-        toast({
-          title: "Response processed!",
-          description: "AI has responded with feedback"
-        });
-      }, 2000);
+      if (transcriptionResponse.error) {
+        throw new Error('Transcription failed: ' + transcriptionResponse.error.message);
+      }
+
+      const transcribedText = transcriptionResponse.data?.text || "Could not transcribe audio";
+      
+      // Get AI response using conversation edge function
+      const conversationResponse = await supabase.functions.invoke('ai-conversation', {
+        body: { 
+          userText: transcribedText, 
+          lessonContext: lessonTitle,
+          difficulty: difficulty
+        }
+      });
+
+      if (conversationResponse.error) {
+        throw new Error('AI response failed: ' + conversationResponse.error.message);
+      }
+
+      const aiData = conversationResponse.data;
+
+      // Add user message
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        type: 'user',
+        text: transcribedText,
+        timestamp: new Date(),
+        corrections: aiData.corrections || [],
+        feedback: aiData.feedback
+      };
+
+      // Add AI response
+      const aiMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        type: 'ai',
+        text: aiData.response || "I didn't quite catch that. Could you try again?",
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, userMessage, aiMessage]);
+      
+      // Speak the AI response
+      speakText(aiMessage.text);
+      
+      toast({
+        title: "Response processed!",
+        description: "AI has responded with feedback"
+      });
 
     } catch (error) {
       console.error('Error processing audio:', error);
@@ -144,18 +170,47 @@ const LessonSession = () => {
     }
   };
 
-  const speakText = (text: string) => {
-    // TODO: Implement ElevenLabs TTS via Supabase Edge Function
-    // For now, use browser's speech synthesis
-    setIsAISpeaking(true);
-    
+  const speakText = async (text: string) => {
+    try {
+      setIsAISpeaking(true);
+      
+      // Generate speech using text-to-speech edge function
+      const ttsResponse = await supabase.functions.invoke('text-to-speech', {
+        body: { text, voice: 'alloy' }
+      });
+
+      if (ttsResponse.error) {
+        throw new Error('Speech generation failed');
+      }
+
+      // Play the generated audio
+      const audioContent = ttsResponse.data?.audioContent;
+      if (audioContent) {
+        const audio = new Audio(`data:audio/mp3;base64,${audioContent}`);
+        audio.onended = () => setIsAISpeaking(false);
+        audio.onerror = () => {
+          setIsAISpeaking(false);
+          // Fallback to browser TTS
+          fallbackToSpeechSynthesis(text);
+        };
+        await audio.play();
+      } else {
+        fallbackToSpeechSynthesis(text);
+      }
+    } catch (error) {
+      console.error('Speech synthesis error:', error);
+      fallbackToSpeechSynthesis(text);
+    }
+  };
+
+  const fallbackToSpeechSynthesis = (text: string) => {
     if ('speechSynthesis' in window) {
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.onend = () => setIsAISpeaking(false);
       utterance.onerror = () => setIsAISpeaking(false);
       speechSynthesis.speak(utterance);
     } else {
-      setTimeout(() => setIsAISpeaking(false), 3000);
+      setIsAISpeaking(false);
     }
   };
 
