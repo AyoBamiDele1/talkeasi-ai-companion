@@ -1,16 +1,57 @@
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Mic, Flame, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 const Home = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    if (user) {
+      fetchUserProfile();
+    }
+  }, [user]);
+
+  const fetchUserProfile = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('display_name')
+        .eq('user_id', user?.id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching profile:', error);
+      } else {
+        setUserProfile(data);
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Get greeting based on time of day
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 18) return "Good afternoon";
+    return "Good evening";
+  };
+
+  const userName = userProfile?.display_name || user?.email?.split('@')[0] || "there";
   
   // Mock data - will be replaced with real data later
   const currentStreak = 7;
   const topMistake = "Past tense pronunciation";
-  const userName = "Adaeze";
 
   const handleStartLesson = () => {
     navigate('/lessons');
@@ -21,7 +62,7 @@ const Home = () => {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-foreground mb-2">
-          Good morning, {userName}! 👋
+          {getGreeting()}, {userName}! 👋
         </h1>
         <p className="text-muted-foreground">
           Ready to improve your English today?
