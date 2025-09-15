@@ -42,14 +42,7 @@ const LessonSession = () => {
   const [currentStreamText, setCurrentStreamText] = useState('');
   const [showCompletion, setShowCompletion] = useState(false);
   const [lesson, setLesson] = useState<any>(null);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      type: 'ai',
-      text: "Hello! I'm your AI English tutor. Let's practice ordering food at a restaurant. I'll be the waiter. How can I help you today?",
-      timestamp: new Date()
-    }
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -75,8 +68,53 @@ const LessonSession = () => {
       }
 
       setLesson(data);
+      
+      // Create initial AI message based on lesson content
+      if (data && messages.length === 0) {
+        const initialMessage = generateInitialMessage(data);
+        setMessages([{
+          id: '1',
+          type: 'ai',
+          text: initialMessage,
+          timestamp: new Date()
+        }]);
+      }
     } catch (error) {
       console.error('Error fetching lesson:', error);
+    }
+  };
+
+  const generateInitialMessage = (lessonData: any) => {
+    const scenarios = lessonData.content?.scenarios || [];
+    const firstScenario = scenarios[0] || 'general conversation';
+    
+    switch (lessonData.title) {
+      case 'Business Introduction':
+        return "Hello! I'm your AI English tutor. Let's practice professional introductions in Nigerian business settings. I'll be your colleague. How would you introduce yourself?";
+      
+      case 'Phone Conversations':
+        return "Hello! I'm your AI English tutor. Let's practice professional phone conversations. I'll be receiving your business call. Go ahead and make your call!";
+      
+      case 'Customer Service Excellence':
+        return "Hello! I'm your AI English tutor. Let's practice customer service scenarios. I'll be a customer with a concern. How can you help me today?";
+      
+      case 'Job Interview Practice':
+        return "Hello! I'm your AI English tutor. Let's practice job interview scenarios. I'll be the interviewer. Tell me, why are you interested in this position?";
+      
+      case 'Small Talk & Networking':
+        return "Hello! I'm your AI English tutor. Let's practice networking and small talk. I'll be someone you just met at a professional event. How are you enjoying the event?";
+      
+      case 'Travel & Tourism':
+        return "Hello! I'm your AI English tutor. Let's practice travel conversations. I'll be a hotel receptionist. How can I assist you today?";
+      
+      case 'Casual Conversations':
+        return "Hello! I'm your AI English tutor. Let's practice casual conversations. I'll be your friend. What are your plans for the weekend?";
+      
+      case 'Presentation Skills':
+        return "Hello! I'm your AI English tutor. Let's practice presentation skills. Imagine you're giving a presentation to your team. Please begin by introducing your topic.";
+      
+      default:
+        return `Hello! I'm your AI English tutor. Let's practice ${lessonData.title.toLowerCase()}. ${lessonData.description} Are you ready to begin?`;
     }
   };
 
