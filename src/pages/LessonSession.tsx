@@ -129,28 +129,25 @@ const LessonSession = () => {
       setMessages(prev => [...prev, userMessage]);
       
       setProcessingStage('thinking');
-      setCurrentStreamText('');
       
-      // Start streaming conversation
-      const response = await supabase.functions.invoke('streaming-conversation', {
-        body: {
-          userText: transcribedText,
+      // Get AI response using conversation edge function (revert to working method)
+      const conversationResponse = await supabase.functions.invoke('ai-conversation', {
+        body: { 
+          userText: transcribedText, 
           lessonContext: lessonTitle,
           difficulty: difficulty
         }
       });
 
-      if (response.error) {
-        throw new Error('Streaming conversation failed: ' + response.error.message);
+      if (conversationResponse.error) {
+        throw new Error('AI response failed: ' + conversationResponse.error.message);
       }
 
-      // For now, fall back to the old method since streaming from supabase.functions.invoke is complex
-      // We'll use the regular conversation + TTS approach but optimized
-      const aiData = response.data;
+      const aiData = conversationResponse.data;
+      console.log('AI conversation response:', aiData);
+      const fullAiResponse = aiData?.response || "I didn't quite catch that. Could you try again?";
 
-      let fullAiResponse = aiData.response || "I didn't quite catch that. Could you try again?";
-
-      // Add final AI message with corrections and feedback
+      // Add AI message with corrections and feedback
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: 'ai',
@@ -158,7 +155,7 @@ const LessonSession = () => {
         timestamp: new Date()
       };
 
-      // Update user message with corrections and feedback
+      // Update user message with corrections and feedback then add AI message
       setMessages(prev => prev.map(msg => 
         msg.id === userMessage.id 
           ? { ...msg, corrections: aiData?.corrections || [], feedback: aiData?.feedback }
@@ -168,7 +165,7 @@ const LessonSession = () => {
       setProcessingStage('generating');
       setIsAISpeaking(true);
       
-      // Generate TTS for the response
+      // Generate optimized TTS for the response
       await speakTextOptimized(fullAiResponse);
 
       setCurrentStreamText('');
