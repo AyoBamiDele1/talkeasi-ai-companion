@@ -190,13 +190,17 @@ const LessonSession = () => {
   const speakTextOptimized = async (text: string) => {
     try {
       setProcessingStage('speaking');
+      console.log('Starting TTS for:', text);
       
       // Split text into sentences for faster TTS generation
       const sentences = text.match(/[^\.!?]+[\.!?]+/g) || [text];
+      console.log('Split into sentences:', sentences);
       
       for (let i = 0; i < sentences.length; i++) {
         const sentence = sentences[i].trim();
         if (!sentence) continue;
+
+        console.log(`Generating TTS for sentence ${i}:`, sentence);
 
         // Generate TTS for this sentence
         const ttsResponse = await supabase.functions.invoke('text-to-speech', {
@@ -204,10 +208,11 @@ const LessonSession = () => {
         });
 
         if (ttsResponse.error) {
-          console.error('TTS failed for sentence:', sentence);
+          console.error('TTS failed for sentence:', sentence, ttsResponse.error);
           continue;
         }
 
+        console.log('TTS response received for sentence', i);
         const audioContent = ttsResponse.data?.audioContent;
         if (audioContent) {
           streamingAudio.addToQueue({
@@ -215,6 +220,9 @@ const LessonSession = () => {
             index: i,
             text: sentence
           });
+          console.log('Added audio to queue for sentence', i);
+        } else {
+          console.error('No audio content in TTS response for sentence:', sentence);
         }
       }
     } catch (error) {
@@ -328,7 +336,7 @@ const LessonSession = () => {
                         <span className="text-xs font-medium text-warning">Correction</span>
                       </div>
                       {message.corrections.map((correction, index) => (
-                        <p key={index} className="text-xs text-muted-foreground">
+                        <p key={index} className="text-xs text-warning-foreground font-medium">
                           {correction}
                         </p>
                       ))}
@@ -341,7 +349,7 @@ const LessonSession = () => {
                         <CheckCircle className="w-3 h-3 text-success" />
                         <span className="text-xs font-medium text-success">Feedback</span>
                       </div>
-                      <p className="text-xs text-muted-foreground">{message.feedback}</p>
+                      <p className="text-xs text-success-foreground font-medium">{message.feedback}</p>
                     </div>
                   )}
                 </CardContent>
