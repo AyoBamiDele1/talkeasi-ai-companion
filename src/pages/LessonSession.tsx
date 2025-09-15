@@ -206,8 +206,8 @@ const LessonSession = () => {
       const conversationResponse = await supabase.functions.invoke('ai-conversation', {
         body: { 
           userText: transcribedText, 
-          lessonContext: lessonTitle,
-          difficulty: difficulty
+          lessonContext: lesson?.title || 'English Conversation Practice',
+          difficulty: lesson?.difficulty || 'Intermediate'
         }
       });
 
