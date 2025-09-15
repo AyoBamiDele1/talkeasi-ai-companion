@@ -2,32 +2,34 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress as ProgressBar } from "@/components/ui/progress";
 import { Calendar, TrendingUp, Award, AlertCircle } from "lucide-react";
+import { useProgress } from "@/hooks/useProgress";
 
 const Progress = () => {
-  // Mock progress data
-  const stats = {
-    totalLessons: 12,
-    completedLessons: 8,
-    currentStreak: 7,
-    bestStreak: 15,
-    accuracyScore: 78,
-    commonMistakes: [
-      { mistake: "Past tense pronunciation", count: 12, improving: true },
-      { mistake: "Article usage (a, an, the)", count: 8, improving: false },
-      { mistake: "Sentence stress", count: 6, improving: true },
-      { mistake: "Word order", count: 4, improving: true }
-    ]
-  };
+  const { stats, loading } = useProgress();
 
-  const weeklyProgress = [
-    { day: "Mon", completed: true },
-    { day: "Tue", completed: true },
-    { day: "Wed", completed: true },
-    { day: "Thu", completed: false },
-    { day: "Fri", completed: true },
-    { day: "Sat", completed: true },
-    { day: "Sun", completed: true }
-  ];
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (!stats) {
+    return (
+      <div className="flex flex-col min-h-screen bg-background p-6 pb-20">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-foreground mb-2">Your Progress</h1>
+          <p className="text-muted-foreground">Complete some lessons to see your progress!</p>
+        </div>
+      </div>
+    );
+  }
+
+  const weeklyProgress = stats.recentActivity.map((activity, index) => ({
+    day: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][index],
+    completed: activity.completed
+  }));
 
   return (
     <div className="flex flex-col min-h-screen bg-background p-6 pb-20">
@@ -86,11 +88,11 @@ const Progress = () => {
           <div className="flex justify-between items-center mb-4">
             <div>
               <div className="text-2xl font-bold text-primary">{stats.currentStreak}</div>
-              <div className="text-sm text-muted-foreground">Current streak</div>
+              <div className="text-sm text-muted-foreground">This week</div>
             </div>
             <div className="text-right">
-              <div className="text-lg font-semibold text-muted-foreground">{stats.bestStreak}</div>
-              <div className="text-sm text-muted-foreground">Best streak</div>
+              <div className="text-lg font-semibold text-muted-foreground">{Math.round((stats.accuracyScore + stats.fluencyScore) / 2)}%</div>
+              <div className="text-sm text-muted-foreground">Avg score</div>
             </div>
           </div>
           

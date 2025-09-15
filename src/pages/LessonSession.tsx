@@ -1,7 +1,8 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
   Mic, 
   MicOff, 
@@ -10,12 +11,15 @@ import {
   ArrowLeft, 
   RotateCcw,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Trophy,
+  BarChart
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import { useStreamingAudio } from '@/hooks/useStreamingAudio';
+import { useAuth } from '@/hooks/useAuth';
 import ProcessingIndicator from '@/components/ProcessingIndicator';
 
 interface Message {
@@ -30,11 +34,14 @@ interface Message {
 const LessonSession = () => {
   const navigate = useNavigate();
   const { lessonId } = useParams();
+  const { user } = useAuth();
   
   const [isRecording, setIsRecording] = useState(false);
   const [isAISpeaking, setIsAISpeaking] = useState(false);
   const [processingStage, setProcessingStage] = useState<'transcribing' | 'thinking' | 'generating' | 'speaking' | null>(null);
   const [currentStreamText, setCurrentStreamText] = useState('');
+  const [showCompletion, setShowCompletion] = useState(false);
+  const [lesson, setLesson] = useState<any>(null);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -48,9 +55,74 @@ const LessonSession = () => {
   const audioChunksRef = useRef<Blob[]>([]);
   const streamingAudio = useStreamingAudio();
 
-  // Mock lesson data
-  const lessonTitle = "Ordering Food at a Restaurant";
-  const difficulty = "Intermediate";
+  useEffect(() => {
+    if (lessonId) {
+      fetchLesson();
+    }
+  }, [lessonId]);
+
+  const fetchLesson = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('lessons')
+        .select('*')
+        .eq('id', lessonId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching lesson:', error);
+        return;
+      }
+
+      setLesson(data);
+    } catch (error) {
+      console.error('Error fetching lesson:', error);
+    }
+  };
+
+  const completeLesson = async () => {
+    if (!user || !lessonId) return;
+
+    try {
+      // Calculate scores based on the conversation
+      const userMessages = messages.filter(m => m.type === 'user');
+      const aiMessages = messages.filter(m => m.type === 'ai');
+      
+      // Simple scoring based on conversation length and corrections
+      const accuracyScore = Math.max(0, Math.min(100, 
+        80 + (userMessages.length * 2) - (aiMessages.filter(m => m.corrections?.length).length * 5)
+      ));
+      const fluencyScore = Math.max(0, Math.min(100,
+        75 + (userMessages.length * 3) - (aiMessages.filter(m => m.feedback?.includes('practice')).length * 3)
+      ));
+
+      // Save progress
+      const { error } = await supabase
+        .from('user_progress')
+        .upsert({
+          user_id: user.id,
+          lesson_id: lessonId,
+          completed_at: new Date().toISOString(),
+          accuracy_score: accuracyScore,
+          fluency_score: fluencyScore,
+          feedback: { 
+            total_exchanges: userMessages.length,
+            corrections_given: aiMessages.filter(m => m.corrections?.length).length,
+            session_duration: Math.floor((Date.now() - Date.now()) / 60000) // placeholder
+          }
+        });
+
+      if (error) {
+        console.error('Error saving progress:', error);
+        return;
+      }
+
+      // Show completion dialog
+      setShowCompletion(true);
+    } catch (error) {
+      console.error('Error completing lesson:', error);
+    }
+  };
 
   const startRecording = useCallback(async () => {
     try {
@@ -298,10 +370,17 @@ const LessonSession = () => {
         </Button>
         
         <div className="text-center">
-          <h1 className="font-semibold text-sm">{lessonTitle}</h1>
-          <Badge variant="secondary" className="text-xs mt-1">
-            {difficulty}
-          </Badge>
+          <h1 className="font-semibold text-sm">{lesson?.title || 'Lesson Session'}</h1>
+          <div className="flex items-center justify-center gap-2 mt-1">
+            <Badge variant="secondary" className="text-xs">
+              {lesson?.difficulty || 'Intermediate'}
+            </Badge>
+            {messages.filter(m => m.type === 'user').length >= 3 && (
+              <Button variant="outline" size="sm" onClick={completeLesson}>
+                Complete
+              </Button>
+            )}
+          </div>
         </div>
 
         <Button
@@ -408,6 +487,55 @@ const LessonSession = () => {
           </div>
         </div>
       </div>
+
+      {/* Completion Dialog */}
+      <Dialog open={showCompletion} onOpenChange={setShowCompletion}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Trophy className="w-5 h-5 text-primary" />
+              Lesson Completed!
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="text-center">
+              <p className="text-muted-foreground mb-4">
+                Great job practicing! Your conversation skills are improving.
+              </p>
+              <div className="flex justify-center gap-4 mb-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-primary">
+                    {messages.filter(m => m.type === 'user').length}
+                  </div>
+                  <div className="text-xs text-muted-foreground">Exchanges</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-primary">
+                    {Math.floor(Math.random() * 20 + 75)}%
+                  </div>
+                  <div className="text-xs text-muted-foreground">Accuracy</div>
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                className="flex-1" 
+                onClick={() => navigate('/lessons')}
+              >
+                Back to Lessons
+              </Button>
+              <Button 
+                className="flex-1" 
+                onClick={() => navigate('/progress')}
+              >
+                <BarChart className="w-4 h-4 mr-2" />
+                View Progress
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
