@@ -15,6 +15,8 @@ import {
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/client';
+import { useStreamingAudio } from '@/hooks/useStreamingAudio';
+import ProcessingIndicator from '@/components/ProcessingIndicator';
 
 interface Message {
   id: string;
@@ -31,6 +33,8 @@ const LessonSession = () => {
   
   const [isRecording, setIsRecording] = useState(false);
   const [isAISpeaking, setIsAISpeaking] = useState(false);
+  const [processingStage, setProcessingStage] = useState<'transcribing' | 'thinking' | 'generating' | 'speaking' | null>(null);
+  const [currentStreamText, setCurrentStreamText] = useState('');
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -42,6 +46,7 @@ const LessonSession = () => {
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const streamingAudio = useStreamingAudio();
 
   // Mock lesson data
   const lessonTitle = "Ordering Food at a Restaurant";
@@ -91,19 +96,16 @@ const LessonSession = () => {
 
   const handleAudioSubmission = async (audioBlob: Blob) => {
     try {
-      toast({
-        title: "Processing speech...",
-        description: "Converting your speech to text"
-      });
-
+      setProcessingStage('transcribing');
+      
       // Convert audio blob to base64
-      const reader = new FileReader();
+      const fileReader = new FileReader();
       const audioBase64 = await new Promise<string>((resolve) => {
-        reader.onloadend = () => {
-          const base64 = (reader.result as string).split(',')[1];
+        fileReader.onloadend = () => {
+          const base64 = (fileReader.result as string).split(',')[1];
           resolve(base64);
         };
-        reader.readAsDataURL(audioBlob);
+        fileReader.readAsDataURL(audioBlob);
       });
 
       // Transcribe audio using speech-to-text edge function
@@ -117,56 +119,111 @@ const LessonSession = () => {
 
       const transcribedText = transcriptionResponse.data?.text || "Could not transcribe audio";
       
-      // Get AI response using conversation edge function
-      const conversationResponse = await supabase.functions.invoke('ai-conversation', {
-        body: { 
-          userText: transcribedText, 
+      // Add user message immediately
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        type: 'user',
+        text: transcribedText,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, userMessage]);
+      
+      setProcessingStage('thinking');
+      setCurrentStreamText('');
+      
+      // Start streaming conversation
+      const response = await supabase.functions.invoke('streaming-conversation', {
+        body: {
+          userText: transcribedText,
           lessonContext: lessonTitle,
           difficulty: difficulty
         }
       });
 
-      if (conversationResponse.error) {
-        throw new Error('AI response failed: ' + conversationResponse.error.message);
+      if (response.error) {
+        throw new Error('Streaming conversation failed: ' + response.error.message);
       }
 
-      const aiData = conversationResponse.data;
+      // For now, fall back to the old method since streaming from supabase.functions.invoke is complex
+      // We'll use the regular conversation + TTS approach but optimized
+      const aiData = response.data;
 
-      // Add user message
-      const userMessage: Message = {
-        id: Date.now().toString(),
-        type: 'user',
-        text: transcribedText,
-        timestamp: new Date(),
-        corrections: aiData.corrections || [],
-        feedback: aiData.feedback
-      };
+      let fullAiResponse = aiData.response || "I didn't quite catch that. Could you try again?";
 
-      // Add AI response
+      // Add final AI message with corrections and feedback
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: 'ai',
-        text: aiData.response || "I didn't quite catch that. Could you try again?",
+        text: fullAiResponse,
         timestamp: new Date()
       };
 
-      setMessages(prev => [...prev, userMessage, aiMessage]);
+      // Update user message with corrections and feedback
+      setMessages(prev => prev.map(msg => 
+        msg.id === userMessage.id 
+          ? { ...msg, corrections: aiData?.corrections || [], feedback: aiData?.feedback }
+          : msg
+      ).concat([aiMessage]));
+
+      setProcessingStage('generating');
+      setIsAISpeaking(true);
       
-      // Speak the AI response
-      speakText(aiMessage.text);
-      
-      toast({
-        title: "Response processed!",
-        description: "AI has responded with feedback"
-      });
+      // Generate TTS for the response
+      await speakTextOptimized(fullAiResponse);
+
+      setCurrentStreamText('');
+      setProcessingStage(null);
+      setIsAISpeaking(false);
 
     } catch (error) {
       console.error('Error processing audio:', error);
+      setProcessingStage(null);
+      setCurrentStreamText('');
+      setIsAISpeaking(false);
+      streamingAudio.reset();
+      
       toast({
         title: "Processing error",
         description: "Could not process your speech. Please try again.",
         variant: "destructive"
       });
+    }
+  };
+
+  const speakTextOptimized = async (text: string) => {
+    try {
+      setProcessingStage('speaking');
+      
+      // Split text into sentences for faster TTS generation
+      const sentences = text.match(/[^\.!?]+[\.!?]+/g) || [text];
+      
+      for (let i = 0; i < sentences.length; i++) {
+        const sentence = sentences[i].trim();
+        if (!sentence) continue;
+
+        // Generate TTS for this sentence
+        const ttsResponse = await supabase.functions.invoke('text-to-speech', {
+          body: { text: sentence, voice: 'alloy' }
+        });
+
+        if (ttsResponse.error) {
+          console.error('TTS failed for sentence:', sentence);
+          continue;
+        }
+
+        const audioContent = ttsResponse.data?.audioContent;
+        if (audioContent) {
+          streamingAudio.addToQueue({
+            audio: audioContent,
+            index: i,
+            text: sentence
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Optimized speech synthesis error:', error);
+      // Fallback to browser TTS
+      fallbackToSpeechSynthesis(text);
     }
   };
 
@@ -253,6 +310,7 @@ const LessonSession = () => {
       {/* Conversation */}
       <div className="flex-1 p-4 pb-32 overflow-y-auto">
         <div className="space-y-4 max-w-2xl mx-auto">
+          <ProcessingIndicator stage={processingStage} currentText={currentStreamText} />
           {messages.map((message) => (
             <div
               key={message.id}
