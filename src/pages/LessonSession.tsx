@@ -190,6 +190,8 @@ const LessonSession = () => {
   const speakTextOptimized = async (text: string) => {
     try {
       setProcessingStage('speaking');
+      setIsAISpeaking(true);
+      streamingAudio.reset();
       console.log('Starting TTS for:', text);
       
       // Split text into sentences for faster TTS generation
