@@ -8,62 +8,61 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 300 25% 97%; /* Warm White */
-    --foreground: 222 16% 19%; /* Dark Contrast */
+    --background: 212 82% 16%; /* Deep Navy */
+    --foreground: 300 25% 97%; /* Warm White */
 
-    --card: 300 25% 97%;
-    --card-foreground: 222 16% 19%;
+    --card: 212 82% 16%;
+    --card-foreground: 300 25% 97%;
 
-    --popover: 300 25% 97%;
-    --popover-foreground: 222 16% 19%;
+    --popover: 212 82% 16%;
+    --popover-foreground: 300 25% 97%;
 
-    --primary: 212 82% 16%; /* Deep Navy */
+    --primary: 332 86% 77%; /* Coral */
     --primary-foreground: 300 25% 97%;
 
-    --secondary: 332 86% 77%; /* Coral */
-    --secondary-foreground: 222 16% 19%;
+    --secondary: 300 25% 97%; /* Warm White */
+    --secondary-foreground: 212 82% 16%;
 
-    --muted: 300 15% 94%;
-    --muted-foreground: 222 10% 45%;
+    --muted: 213 30% 55%; /* Blue-gray from reference */
+    --muted-foreground: 213 30% 65%;
 
     --accent: 332 86% 77%; /* Coral accent */
     --accent-foreground: 212 82% 16%;
 
-    --success: 142 76% 36%; /* Keep success green */
-    --success-foreground: 300 25% 97%;
+    --success: 174 94% 42%; /* Teal from reference */
+    --success-foreground: 212 82% 16%;
 
     --warning: 45 93% 47%; /* Keep warning yellow */
-    --warning-foreground: 222 16% 19%;
+    --warning-foreground: 212 82% 16%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 300 25% 97%;
 
-    --border: 300 15% 88%;
-    --input: 300 15% 90%;
-    --ring: 212 82% 16%;
+    --border: 300 25% 97% / 0.1; /* Semi-transparent warm white */
+    --input: 300 25% 97% / 0.05;
+    --ring: 332 86% 77%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 0 0% 98%;
+    /* Custom gradient and overlay colors */
+    --gradient-coral: linear-gradient(135deg, hsl(332 86% 77%), hsl(14 100% 65%));
+    --overlay-subtle: hsl(300 25% 97% / 0.05);
+    --overlay-card: hsl(300 25% 97% / 0.1);
+    --glow-coral: hsl(332 86% 77% / 0.4);
 
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 212 82% 16%;
+    --sidebar-foreground: 300 25% 97%;
+    --sidebar-primary: 332 86% 77%;
+    --sidebar-primary-foreground: 212 82% 16%;
+    --sidebar-accent: 300 25% 97% / 0.05;
+    --sidebar-accent-foreground: 300 25% 97%;
+    --sidebar-border: 300 25% 97% / 0.1;
+    --sidebar-ring: 332 86% 77%;
   }
 
   .dark {
-    --background: 222 16% 19%; /* Dark Contrast */
-    --foreground: 300 25% 97%; /* Warm White */
+    --background: 222 16% 19%;
+    --foreground: 300 25% 97%;
 
     --card: 222 16% 19%;
     --card-foreground: 300 25% 97%;
@@ -71,19 +70,19 @@ All colors MUST be HSL.
     --popover: 222 16% 19%;
     --popover-foreground: 300 25% 97%;
 
-    --primary: 212 82% 25%; /* Lighter Navy for dark mode */
-    --primary-foreground: 300 25% 97%;
+    --primary: 332 86% 77%;
+    --primary-foreground: 222 16% 19%;
 
-    --secondary: 332 86% 70%; /* Slightly darker coral */
+    --secondary: 300 25% 97%;
     --secondary-foreground: 222 16% 19%;
 
     --muted: 222 12% 25%;
-    --muted-foreground: 300 10% 70%;
+    --muted-foreground: 213 30% 65%;
 
-    --accent: 332 86% 70%; /* Coral accent for dark mode */
+    --accent: 332 86% 77%;
     --accent-foreground: 222 16% 19%;
 
-    --success: 142 76% 45%;
+    --success: 174 94% 42%;
     --success-foreground: 222 16% 19%;
 
     --warning: 45 93% 55%;
@@ -94,15 +93,35 @@ All colors MUST be HSL.
 
     --border: 222 12% 30%;
     --input: 222 12% 28%;
-    --ring: 332 86% 70%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --ring: 332 86% 77%;
+    
+    --sidebar-background: 222 16% 19%;
+    --sidebar-foreground: 300 25% 97%;
+    --sidebar-primary: 332 86% 77%;
+    --sidebar-primary-foreground: 222 16% 19%;
+    --sidebar-accent: 222 12% 25%;
+    --sidebar-accent-foreground: 300 25% 97%;
+    --sidebar-border: 222 12% 30%;
+    --sidebar-ring: 332 86% 77%;
+  }
+}
+
+@layer components {
+  .gradient-coral {
+    @apply bg-gradient-to-br from-primary to-[hsl(14_100%_65%)];
+  }
+  
+  .card-overlay {
+    background: var(--overlay-card);
+    backdrop-filter: blur(10px);
+  }
+  
+  .glow-coral {
+    box-shadow: 0 4px 12px var(--glow-coral);
+  }
+  
+  .glow-coral:hover {
+    box-shadow: 0 6px 16px var(--glow-coral);
   }
 }
 
