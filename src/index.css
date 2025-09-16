@@ -17,7 +17,7 @@ All colors MUST be HSL.
     --popover: 212 82% 16%;
     --popover-foreground: 300 25% 97%;
 
-    --primary: 332 86% 77%; /* Coral */
+    --primary: 332 86% 65%; /* Deeper Coral */
     --primary-foreground: 300 25% 97%;
 
     --secondary: 300 25% 97%; /* Warm White */
@@ -70,7 +70,7 @@ All colors MUST be HSL.
     --popover: 222 16% 19%;
     --popover-foreground: 300 25% 97%;
 
-    --primary: 332 86% 77%;
+    --primary: 332 86% 65%;
     --primary-foreground: 222 16% 19%;
 
     --secondary: 300 25% 97%;
