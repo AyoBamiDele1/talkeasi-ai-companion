@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
 import { RealtimeChat } from '@/utils/RealtimeAudio';
-import { Mic, MicOff, Volume2, VolumeX, Phone, PhoneOff } from 'lucide-react';
+import { Mic, MicOff, Volume2, VolumeX, Phone, PhoneOff, ArrowLeft } from 'lucide-react';
 
 interface RealtimeVoiceInterfaceProps {
   lessonContext?: string;
@@ -27,6 +28,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   onMessageUpdate
 }) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -155,110 +157,78 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   }, []);
 
   return (
-    <div className="flex flex-col gap-4 h-full">
-      {/* Connection Status */}
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg">Real-time Voice Chat</CardTitle>
-            <Badge variant={isConnected ? "default" : "secondary"}>
-              {isConnected ? "Connected" : "Disconnected"}
+    <div className="fixed bottom-0 left-0 right-0 bg-card border-t p-4 z-50">
+      <div className="max-w-md mx-auto">
+        {/* Connection Status */}
+        <div className="text-center mb-4">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <Badge variant={isConnected ? "default" : "secondary"} className="text-xs">
+              {isConnected ? "Real-time Connected" : "Real-time Offline"}
             </Badge>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-4">
-            {!isConnected ? (
-              <Button 
-                onClick={startConversation}
-                disabled={isConnecting}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground"
-              >
-                <Phone className="w-4 h-4 mr-2" />
-                {isConnecting ? "Connecting..." : "Start Conversation"}
-              </Button>
-            ) : (
-              <Button 
-                onClick={endConversation}
-                variant="destructive"
-              >
-                <PhoneOff className="w-4 h-4 mr-2" />
-                End Conversation
-              </Button>
-            )}
-            
-            {isConnected && (
-              <div className="flex items-center gap-2">
-                {isSpeaking ? (
-                  <div className="flex items-center gap-2 text-success">
-                    <Volume2 className="w-4 h-4" />
-                    <span className="text-sm">AI Speaking</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Mic className="w-4 h-4" />
-                    <span className="text-sm">Listening</span>
-                  </div>
-                )}
+            {isConnected && isSpeaking && (
+              <div className="flex items-center gap-1 text-success text-xs">
+                <Volume2 className="w-3 h-3" />
+                <span>AI Speaking</span>
               </div>
             )}
           </div>
-        </CardContent>
-      </Card>
+          
+          <p className="text-sm text-muted-foreground">
+            {!isConnected 
+              ? "Tap to start real-time conversation" 
+              : isConnecting
+              ? "Connecting..."
+              : "Speak naturally - AI will respond instantly"
+            }
+          </p>
+        </div>
+        
+        {/* Controls */}
+        <div className="flex items-center justify-center space-x-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate('/lessons')}
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
 
-      {/* Current Transcript */}
-      {currentTranscript && (
-        <Card>
-          <CardContent className="pt-4">
-            <div className="text-sm text-muted-foreground mb-2">AI is saying:</div>
-            <div className="text-foreground">{currentTranscript}</div>
-          </CardContent>
-        </Card>
-      )}
+          {!isConnected ? (
+            <Button
+              size="lg"
+              className="w-16 h-16 rounded-full bg-primary hover:bg-primary/90"
+              onClick={startConversation}
+              disabled={isConnecting}
+            >
+              {isConnecting ? (
+                <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Phone className="w-6 h-6" />
+              )}
+            </Button>
+          ) : (
+            <Button
+              size="lg"
+              className="w-16 h-16 rounded-full bg-destructive hover:bg-destructive/90"
+              onClick={endConversation}
+            >
+              <PhoneOff className="w-6 h-6" />
+            </Button>
+          )}
 
-      {/* Conversation History */}
-      {messages.length > 0 && (
-        <Card className="flex-1">
-          <CardHeader>
-            <CardTitle className="text-lg">Conversation</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4 max-h-96 overflow-y-auto">
-              {messages.map((message) => (
-                <div 
-                  key={message.id}
-                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div 
-                    className={`max-w-[80%] p-3 rounded-lg ${
-                      message.role === 'user' 
-                        ? 'bg-primary text-primary-foreground' 
-                        : 'bg-muted text-muted-foreground'
-                    }`}
-                  >
-                    <div className="text-sm">{message.content}</div>
-                    <div className="text-xs opacity-70 mt-1">
-                      {message.timestamp.toLocaleTimeString()}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Instructions */}
-      {!isConnected && (
-        <Card>
-          <CardContent className="pt-4">
-            <div className="text-sm text-muted-foreground">
-              Click "Start Conversation" to begin a real-time voice chat with your AI tutor. 
-              The conversation will be fully interactive - just speak naturally and the AI will respond in real-time.
-            </div>
-          </CardContent>
-        </Card>
-      )}
+          <Button
+            variant="ghost"
+            size="icon"
+            disabled={!isConnected}
+          >
+            {isConnected && !isSpeaking ? (
+              <Mic className="w-5 h-5 text-success" />
+            ) : (
+              <MicOff className="w-5 h-5 text-muted-foreground" />
+            )}
+          </Button>
+        </div>
+      </div>
     </div>
   );
 };
