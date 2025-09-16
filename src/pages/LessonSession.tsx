@@ -44,7 +44,7 @@ const LessonSession = () => {
   const [showCompletion, setShowCompletion] = useState(false);
   const [lesson, setLesson] = useState<any>(null);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [useRealtimeMode, setUseRealtimeMode] = useState(false);
+  const [useRealtimeMode, setUseRealtimeMode] = useState(true);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -480,53 +480,76 @@ const LessonSession = () => {
         </div>
       </div>
 
-      {/* Recording Controls */}
-      <div className="fixed bottom-0 left-0 right-0 bg-card border-t p-4 z-50">
-        <div className="max-w-md mx-auto">
-          <div className="text-center mb-4">
-            <p className="text-sm text-muted-foreground">
-              {isRecording ? "Recording... Tap to stop" : "Tap to speak"}
-            </p>
-          </div>
-          
-          <div className="flex items-center justify-center space-x-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={replayLastAI}
-              disabled={isAISpeaking || isRecording}
-            >
-              <RotateCcw className="w-5 h-5" />
-            </Button>
+      {/* Voice Interface */}
+      {useRealtimeMode ? (
+        <RealtimeVoiceInterface
+          lessonContext={lesson?.title || 'English Conversation Practice'}
+          onTranscriptUpdate={(transcript) => {
+            setCurrentStreamText(transcript);
+          }}
+          onConversationEnd={() => {
+            console.log('Conversation ended');
+          }}
+          onMessageUpdate={(realtimeMessages) => {
+            // Convert realtime messages to the format expected by the lesson session
+            const convertedMessages = realtimeMessages.map(msg => ({
+              id: msg.id,
+              type: msg.role === 'user' ? 'user' as const : 'ai' as const,
+              text: msg.content,
+              timestamp: msg.timestamp
+            }));
+            setMessages(convertedMessages);
+          }}
+        />
+      ) : (
+        /* Recording Controls */
+        <div className="fixed bottom-0 left-0 right-0 bg-card border-t p-4 z-50">
+          <div className="max-w-md mx-auto">
+            <div className="text-center mb-4">
+              <p className="text-sm text-muted-foreground">
+                {isRecording ? "Recording... Tap to stop" : "Tap to speak"}
+              </p>
+            </div>
+            
+            <div className="flex items-center justify-center space-x-4">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={replayLastAI}
+                disabled={isAISpeaking || isRecording}
+              >
+                <RotateCcw className="w-5 h-5" />
+              </Button>
 
-            <Button
-              size="lg"
-              className={`w-16 h-16 rounded-full ${
-                isRecording 
-                  ? 'bg-destructive hover:bg-destructive/90' 
-                  : 'bg-primary hover:bg-primary/90'
-              }`}
-              onMouseDown={isRecording ? stopRecording : startRecording}
-              onTouchStart={isRecording ? stopRecording : startRecording}
-              disabled={isAISpeaking}
-            >
-              {isRecording ? (
-                <MicOff className="w-6 h-6" />
-              ) : (
-                <Mic className="w-6 h-6" />
-              )}
-            </Button>
+              <Button
+                size="lg"
+                className={`w-16 h-16 rounded-full ${
+                  isRecording 
+                    ? 'bg-destructive hover:bg-destructive/90' 
+                    : 'bg-primary hover:bg-primary/90'
+                }`}
+                onMouseDown={isRecording ? stopRecording : startRecording}
+                onTouchStart={isRecording ? stopRecording : startRecording}
+                disabled={isAISpeaking}
+              >
+                {isRecording ? (
+                  <MicOff className="w-6 h-6" />
+                ) : (
+                  <Mic className="w-6 h-6" />
+                )}
+              </Button>
 
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate('/lessons')}
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate('/lessons')}
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Completion Dialog */}
       <Dialog open={showCompletion} onOpenChange={setShowCompletion}>

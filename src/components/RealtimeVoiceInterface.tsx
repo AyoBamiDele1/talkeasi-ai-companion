@@ -10,6 +10,7 @@ interface RealtimeVoiceInterfaceProps {
   lessonContext?: string;
   onTranscriptUpdate?: (transcript: string) => void;
   onConversationEnd?: () => void;
+  onMessageUpdate?: (messages: ConversationMessage[]) => void;
 }
 
 interface ConversationMessage {
@@ -22,7 +23,8 @@ interface ConversationMessage {
 const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({ 
   lessonContext, 
   onTranscriptUpdate,
-  onConversationEnd 
+  onConversationEnd,
+  onMessageUpdate
 }) => {
   const { toast } = useToast();
   const [isConnected, setIsConnected] = useState(false);
@@ -30,6 +32,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [currentTranscript, setCurrentTranscript] = useState('');
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
+  const messagesRef = useRef<ConversationMessage[]>([]);
   const chatRef = useRef<RealtimeChat | null>(null);
   const messageIdCounter = useRef(0);
 
@@ -67,7 +70,10 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
             content: currentTranscript.trim(),
             timestamp: new Date()
           };
-          setMessages(prev => [...prev, aiMessage]);
+          const newMessages = [...messagesRef.current, aiMessage];
+          setMessages(newMessages);
+          messagesRef.current = newMessages;
+          onMessageUpdate?.(newMessages);
           setCurrentTranscript('');
         }
         break;
@@ -81,7 +87,10 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
             content: event.transcript.trim(),
             timestamp: new Date()
           };
-          setMessages(prev => [...prev, userMessage]);
+          const newMessages = [...messagesRef.current, userMessage];
+          setMessages(newMessages);
+          messagesRef.current = newMessages;
+          onMessageUpdate?.(newMessages);
         }
         break;
         
