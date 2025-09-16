@@ -49,10 +49,12 @@ serve(async (req) => {
         console.log("Configuring session...");
         
         const sessionConfig = {
+          event_id: `event_${Date.now()}`,
           type: 'session.update',
           session: {
-            type: 'realtime',
+            modalities: ['text', 'audio'],
             instructions: 'You are an English language tutor. Help the user practice English conversation in a friendly, encouraging way. Provide gentle corrections and helpful feedback. Keep responses conversational and engaging.',
+            voice: 'alloy',
             input_audio_format: 'pcm16',
             output_audio_format: 'pcm16',
             input_audio_transcription: {
