@@ -54,7 +54,6 @@ serve(async (req) => {
           session: {
             type: 'realtime',
             instructions: 'You are an English language tutor. Help the user practice English conversation in a friendly, encouraging way. Provide gentle corrections and helpful feedback. Keep responses conversational and engaging.',
-            voice: 'alloy',
             turn_detection: {
               type: 'server_vad',
               threshold: 0.5,
