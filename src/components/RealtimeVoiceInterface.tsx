@@ -1,11 +1,21 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Mic, MicOff, Volume2, VolumeX, ArrowLeft, MessageSquare } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
-import { RealtimeChat } from '@/utils/RealtimeAudio';
-import { Mic, MicOff, Volume2, VolumeX, Phone, PhoneOff, ArrowLeft } from 'lucide-react';
+import ProcessingIndicator from './ProcessingIndicator';
+
+interface ConversationMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+  corrections?: string[];
+  feedback?: string;
+}
 
 interface RealtimeVoiceInterfaceProps {
   lessonContext?: string;
@@ -14,171 +24,326 @@ interface RealtimeVoiceInterfaceProps {
   onMessageUpdate?: (messages: ConversationMessage[]) => void;
 }
 
-interface ConversationMessage {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: Date;
+// Audio recording class
+class AudioRecorder {
+  private mediaRecorder: MediaRecorder | null = null;
+  private audioChunks: Blob[] = [];
+  private stream: MediaStream | null = null;
+
+  async start(): Promise<void> {
+    this.audioChunks = [];
+    this.stream = await navigator.mediaDevices.getUserMedia({ 
+      audio: {
+        sampleRate: 44100,
+        channelCount: 1,
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true
+      } 
+    });
+    
+    this.mediaRecorder = new MediaRecorder(this.stream, {
+      mimeType: 'audio/webm;codecs=opus'
+    });
+    
+    this.mediaRecorder.ondataavailable = (event) => {
+      if (event.data.size > 0) {
+        this.audioChunks.push(event.data);
+      }
+    };
+    
+    this.mediaRecorder.start();
+  }
+
+  async stop(): Promise<Blob> {
+    return new Promise((resolve) => {
+      if (!this.mediaRecorder) {
+        throw new Error('No media recorder available');
+      }
+
+      this.mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
+        this.cleanup();
+        resolve(audioBlob);
+      };
+      
+      this.mediaRecorder.stop();
+    });
+  }
+
+  private cleanup() {
+    if (this.stream) {
+      this.stream.getTracks().forEach(track => track.stop());
+      this.stream = null;
+    }
+    this.mediaRecorder = null;
+    this.audioChunks = [];
+  }
 }
 
-const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({ 
-  lessonContext, 
+const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
+  lessonContext,
   onTranscriptUpdate,
   onConversationEnd,
   onMessageUpdate
 }) => {
+  const [isRecording, setIsRecording] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [messages, setMessages] = useState<ConversationMessage[]>([]);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
+  const [isSessionActive, setIsSessionActive] = useState(false);
+  
+  const audioRecorderRef = useRef<AudioRecorder>(new AudioRecorder());
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [isConnected, setIsConnected] = useState(false);
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
-  const [currentTranscript, setCurrentTranscript] = useState('');
-  const [messages, setMessages] = useState<ConversationMessage[]>([]);
-  const messagesRef = useRef<ConversationMessage[]>([]);
-  const chatRef = useRef<RealtimeChat | null>(null);
   const messageIdCounter = useRef(0);
 
-  const handleMessage = (event: any) => {
-    console.log('Received realtime message:', event.type);
-    
-    switch (event.type) {
-      case 'session.created':
-        console.log('Session created successfully');
-        break;
-        
-      case 'session.updated':
-        console.log('Session updated:', event.session);
-        break;
-        
-      case 'response.audio.delta':
-        setIsSpeaking(true);
-        break;
-        
-      case 'response.audio.done':
-        setIsSpeaking(false);
-        break;
-        
-      case 'response.audio_transcript.delta':
-        setCurrentTranscript(prev => prev + event.delta);
-        onTranscriptUpdate?.(currentTranscript + event.delta);
-        break;
-        
-      case 'response.audio_transcript.done':
-        // Add AI message to conversation
-        if (currentTranscript.trim()) {
-          const aiMessage: ConversationMessage = {
-            id: `ai-${messageIdCounter.current++}`,
-            role: 'assistant',
-            content: currentTranscript.trim(),
-            timestamp: new Date()
-          };
-          const newMessages = [...messagesRef.current, aiMessage];
-          setMessages(newMessages);
-          messagesRef.current = newMessages;
-          onMessageUpdate?.(newMessages);
-          setCurrentTranscript('');
-        }
-        break;
-        
-      case 'conversation.item.input_audio_transcription.completed':
-        // Add user message to conversation
-        if (event.transcript?.trim()) {
-          const userMessage: ConversationMessage = {
-            id: `user-${messageIdCounter.current++}`,
-            role: 'user',
-            content: event.transcript.trim(),
-            timestamp: new Date()
-          };
-          const newMessages = [...messagesRef.current, userMessage];
-          setMessages(newMessages);
-          messagesRef.current = newMessages;
-          onMessageUpdate?.(newMessages);
-        }
-        break;
-        
-      case 'error':
-        console.error('Realtime error:', event.error);
-        toast({
-          title: "Error",
-          description: event.error?.message || 'An error occurred',
-          variant: "destructive",
-        });
-        break;
-    }
-  };
-
-  const startConversation = async () => {
-    if (isConnecting || isConnected) return;
-    
-    setIsConnecting(true);
-    try {
-      chatRef.current = new RealtimeChat(handleMessage);
-      await chatRef.current.connect();
-      setIsConnected(true);
-      setMessages([]);
-      
-      toast({
-        title: "Connected",
-        description: "Real-time voice conversation is ready",
-      });
-    } catch (error) {
-      console.error('Error starting conversation:', error);
-      toast({
-        title: "Connection Error",
-        description: error instanceof Error ? error.message : 'Failed to start conversation',
-        variant: "destructive",
-      });
-    } finally {
-      setIsConnecting(false);
-    }
-  };
-
-  const endConversation = () => {
-    if (chatRef.current) {
-      chatRef.current.disconnect();
-    }
-    setIsConnected(false);
-    setIsSpeaking(false);
-    setCurrentTranscript('');
-    onConversationEnd?.();
-    
-    toast({
-      title: "Disconnected",
-      description: "Voice conversation ended",
+  // Convert blob to base64
+  const blobToBase64 = (blob: Blob): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        const base64 = result.split(',')[1];
+        resolve(base64);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
     });
   };
 
-  useEffect(() => {
-    return () => {
-      if (chatRef.current) {
-        chatRef.current.disconnect();
+  // Play audio from base64
+  const playAudio = async (base64Audio: string) => {
+    try {
+      setIsSpeaking(true);
+      const audioBlob = new Blob([
+        Uint8Array.from(atob(base64Audio), c => c.charCodeAt(0))
+      ], { type: 'audio/mp3' });
+      
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      
+      setCurrentAudio(audio);
+      
+      audio.onended = () => {
+        setIsSpeaking(false);
+        setCurrentAudio(null);
+        URL.revokeObjectURL(audioUrl);
+      };
+      
+      await audio.play();
+    } catch (error) {
+      console.error('Error playing audio:', error);
+      setIsSpeaking(false);
+      setCurrentAudio(null);
+    }
+  };
+
+  // Stop current audio
+  const stopAudio = () => {
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
+      setIsSpeaking(false);
+      setCurrentAudio(null);
+    }
+  };
+
+  // Start recording
+  const startRecording = async () => {
+    try {
+      await audioRecorderRef.current.start();
+      setIsRecording(true);
+      console.log('Recording started');
+    } catch (error) {
+      console.error('Error starting recording:', error);
+      toast({
+        title: "Recording Error",
+        description: "Failed to start recording. Please check your microphone permissions.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Stop recording and process
+  const stopRecording = async () => {
+    try {
+      setIsRecording(false);
+      setIsProcessing(true);
+      
+      // Stop recording and get audio blob
+      const audioBlob = await audioRecorderRef.current.stop();
+      console.log('Recording stopped, processing audio...');
+      
+      // Convert to base64
+      const base64Audio = await blobToBase64(audioBlob);
+      
+      // Step 1: Speech to text
+      console.log('Converting speech to text...');
+      const sttResponse = await supabase.functions.invoke('speech-to-text', {
+        body: { audio: base64Audio }
+      });
+
+      if (sttResponse.error) {
+        throw new Error(sttResponse.error.message);
       }
+
+      const userText = sttResponse.data?.text;
+      if (!userText || userText.trim().length === 0) {
+        throw new Error('No speech detected. Please try again.');
+      }
+
+      console.log('Transcribed text:', userText);
+      onTranscriptUpdate?.(userText);
+
+      // Add user message
+      const userMessage: ConversationMessage = {
+        id: `user-${messageIdCounter.current++}`,
+        role: 'user',
+        content: userText,
+        timestamp: new Date()
+      };
+      const newMessagesWithUser = [...messages, userMessage];
+      setMessages(newMessagesWithUser);
+      onMessageUpdate?.(newMessagesWithUser);
+
+      // Step 2: Get AI response
+      console.log('Getting AI response...');
+      const aiResponse = await supabase.functions.invoke('ai-conversation', {
+        body: { 
+          userText, 
+          lessonContext: lessonContext || 'General English conversation practice',
+          difficulty: 'Intermediate'
+        }
+      });
+
+      if (aiResponse.error) {
+        throw new Error(aiResponse.error.message);
+      }
+
+      const aiData = aiResponse.data;
+      console.log('AI response:', aiData);
+
+      // Add assistant message
+      const assistantMessage: ConversationMessage = {
+        id: `assistant-${messageIdCounter.current++}`,
+        role: 'assistant',
+        content: aiData.response,
+        timestamp: new Date(),
+        corrections: aiData.corrections || [],
+        feedback: aiData.feedback
+      };
+      const finalMessages = [...newMessagesWithUser, assistantMessage];
+      setMessages(finalMessages);
+      onMessageUpdate?.(finalMessages);
+
+      // Step 3: Convert AI response to speech
+      console.log('Converting text to speech...');
+      const ttsResponse = await supabase.functions.invoke('text-to-speech', {
+        body: { 
+          text: aiData.response,
+          voice: 'alloy'
+        }
+      });
+
+      if (ttsResponse.error) {
+        throw new Error(ttsResponse.error.message);
+      }
+
+      // Play the audio
+      await playAudio(ttsResponse.data.audioContent);
+
+    } catch (error) {
+      console.error('Voice processing error:', error);
+      toast({
+        title: "Processing Error",
+        description: error instanceof Error ? error.message : "Failed to process voice input",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Start session
+  const startSession = () => {
+    setIsSessionActive(true);
+    setMessages([]);
+    
+    // Add welcome message
+    const welcomeMessage: ConversationMessage = {
+      id: 'welcome',
+      role: 'assistant',
+      content: "Welcome! I'm ready to help you practice. Press and hold the microphone to start speaking.",
+      timestamp: new Date()
     };
-  }, []);
+    setMessages([welcomeMessage]);
+    onMessageUpdate?.([welcomeMessage]);
+    
+    toast({
+      title: "Session Started",
+      description: "Voice practice session is now active",
+    });
+  };
+
+  // End session
+  const endSession = () => {
+    stopAudio();
+    setIsSessionActive(false);
+    setIsRecording(false);
+    setIsProcessing(false);
+    setMessages([]);
+    onConversationEnd?.();
+    
+    toast({
+      title: "Session Ended",
+      description: "Voice practice session has ended",
+    });
+  };
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-card border-t p-4 z-50">
       <div className="max-w-md mx-auto">
-        {/* Connection Status */}
+        {/* Status */}
         <div className="text-center mb-4">
           <div className="flex items-center justify-center gap-2 mb-2">
-            <Badge variant={isConnected ? "default" : "secondary"} className="text-xs">
-              {isConnected ? "Real-time Connected" : "Real-time Offline"}
+            <Badge variant={isSessionActive ? "default" : "secondary"} className="text-xs">
+              {isSessionActive ? "Session Active" : "Session Inactive"}
             </Badge>
-            {isConnected && isSpeaking && (
+            
+            {isSpeaking && (
               <div className="flex items-center gap-1 text-success text-xs">
                 <Volume2 className="w-3 h-3" />
                 <span>AI Speaking</span>
               </div>
             )}
+            
+            {isRecording && (
+              <div className="flex items-center gap-1 text-primary text-xs">
+                <Mic className="w-3 h-3" />
+                <span>Recording...</span>
+              </div>
+            )}
+            
+            {isProcessing && (
+              <div className="flex items-center gap-1 text-warning text-xs">
+                <ProcessingIndicator stage="transcribing" />
+                <span>Processing...</span>
+              </div>
+            )}
           </div>
           
           <p className="text-sm text-muted-foreground">
-            {!isConnected 
-              ? "Tap to start real-time conversation" 
-              : isConnecting
-              ? "Connecting..."
-              : "Speak naturally - AI will respond instantly"
+            {!isSessionActive 
+              ? "Tap to start voice practice session" 
+              : isRecording
+              ? "Release to stop recording"
+              : isProcessing
+              ? "Processing your speech..."
+              : isSpeaking
+              ? "AI is responding..."
+              : "Hold microphone button to speak"
             }
           </p>
         </div>
@@ -193,41 +358,60 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
             <ArrowLeft className="w-5 h-5" />
           </Button>
 
-          {!isConnected ? (
+          {!isSessionActive ? (
             <Button
               size="lg"
               className="w-16 h-16 rounded-full bg-primary hover:bg-primary/90"
-              onClick={startConversation}
-              disabled={isConnecting}
+              onClick={startSession}
             >
-              {isConnecting ? (
-                <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <Phone className="w-6 h-6" />
-              )}
+              <Mic className="w-6 h-6" />
             </Button>
           ) : (
             <Button
               size="lg"
-              className="w-16 h-16 rounded-full bg-destructive hover:bg-destructive/90"
-              onClick={endConversation}
+              className={`w-16 h-16 rounded-full ${
+                isRecording 
+                  ? 'bg-destructive hover:bg-destructive/90' 
+                  : 'bg-primary hover:bg-primary/90'
+              }`}
+              onMouseDown={startRecording}
+              onMouseUp={stopRecording}
+              onTouchStart={startRecording}
+              onTouchEnd={stopRecording}
+              disabled={isProcessing || isSpeaking}
             >
-              <PhoneOff className="w-6 h-6" />
+              {isRecording ? (
+                <MicOff className="w-6 h-6" />
+              ) : (
+                <Mic className="w-6 h-6" />
+              )}
             </Button>
           )}
 
-          <Button
-            variant="ghost"
-            size="icon"
-            disabled={!isConnected}
-          >
-            {isConnected && !isSpeaking ? (
-              <Mic className="w-5 h-5 text-success" />
-            ) : (
-              <MicOff className="w-5 h-5 text-muted-foreground" />
-            )}
-          </Button>
+          {isSessionActive && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={endSession}
+            >
+              <MessageSquare className="w-5 h-5" />
+            </Button>
+          )}
         </div>
+        
+        {/* Quick Actions */}
+        {isSpeaking && (
+          <div className="flex justify-center mt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={stopAudio}
+            >
+              <VolumeX className="w-4 h-4 mr-1" />
+              Stop Audio
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
