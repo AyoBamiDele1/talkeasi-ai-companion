@@ -21,6 +21,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useStreamingAudio } from '@/hooks/useStreamingAudio';
 import { useAuth } from '@/hooks/useAuth';
 import ProcessingIndicator from '@/components/ProcessingIndicator';
+import RealtimeVoiceInterface from '@/components/RealtimeVoiceInterface';
 
 interface Message {
   id: string;
@@ -43,6 +44,7 @@ const LessonSession = () => {
   const [showCompletion, setShowCompletion] = useState(false);
   const [lesson, setLesson] = useState<any>(null);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [useRealtimeMode, setUseRealtimeMode] = useState(false);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
