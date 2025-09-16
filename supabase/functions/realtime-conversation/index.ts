@@ -51,7 +51,7 @@ serve(async (req) => {
         const sessionConfig = {
           type: 'session.update',
           session: {
-            type: 'session',
+            type: 'realtime',
             modalities: ['text', 'audio'],
             instructions: 'You are an English language tutor. Help the user practice English conversation in a friendly, encouraging way. Provide gentle corrections and helpful feedback. Keep responses conversational and engaging.',
             voice: 'alloy',
