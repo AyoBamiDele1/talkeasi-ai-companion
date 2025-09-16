@@ -31,7 +31,7 @@ serve(async (req) => {
 
         openAISocket = new WebSocket(
           "wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01",
-          ["realtime", `openai-insecure-api-key.${openAIApiKey}`]
+          ["openai-realtime-v1", `openai-insecure-api-key.${openAIApiKey}`]
         );
 
     openAISocket.onopen = () => {
@@ -52,7 +52,6 @@ serve(async (req) => {
           type: 'session.update',
           session: {
             type: 'realtime',
-            modalities: ['text', 'audio'],
             instructions: 'You are an English language tutor. Help the user practice English conversation in a friendly, encouraging way. Provide gentle corrections and helpful feedback. Keep responses conversational and engaging.',
             voice: 'alloy',
             input_audio_format: 'pcm16',
