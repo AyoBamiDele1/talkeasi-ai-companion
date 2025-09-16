@@ -481,7 +481,7 @@ const LessonSession = () => {
       </div>
 
       {/* Recording Controls */}
-      <div className="fixed bottom-0 left-0 right-0 bg-card border-t p-4">
+      <div className="fixed bottom-0 left-0 right-0 bg-card border-t p-4 z-50">
         <div className="max-w-md mx-auto">
           <div className="text-center mb-4">
             <p className="text-sm text-muted-foreground">
