@@ -45,6 +45,7 @@ const LessonSession = () => {
   const [lesson, setLesson] = useState<any>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [useRealtimeMode, setUseRealtimeMode] = useState(true);
+  const [useElevenLabs, setUseElevenLabs] = useState(true); // Use ElevenLabs by default
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -316,10 +317,18 @@ const LessonSession = () => {
 
         console.log(`Generating TTS for sentence ${i}:`, sentence);
 
-        // Generate TTS for this sentence
-        const ttsResponse = await supabase.functions.invoke('text-to-speech', {
-          body: { text: sentence, voice: 'alloy' }
-        });
+        // Generate TTS for this sentence using the selected provider
+        const ttsResponse = useElevenLabs 
+          ? await supabase.functions.invoke('elevenlabs-tts', {
+              body: { 
+                text: sentence, 
+                voiceId: '9BWtsMINqrJLrRacOk9x', // Aria voice - natural sounding
+                modelId: 'eleven_turbo_v2_5' // Fast, low latency model
+              }
+            })
+          : await supabase.functions.invoke('text-to-speech', {
+              body: { text: sentence, voice: 'alloy' }
+            });
 
         if (ttsResponse.error) {
           console.error('TTS failed for sentence:', sentence, ttsResponse.error);
@@ -350,10 +359,18 @@ const LessonSession = () => {
     try {
       setIsAISpeaking(true);
       
-      // Generate speech using text-to-speech edge function
-      const ttsResponse = await supabase.functions.invoke('text-to-speech', {
-        body: { text, voice: 'alloy' }
-      });
+      // Generate speech using the selected TTS provider
+      const ttsResponse = useElevenLabs 
+        ? await supabase.functions.invoke('elevenlabs-tts', {
+            body: { 
+              text, 
+              voiceId: '9BWtsMINqrJLrRacOk9x', // Aria voice - natural sounding
+              modelId: 'eleven_turbo_v2_5' // Fast, low latency model
+            }
+          })
+        : await supabase.functions.invoke('text-to-speech', {
+            body: { text, voice: 'alloy' }
+          });
 
       if (ttsResponse.error) {
         throw new Error('Speech generation failed');
@@ -414,6 +431,13 @@ const LessonSession = () => {
           <div className="flex items-center justify-center gap-2 mt-1">
             <Badge variant="secondary" className="text-xs">
               {lesson?.difficulty || 'Intermediate'}
+            </Badge>
+            <Badge 
+              variant={useElevenLabs ? "default" : "outline"} 
+              className="text-xs cursor-pointer"
+              onClick={() => setUseElevenLabs(!useElevenLabs)}
+            >
+              {useElevenLabs ? 'ElevenLabs' : 'OpenAI'}
             </Badge>
             {messages.filter(m => m.type === 'user').length >= 3 && (
               <Button variant="outline" size="sm" onClick={completeLesson}>
@@ -484,6 +508,7 @@ const LessonSession = () => {
       {useRealtimeMode ? (
         <RealtimeVoiceInterface
           lessonContext={lesson?.title || 'English Conversation Practice'}
+          useElevenLabs={useElevenLabs} // Pass the TTS provider preference
           onTranscriptUpdate={(transcript) => {
             setCurrentStreamText(transcript);
           }}

@@ -22,6 +22,7 @@ interface RealtimeVoiceInterfaceProps {
   onTranscriptUpdate?: (transcript: string) => void;
   onConversationEnd?: () => void;
   onMessageUpdate?: (messages: ConversationMessage[]) => void;
+  useElevenLabs?: boolean; // Add option to use ElevenLabs TTS
 }
 
 // Audio recording class
@@ -85,7 +86,8 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   lessonContext,
   onTranscriptUpdate,
   onConversationEnd,
-  onMessageUpdate
+  onMessageUpdate,
+  useElevenLabs = true // Default to ElevenLabs
 }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -240,12 +242,20 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
 
       // Step 3: Convert AI response to speech
       console.log('Converting text to speech...');
-      const ttsResponse = await supabase.functions.invoke('text-to-speech', {
-        body: { 
-          text: aiData.response,
-          voice: 'alloy'
-        }
-      });
+      const ttsResponse = useElevenLabs 
+        ? await supabase.functions.invoke('elevenlabs-tts', {
+            body: { 
+              text: aiData.response,
+              voiceId: '9BWtsMINqrJLrRacOk9x', // Aria voice - natural sounding
+              modelId: 'eleven_turbo_v2_5' // Fast, low latency model
+            }
+          })
+        : await supabase.functions.invoke('text-to-speech', {
+            body: { 
+              text: aiData.response,
+              voice: 'alloy'
+            }
+          });
 
       if (ttsResponse.error) {
         throw new Error(ttsResponse.error.message);
