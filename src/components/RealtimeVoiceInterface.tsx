@@ -86,7 +86,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   onTranscriptUpdate,
   onConversationEnd,
   onMessageUpdate,
-  useElevenLabs = true
+  useElevenLabs = false
 }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
