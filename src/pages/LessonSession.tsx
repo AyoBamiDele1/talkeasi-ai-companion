@@ -45,7 +45,7 @@ const LessonSession = () => {
   const [lesson, setLesson] = useState<any>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [useRealtimeMode, setUseRealtimeMode] = useState(true);
-  const [useElevenLabs, setUseElevenLabs] = useState(true); // Use ElevenLabs by default
+  const [useElevenLabs, setUseElevenLabs] = useState(false); // Default to OpenAI TTS to avoid provider errors
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);

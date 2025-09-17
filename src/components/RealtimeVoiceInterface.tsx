@@ -241,27 +241,55 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
 
       // Step 3: Convert AI response to speech
       console.log('Converting text to speech...');
-      const ttsResponse = useElevenLabs 
-        ? await supabase.functions.invoke('elevenlabs-tts', {
-            body: { 
-              text: aiData.response,
-              voiceId: '9BWtsMINqrJLrRacOk9x',
-              modelId: 'eleven_turbo_v2_5'
-            }
-          })
-        : await supabase.functions.invoke('text-to-speech', {
-            body: { 
-              text: aiData.response,
-              voice: 'alloy'
-            }
-          });
+      // Try primary provider, then fallback to OpenAI if ElevenLabs fails
+      let audioContent: string | undefined;
+      let usedFallback = false;
 
-      if (ttsResponse.error) {
-        throw new Error(ttsResponse.error.message);
+      if (useElevenLabs) {
+        const primary = await supabase.functions.invoke('elevenlabs-tts', {
+          body: {
+            text: aiData.response,
+            voiceId: '9BWtsMINqrJLrRacOk9x',
+            modelId: 'eleven_turbo_v2_5',
+          },
+        });
+
+        if (!primary.error && primary.data?.audioContent) {
+          audioContent = primary.data.audioContent;
+        } else {
+          // Fallback to OpenAI TTS
+          const fallback = await supabase.functions.invoke('text-to-speech', {
+            body: { text: aiData.response, voice: 'alloy' },
+          });
+          if (fallback.error) {
+            throw new Error(fallback.error.message || 'Text-to-speech failed');
+          }
+          usedFallback = true;
+          audioContent = fallback.data?.audioContent;
+        }
+      } else {
+        const resp = await supabase.functions.invoke('text-to-speech', {
+          body: { text: aiData.response, voice: 'alloy' },
+        });
+        if (resp.error) {
+          throw new Error(resp.error.message || 'Text-to-speech failed');
+        }
+        audioContent = resp.data?.audioContent;
+      }
+
+      if (!audioContent) {
+        throw new Error('No audio content returned from TTS');
+      }
+
+      if (usedFallback) {
+        toast({
+          title: 'Voice provider unavailable',
+          description: 'Switched to backup voice (OpenAI).',
+        });
       }
 
       // Play the audio
-      await playAudio(ttsResponse.data.audioContent);
+      await playAudio(audioContent);
 
     } catch (error) {
       console.error('Voice processing error:', error);
