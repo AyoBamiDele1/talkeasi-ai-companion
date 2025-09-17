@@ -52,14 +52,21 @@ serve(async (req) => {
           event_id: `event_${Date.now()}`,
           type: 'session.update',
           session: {
-            type: 'realtime',
+            modalities: ["text", "audio"],
             instructions: 'You are an English language tutor. Help the user practice English conversation in a friendly, encouraging way. Provide gentle corrections and helpful feedback. Keep responses conversational and engaging.',
+            voice: 'alloy',
+            input_audio_format: 'pcm16',
+            output_audio_format: 'pcm16',
+            input_audio_transcription: {
+              model: 'whisper-1'
+            },
             turn_detection: {
               type: 'server_vad',
               threshold: 0.5,
               prefix_padding_ms: 300,
               silence_duration_ms: 1000
-            }
+            },
+            temperature: 0.8
           }
         };
         

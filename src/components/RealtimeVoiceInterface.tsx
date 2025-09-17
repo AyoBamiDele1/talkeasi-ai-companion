@@ -317,32 +317,40 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   };
 
   // Handle realtime messages
+  const [currentTranscript, setCurrentTranscript] = useState('');
+  const [isAISpeaking, setIsAISpeaking] = useState(false);
+
   const handleRealtimeMessage = (message: any) => {
-    console.log('Realtime message:', message.type);
+    console.log('Realtime message:', message);
     
-    if (message.type === 'response.audio_transcript.delta') {
-      // Handle AI response transcript
-      const aiMessage: ConversationMessage = {
-        id: `ai-${Date.now()}`,
-        role: 'assistant',
-        content: message.delta || '',
-        timestamp: new Date()
-      };
-      
-      setMessages(prev => {
-        const updated = [...prev, aiMessage];
-        onMessageUpdate?.(updated);
-        return updated;
-      });
-      
-      setIsSpeaking(true);
-      onTranscriptUpdate?.(message.delta || '');
-    } else if (message.type === 'response.audio.done') {
-      setIsSpeaking(false);
+    if (message.type === 'response.output_audio_transcript.delta') {
+      // Handle AI speech transcript
+      setCurrentTranscript(prev => prev + (message.delta || ''));
+    } else if (message.type === 'response.output_audio_transcript.done') {
+      // AI finished speaking
+      if (currentTranscript.trim()) {
+        setMessages(prev => [...prev, {
+          id: `assistant-${Date.now()}`,
+          role: 'assistant',
+          content: currentTranscript,
+          timestamp: new Date()
+        }]);
+        setCurrentTranscript('');
+      }
+    } else if (message.type === 'response.output_audio.done') {
+      // AI finished speaking audio
+      setIsAISpeaking(false);
+    } else if (message.type === 'response.created') {
+      // AI started responding
+      setIsAISpeaking(true);
+      setIsProcessing(false);
     } else if (message.type === 'input_audio_buffer.speech_started') {
-      console.log('User started speaking');
+      // User started speaking
+      setIsRecording(true);
     } else if (message.type === 'input_audio_buffer.speech_stopped') {
-      console.log('User stopped speaking');
+      // User stopped speaking
+      setIsRecording(false);
+      setIsProcessing(true);
     }
   };
 
@@ -444,7 +452,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
               </Badge>
             )}
             
-            {isSpeaking && (
+            {(isSpeaking || isAISpeaking) && (
               <div className="flex items-center gap-1 text-success text-xs">
                 <Volume2 className="w-3 h-3" />
                 <span>AI Speaking</span>
@@ -475,7 +483,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
               ? "Release to stop recording"
               : isProcessing
               ? "Processing your speech..."
-              : isSpeaking
+              : (isSpeaking || isAISpeaking)
               ? "AI is responding..."
               : "Hold microphone button to speak"
             }
@@ -528,7 +536,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
               onMouseUp={stopRecording}
               onTouchStart={startRecording}
               onTouchEnd={stopRecording}
-              disabled={isProcessing || isSpeaking}
+              disabled={isProcessing || isSpeaking || isAISpeaking}
             >
               {isRecording ? (
                 <MicOff className="w-6 h-6" />
@@ -562,7 +570,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
         </div>
         
         {/* Quick Actions */}
-        {isSpeaking && (
+        {(isSpeaking || isAISpeaking) && (
           <div className="flex justify-center mt-2">
             <Button
               variant="outline"

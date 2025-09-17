@@ -206,7 +206,7 @@ export class RealtimeChat {
           if (data.type === 'connection_established') {
             // Start audio recording
             await this.startAudioRecording();
-          } else if (data.type === 'response.audio.delta') {
+          } else if (data.type === 'response.output_audio.delta') {
             // Play audio chunk
             await this.handleAudioDelta(data.delta);
           } else {
