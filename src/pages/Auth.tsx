@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { Mic, Globe } from 'lucide-react';
+import { Mic } from 'lucide-react';
 
 export default function Auth() {
   const { user, signIn, signUp, loading } = useAuth();
@@ -89,12 +89,6 @@ export default function Auth() {
         </div>
 
         <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2 mb-2">
-              <Globe className="h-5 w-5 text-primary" />
-              <span className="text-sm text-muted-foreground">Tailored for Nigerian English</span>
-            </div>
-          </CardHeader>
           <Tabs defaultValue="signin" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="signin">Sign In</TabsTrigger>
