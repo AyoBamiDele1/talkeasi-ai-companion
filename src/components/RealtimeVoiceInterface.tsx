@@ -2,10 +2,11 @@ import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Mic, MicOff, Volume2, VolumeX, ArrowLeft, MessageSquare } from 'lucide-react';
+import { Mic, MicOff, Volume2, VolumeX, ArrowLeft, MessageSquare, Phone, PhoneOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import ProcessingIndicator from './ProcessingIndicator';
+import { RealtimeChat } from '@/utils/RealtimeAudio';
 
 interface ConversationMessage {
   id: string;
@@ -94,8 +95,11 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
   const [isSessionActive, setIsSessionActive] = useState(false);
+  const [isHandsFreeMode, setIsHandsFreeMode] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
   
   const audioRecorderRef = useRef<AudioRecorder>(new AudioRecorder());
+  const realtimeChatRef = useRef<RealtimeChat | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
   const messageIdCounter = useRef(0);
@@ -312,9 +316,76 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     }
   };
 
-  // Start session
+  // Handle realtime messages
+  const handleRealtimeMessage = (message: any) => {
+    console.log('Realtime message:', message.type);
+    
+    if (message.type === 'response.audio_transcript.delta') {
+      // Handle AI response transcript
+      const aiMessage: ConversationMessage = {
+        id: `ai-${Date.now()}`,
+        role: 'assistant',
+        content: message.delta || '',
+        timestamp: new Date()
+      };
+      
+      setMessages(prev => {
+        const updated = [...prev, aiMessage];
+        onMessageUpdate?.(updated);
+        return updated;
+      });
+      
+      setIsSpeaking(true);
+      onTranscriptUpdate?.(message.delta || '');
+    } else if (message.type === 'response.audio.done') {
+      setIsSpeaking(false);
+    } else if (message.type === 'input_audio_buffer.speech_started') {
+      console.log('User started speaking');
+    } else if (message.type === 'input_audio_buffer.speech_stopped') {
+      console.log('User stopped speaking');
+    }
+  };
+
+  // Start hands-free session
+  const startHandsFreeSession = async () => {
+    try {
+      setIsConnecting(true);
+      realtimeChatRef.current = new RealtimeChat(handleRealtimeMessage);
+      await realtimeChatRef.current.connect();
+      
+      setIsSessionActive(true);
+      setIsHandsFreeMode(true);
+      setMessages([]);
+      
+      const welcomeMessage: ConversationMessage = {
+        id: 'welcome',
+        role: 'assistant',
+        content: "Connected! I can hear you now. Just start speaking naturally - no need to hold any buttons.",
+        timestamp: new Date()
+      };
+      setMessages([welcomeMessage]);
+      onMessageUpdate?.([welcomeMessage]);
+      
+      toast({
+        title: "Hands-Free Mode Active",
+        description: "Just start speaking naturally!",
+      });
+    } catch (error) {
+      console.error('Failed to start hands-free session:', error);
+      toast({
+        title: "Connection Failed",
+        description: error instanceof Error ? error.message : "Failed to connect to voice service",
+        variant: "destructive",
+      });
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
+  // Start push-to-talk session
   const startSession = () => {
     setIsSessionActive(true);
+    setIsHandsFreeMode(false);
     setMessages([]);
     
     // Add welcome message
@@ -336,7 +407,15 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   // End session
   const endSession = () => {
     stopAudio();
+    
+    // Disconnect realtime chat if active
+    if (realtimeChatRef.current) {
+      realtimeChatRef.current.disconnect();
+      realtimeChatRef.current = null;
+    }
+    
     setIsSessionActive(false);
+    setIsHandsFreeMode(false);
     setIsRecording(false);
     setIsProcessing(false);
     setMessages([]);
@@ -355,8 +434,15 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
         <div className="text-center mb-4">
           <div className="flex items-center justify-center gap-2 mb-2">
             <Badge variant={isSessionActive ? "default" : "secondary"} className="text-xs">
-              {isSessionActive ? "Session Active" : "Session Inactive"}
+              {isConnecting ? "Connecting..." : isSessionActive ? "Session Active" : "Session Inactive"}
             </Badge>
+            
+            {isHandsFreeMode && (
+              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
+                <Phone className="w-3 h-3 mr-1" />
+                Hands-Free
+              </Badge>
+            )}
             
             {isSpeaking && (
               <div className="flex items-center gap-1 text-success text-xs">
@@ -382,7 +468,9 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
           
           <p className="text-sm text-muted-foreground">
             {!isSessionActive 
-              ? "Tap to start voice practice session" 
+              ? "Choose your interaction mode" 
+              : isHandsFreeMode
+              ? "Just speak naturally - I'm listening"
               : isRecording
               ? "Release to stop recording"
               : isProcessing
@@ -393,6 +481,30 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
             }
           </p>
         </div>
+
+        {/* Mode Selection (when not active) */}
+        {!isSessionActive && (
+          <div className="flex gap-2 mb-4">
+            <Button
+              size="lg"
+              variant="outline"
+              className="flex-1 h-12"
+              onClick={startSession}
+            >
+              <Mic className="w-4 h-4 mr-2" />
+              Push to Talk
+            </Button>
+            <Button
+              size="lg"
+              className="flex-1 h-12 bg-green-600 hover:bg-green-700"
+              onClick={startHandsFreeSession}
+              disabled={isConnecting}
+            >
+              <Phone className="w-4 h-4 mr-2" />
+              {isConnecting ? "Connecting..." : "Hands-Free"}
+            </Button>
+          </div>
+        )}
         
         {/* Controls */}
         <div className="flex items-center justify-center space-x-4">
@@ -404,15 +516,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
             <ArrowLeft className="w-5 h-5" />
           </Button>
 
-          {!isSessionActive ? (
-            <Button
-              size="lg"
-              className="w-16 h-16 rounded-full bg-primary hover:bg-primary/90"
-              onClick={startSession}
-            >
-              <Mic className="w-6 h-6" />
-            </Button>
-          ) : (
+          {isSessionActive && !isHandsFreeMode && (
             <Button
               size="lg"
               className={`w-16 h-16 rounded-full ${
@@ -434,13 +538,25 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
             </Button>
           )}
 
+          {isSessionActive && isHandsFreeMode && (
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-full bg-green-100 border-2 border-green-500 flex items-center justify-center">
+                <Phone className="w-6 h-6 text-green-600" />
+              </div>
+            </div>
+          )}
+
           {isSessionActive && (
             <Button
               variant="ghost"
               size="icon"
               onClick={endSession}
             >
-              <MessageSquare className="w-5 h-5" />
+              {isHandsFreeMode ? (
+                <PhoneOff className="w-5 h-5" />
+              ) : (
+                <MessageSquare className="w-5 h-5" />
+              )}
             </Button>
           )}
         </div>
