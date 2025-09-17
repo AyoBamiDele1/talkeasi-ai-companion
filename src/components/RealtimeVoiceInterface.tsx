@@ -1,7 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Mic, MicOff, Volume2, VolumeX, ArrowLeft, MessageSquare } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -22,7 +21,7 @@ interface RealtimeVoiceInterfaceProps {
   onTranscriptUpdate?: (transcript: string) => void;
   onConversationEnd?: () => void;
   onMessageUpdate?: (messages: ConversationMessage[]) => void;
-  useElevenLabs?: boolean; // Add option to use ElevenLabs TTS
+  useElevenLabs?: boolean;
 }
 
 // Audio recording class
@@ -87,7 +86,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   onTranscriptUpdate,
   onConversationEnd,
   onMessageUpdate,
-  useElevenLabs = true // Default to ElevenLabs
+  useElevenLabs = true
 }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -246,8 +245,8 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
         ? await supabase.functions.invoke('elevenlabs-tts', {
             body: { 
               text: aiData.response,
-              voiceId: '9BWtsMINqrJLrRacOk9x', // Aria voice - natural sounding
-              modelId: 'eleven_turbo_v2_5' // Fast, low latency model
+              voiceId: '9BWtsMINqrJLrRacOk9x',
+              modelId: 'eleven_turbo_v2_5'
             }
           })
         : await supabase.functions.invoke('text-to-speech', {
