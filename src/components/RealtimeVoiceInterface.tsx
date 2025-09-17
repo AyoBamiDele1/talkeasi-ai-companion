@@ -338,17 +338,29 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
         setCurrentTranscript('');
       }
     } else if (message.type === 'response.output_audio.done') {
-      // AI finished speaking audio
+      // AI finished speaking audio - reset to listening state
       setIsAISpeaking(false);
+      setIsProcessing(false);
+      // Don't automatically start recording - wait for server VAD to detect speech
+    } else if (message.type === 'response.done') {
+      // Response completely finished - ensure we're in listening state
+      setIsAISpeaking(false);
+      setIsProcessing(false);
+      setIsRecording(false);
     } else if (message.type === 'response.created') {
       // AI started responding
       setIsAISpeaking(true);
       setIsProcessing(false);
+      setIsRecording(false); // Stop any recording state when AI responds
     } else if (message.type === 'input_audio_buffer.speech_started') {
-      // User started speaking
+      // User started speaking - only now show recording
+      console.log('User speech detected - starting to record');
       setIsRecording(true);
+      setIsProcessing(false);
+      setIsAISpeaking(false);
     } else if (message.type === 'input_audio_buffer.speech_stopped') {
-      // User stopped speaking
+      // User stopped speaking - show processing
+      console.log('User speech ended - processing');
       setIsRecording(false);
       setIsProcessing(true);
     }
