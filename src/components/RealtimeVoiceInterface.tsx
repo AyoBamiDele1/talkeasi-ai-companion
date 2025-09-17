@@ -272,6 +272,15 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
           body: { text: aiData.response, voice: 'alloy' },
         });
         if (resp.error) {
+          console.error('OpenAI TTS failed, falling back to browser TTS:', resp.error);
+          // Browser fallback to avoid blocking the flow
+          if (typeof speechSynthesis !== 'undefined') {
+            const utter = new SpeechSynthesisUtterance(aiData.response);
+            utter.onend = () => setIsSpeaking(false);
+            speechSynthesis.speak(utter);
+            toast({ title: 'Using browser voice', description: 'Cloud TTS unavailable, fell back to your device voice.' });
+            return; // Skip audio playback since browser is speaking
+          }
           throw new Error(resp.error.message || 'Text-to-speech failed');
         }
         audioContent = resp.data?.audioContent;
