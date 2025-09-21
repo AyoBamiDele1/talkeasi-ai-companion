@@ -1,0 +1,16 @@
+-- Remove duplicate lessons (keeping the older versions)
+DELETE FROM lessons WHERE id IN (
+  '1cfa726b-db74-47a0-ad84-250943ccbd19', -- Airport & Immigration Procedures (duplicate)
+  'e68ee4c6-f500-4589-bd56-d4707ed5a788', -- Banking & Financial Services (duplicate)
+  '2ba7831c-bc5e-41ef-a53f-13b99a8da8fd', -- Contract Negotiations & Legal Discussions (duplicate)
+  'c537afc9-769a-4b41-a8e2-b97414518704', -- Cultural Exchange & Social Integration (duplicate)
+  '03789b58-6eea-439b-8585-2e99d50c9f4b', -- Doctor Appointments & Health Discussions (duplicate)
+  '743d1a38-18eb-431a-aeb7-8cd961fa3c42', -- Housing & Living Arrangements (duplicate)
+  '2d6d3dd1-6ba4-41c8-81b4-88adbff7339c', -- IT Support & Technical Communication (duplicate)
+  '8e6c071e-ba67-47e8-961f-7991c285e18f', -- Medical Emergency Communication (duplicate)
+  '7f6d93ac-fe48-4be4-9800-b5bf8483c2da', -- Research & Academic Discussions (duplicate)
+  'a2689a4e-28bb-49ae-a3f2-c5b6fbc8189d', -- Shopping & Consumer Services (duplicate)
+  '31267352-3f58-479c-b39f-e06b821e73cc', -- Software Development Collaboration (duplicate)
+  'd7b1bb48-03e2-4d02-a877-f758156d7636', -- Team Meetings & Project Management (duplicate)
+  'f397b6de-288a-4ff6-b459-5a3318bf4fa2'  -- University Life & Campus Communication (duplicate)
+);
