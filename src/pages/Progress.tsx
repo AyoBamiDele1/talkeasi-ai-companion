@@ -3,9 +3,12 @@ import { Badge } from "@/components/ui/badge";
 import { Progress as ProgressBar } from "@/components/ui/progress";
 import { Calendar, TrendingUp, Award, AlertCircle } from "lucide-react";
 import { useProgress } from "@/hooks/useProgress";
+import { useAchievements } from "@/hooks/useAchievements";
+import { AchievementsSection } from "@/components/achievements/AchievementsSection";
 
 const Progress = () => {
   const { stats, loading } = useProgress();
+  const { achievements, totalPoints, loading: achievementsLoading, checkAndUnlockAchievements } = useAchievements();
 
   if (loading) {
     return (
@@ -110,6 +113,15 @@ const Progress = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Achievements */}
+      <div className="mb-6">
+        <AchievementsSection 
+          achievements={achievements}
+          totalPoints={totalPoints}
+          loading={achievementsLoading}
+        />
+      </div>
 
       {/* Common Mistakes */}
       <Card>
