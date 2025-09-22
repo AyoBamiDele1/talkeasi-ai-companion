@@ -93,7 +93,7 @@ const LessonSession = () => {
     
     switch (lessonData.title) {
       case 'Business Introduction':
-        return "Hello! I'm your AI English tutor. Let's practice professional introductions in Nigerian business settings. I'll be your colleague. How would you introduce yourself?";
+        return "Hello! I'm your AI English tutor. Let's practice professional introductions in business settings. I'll be your colleague. How would you introduce yourself?";
       
       case 'Phone Conversations':
         return "Hello! I'm your AI English tutor. Let's practice professional phone conversations. I'll be receiving your business call. Go ahead and make your call!";

@@ -26,13 +26,13 @@ const ProfileLanguageSettings = ({ onBack }: ProfileLanguageSettingsProps) => {
   });
 
   const languages = [
-    { value: "nigerian-english", label: "Nigerian English" },
+    { value: "english", label: "English" },
     { value: "british-english", label: "British English" },
     { value: "american-english", label: "American English" },
     { value: "yoruba", label: "Yoruba" },
     { value: "igbo", label: "Igbo" },
     { value: "hausa", label: "Hausa" },
-    { value: "pidgin", label: "Nigerian Pidgin" },
+    { value: "pidgin", label: "Pidgin English" },
     { value: "french", label: "French" },
     { value: "spanish", label: "Spanish" },
     { value: "mandarin", label: "Mandarin Chinese" },
@@ -53,8 +53,7 @@ const ProfileLanguageSettings = ({ onBack }: ProfileLanguageSettingsProps) => {
     { value: "american", label: "American English" },
     { value: "british", label: "British English" },
     { value: "australian", label: "Australian English" },
-    { value: "canadian", label: "Canadian English" },
-    { value: "nigerian", label: "Nigerian English" }
+    { value: "canadian", label: "Canadian English" }
   ];
 
   useEffect(() => {
@@ -79,7 +78,7 @@ const ProfileLanguageSettings = ({ onBack }: ProfileLanguageSettingsProps) => {
       if (data) {
         setSettings(prev => ({
           ...prev,
-          nativeLanguage: data.native_language || "nigerian-english",
+          nativeLanguage: data.native_language || "english",
           learningLevel: data.level?.toLowerCase() || "beginner"
         }));
       }
@@ -97,7 +96,7 @@ const ProfileLanguageSettings = ({ onBack }: ProfileLanguageSettingsProps) => {
         .from('profiles')
         .upsert({
           user_id: user.id,
-          native_language: languages.find(l => l.value === settings.nativeLanguage)?.label || "Nigerian English",
+          native_language: languages.find(l => l.value === settings.nativeLanguage)?.label || "English",
           level: levels.find(l => l.value === settings.learningLevel)?.label || "Beginner"
         });
 
