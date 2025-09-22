@@ -17,6 +17,12 @@ import {
   Target,
   Globe
 } from "lucide-react";
+import ProfileSettings from "@/components/profile/ProfileSettings";
+import ProfileSubscription from "@/components/profile/ProfileSubscription";
+import ProfileNotifications from "@/components/profile/ProfileNotifications";
+import ProfileLearningGoals from "@/components/profile/ProfileLearningGoals";
+import ProfileLanguageSettings from "@/components/profile/ProfileLanguageSettings";
+import ProfileHelpSupport from "@/components/profile/ProfileHelpSupport";
 
 interface UserProfile {
   display_name: string;
@@ -32,12 +38,15 @@ interface UserStats {
   accuracy: number;
 }
 
+type ProfileView = 'main' | 'settings' | 'subscription' | 'notifications' | 'goals' | 'language' | 'help';
+
 const Profile = () => {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [stats, setStats] = useState<UserStats>({ completed_lessons: 0, current_streak: 0, accuracy: 0 });
   const [loading, setLoading] = useState(true);
+  const [currentView, setCurrentView] = useState<ProfileView>('main');
 
   useEffect(() => {
     if (user) {
@@ -134,13 +143,33 @@ const Profile = () => {
   }
 
   const menuItems = [
-    { icon: Settings, label: "Settings", action: () => {} },
-    { icon: CreditCard, label: "Subscription", badge: "Premium", action: () => {} },
-    { icon: Bell, label: "Notifications", action: () => {} },
-    { icon: Target, label: "Learning Goals", action: () => {} },
-    { icon: Globe, label: "Language Settings", action: () => {} },
-    { icon: HelpCircle, label: "Help & Support", action: () => {} }
+    { icon: Settings, label: "Settings", action: () => setCurrentView('settings') },
+    { icon: CreditCard, label: "Subscription", badge: "Premium", action: () => setCurrentView('subscription') },
+    { icon: Bell, label: "Notifications", action: () => setCurrentView('notifications') },
+    { icon: Target, label: "Learning Goals", action: () => setCurrentView('goals') },
+    { icon: Globe, label: "Language Settings", action: () => setCurrentView('language') },
+    { icon: HelpCircle, label: "Help & Support", action: () => setCurrentView('help') }
   ];
+
+  // Render different views based on current selection
+  if (currentView !== 'main') {
+    switch (currentView) {
+      case 'settings':
+        return <ProfileSettings onBack={() => setCurrentView('main')} />;
+      case 'subscription':
+        return <ProfileSubscription onBack={() => setCurrentView('main')} />;
+      case 'notifications':
+        return <ProfileNotifications onBack={() => setCurrentView('main')} />;
+      case 'goals':
+        return <ProfileLearningGoals onBack={() => setCurrentView('main')} />;
+      case 'language':
+        return <ProfileLanguageSettings onBack={() => setCurrentView('main')} />;
+      case 'help':
+        return <ProfileHelpSupport onBack={() => setCurrentView('main')} />;
+      default:
+        return null;
+    }
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-background p-6 pb-20">
@@ -228,7 +257,7 @@ const Profile = () => {
       {/* Menu Items */}
       <div className="space-y-2 mb-6">
         {menuItems.map((item, index) => (
-          <Card key={index} className="cursor-pointer hover:bg-muted/50 transition-colors">
+          <Card key={index} className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={item.action}>
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
