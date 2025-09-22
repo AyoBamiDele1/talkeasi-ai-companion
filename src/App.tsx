@@ -12,6 +12,9 @@ import Lessons from "./pages/Lessons";
 import LessonSession from "./pages/LessonSession";
 import Progress from "./pages/Progress";
 import Profile from "./pages/Profile";
+import Community from "./pages/Community";
+import Leaderboards from "./pages/Leaderboards";
+import Friends from "./pages/Friends";
 import NotFound from "./pages/NotFound";
 import BottomNavigation from "./components/BottomNavigation";
 
@@ -51,6 +54,21 @@ const App = () => (
               <Route path="/lesson/:lessonId" element={
                 <ProtectedRoute>
                   <LessonSession />
+                </ProtectedRoute>
+              } />
+              <Route path="/community" element={
+                <ProtectedRoute>
+                  <Community />
+                </ProtectedRoute>
+              } />
+              <Route path="/leaderboards" element={
+                <ProtectedRoute>
+                  <Leaderboards />
+                </ProtectedRoute>
+              } />
+              <Route path="/friends" element={
+                <ProtectedRoute>
+                  <Friends />
                 </ProtectedRoute>
               } />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
