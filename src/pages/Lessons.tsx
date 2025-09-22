@@ -2,11 +2,10 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Star, Mic2, CheckCircle, Volume2, Image, Gamepad2 } from "lucide-react";
+import { Clock, Star, Mic2, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { MultimediaLessonContent } from "@/components/lesson/MultimediaLessonContent";
 
 interface Lesson {
   id: string;
@@ -21,9 +20,6 @@ interface Lesson {
   content?: {
     scenarios?: string[];
     key_phrases?: string[];
-    audio_content?: any[];
-    images?: any[];
-    exercises?: any[];
   };
 }
 
@@ -32,7 +28,6 @@ const Lessons = () => {
   const { user } = useAuth();
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
 
   useEffect(() => {
     fetchLessons();
@@ -102,13 +97,6 @@ const Lessons = () => {
     navigate(`/lesson/${lessonId}`);
   };
 
-  const getMultimediaCount = (lesson: Lesson) => {
-    const content = lesson.content || {};
-    const audioCount = content.audio_content?.length || 0;
-    const imageCount = content.images?.length || 0;
-    const exerciseCount = content.exercises?.length || 0;
-    return { audioCount, imageCount, exerciseCount, total: audioCount + imageCount + exerciseCount };
-  };
 
   if (loading) {
     return (
@@ -126,145 +114,68 @@ const Lessons = () => {
           Practice Lessons
         </h1>
         <p className="text-muted-foreground">
-          Choose a conversation topic to practice with rich multimedia content
+          Choose a conversation topic to practice your English skills
         </p>
       </div>
 
       {/* Lessons List */}
       <div className="space-y-4">
-        {lessons.map((lesson) => {
-          const { audioCount, imageCount, exerciseCount, total } = getMultimediaCount(lesson);
-          
-          return (
-            <Card key={lesson.id} className="relative">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-lg">{lesson.title}</CardTitle>
-                    {lesson.description && (
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {lesson.description}
-                      </p>
-                    )}
-                  </div>
-                  {lesson.completed && (
-                    <CheckCircle className="w-5 h-5 text-primary" />
+        {lessons.map((lesson) => (
+          <Card key={lesson.id} className="relative">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg">{lesson.title}</CardTitle>
+                  {lesson.description && (
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {lesson.description}
+                    </p>
                   )}
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="flex items-center gap-1 text-muted-foreground">
-                    <Clock className="w-4 h-4" />
-                    <span className="text-sm">{lesson.duration_minutes} min</span>
-                  </div>
-                  
-                  <Badge 
-                    variant="secondary" 
-                    className={`text-xs ${getDifficultyColor(lesson.difficulty)}`}
-                  >
-                    {lesson.difficulty}
-                  </Badge>
-
-                  <Badge variant="outline" className="text-xs">
-                    {lesson.category}
-                  </Badge>
-
-                  {lesson.rating && (
-                    <div className="flex items-center gap-1">
-                      <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                      <span className="text-sm text-muted-foreground">{lesson.rating}</span>
-                    </div>
-                  )}
+                {lesson.completed && (
+                  <CheckCircle className="w-5 h-5 text-primary" />
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-4 mb-4">
+                <div className="flex items-center gap-1 text-muted-foreground">
+                  <Clock className="w-4 h-4" />
+                  <span className="text-sm">{lesson.duration_minutes} min</span>
                 </div>
+                
+                <Badge 
+                  variant="secondary" 
+                  className={`text-xs ${getDifficultyColor(lesson.difficulty)}`}
+                >
+                  {lesson.difficulty}
+                </Badge>
 
-                {/* Multimedia Content Indicators */}
-                {total > 0 && (
-                  <div className="flex items-center gap-3 mb-4 p-2 bg-muted/10 rounded-md">
-                    <span className="text-xs font-medium text-muted-foreground">Rich Content:</span>
-                    {audioCount > 0 && (
-                      <div className="flex items-center gap-1">
-                        <Volume2 className="w-3 h-3 text-accent" />
-                        <span className="text-xs text-accent">{audioCount}</span>
-                      </div>
-                    )}
-                    {imageCount > 0 && (
-                      <div className="flex items-center gap-1">
-                        <Image className="w-3 h-3 text-success" />
-                        <span className="text-xs text-success">{imageCount}</span>
-                      </div>
-                    )}
-                    {exerciseCount > 0 && (
-                      <div className="flex items-center gap-1">
-                        <Gamepad2 className="w-3 h-3 text-primary" />
-                        <span className="text-xs text-primary">{exerciseCount}</span>
-                      </div>
-                    )}
+                <Badge variant="outline" className="text-xs">
+                  {lesson.category}
+                </Badge>
+
+                {lesson.rating && (
+                  <div className="flex items-center gap-1">
+                    <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                    <span className="text-sm text-muted-foreground">{lesson.rating}</span>
                   </div>
                 )}
+              </div>
 
-                <div className="flex gap-2">
-                  <Button 
-                    variant={lesson.completed ? "secondary" : "default"}
-                    className="flex-1"
-                    size="sm"
-                    onClick={() => handleLessonStart(lesson.id)}
-                  >
-                    <Mic2 className="w-4 h-4 mr-2" />
-                    {lesson.completed ? "Practice Again" : "Start Lesson"}
-                  </Button>
-                  
-                  {total > 0 && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setSelectedLesson(lesson)}
-                    >
-                      Preview
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+              <Button 
+                variant={lesson.completed ? "secondary" : "default"}
+                className="w-full"
+                size="sm"
+                onClick={() => handleLessonStart(lesson.id)}
+              >
+                <Mic2 className="w-4 h-4 mr-2" />
+                {lesson.completed ? "Practice Again" : "Start Lesson"}
+              </Button>
+            </CardContent>
+          </Card>
+        ))}
       </div>
-
-      {/* Multimedia Lesson Preview Modal */}
-      {selectedLesson && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-background border rounded-lg shadow-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-4 border-b">
-              <h2 className="text-lg font-semibold">Lesson Preview</h2>
-              <Button variant="ghost" size="sm" onClick={() => setSelectedLesson(null)}>
-                ×
-              </Button>
-            </div>
-            <div className="p-4">
-              <MultimediaLessonContent 
-                lesson={{
-                  ...selectedLesson,
-                  content: selectedLesson.content || { scenarios: [], key_phrases: [] }
-                }}
-                onExerciseComplete={(score) => {
-                  console.log(`Exercise completed with score: ${score}%`);
-                }}
-              />
-            </div>
-            <div className="flex justify-end gap-2 p-4 border-t">
-              <Button variant="outline" onClick={() => setSelectedLesson(null)}>
-                Close Preview
-              </Button>
-              <Button onClick={() => {
-                setSelectedLesson(null);
-                handleLessonStart(selectedLesson.id);
-              }}>
-                Start Lesson
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
