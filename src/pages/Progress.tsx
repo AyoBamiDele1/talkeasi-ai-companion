@@ -95,7 +95,7 @@ const Progress = () => {
         <CardContent>
           <div className="flex justify-between items-center mb-4">
             <div>
-              <div className="text-2xl font-bold text-primary">{stats.currentStreak}</div>
+              <div className="text-2xl font-bold text-primary">{weeklyProgress.filter(day => day.completed).length}</div>
               <div className="text-sm text-muted-foreground">This week</div>
             </div>
             <div className="text-right">
