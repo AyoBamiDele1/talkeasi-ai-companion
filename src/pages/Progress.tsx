@@ -5,6 +5,7 @@ import { Calendar, TrendingUp, Award, AlertCircle } from "lucide-react";
 import { useProgress } from "@/hooks/useProgress";
 import { useAchievements } from "@/hooks/useAchievements";
 import { AchievementsSection } from "@/components/achievements/AchievementsSection";
+import StreakDisplay from "@/components/StreakDisplay";
 
 const Progress = () => {
   const { stats, loading } = useProgress();
@@ -80,6 +81,10 @@ const Progress = () => {
       </div>
 
       {/* Weekly Streak */}
+      <div className="mb-6">
+        <StreakDisplay />
+      </div>
+
       <Card className="mb-6">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center gap-2">

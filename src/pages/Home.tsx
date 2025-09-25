@@ -2,10 +2,11 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Mic, Flame, TrendingUp } from "lucide-react";
+import { Mic, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import StreakDisplay from "@/components/StreakDisplay";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -48,9 +49,6 @@ const Home = () => {
   };
 
   const userName = userProfile?.display_name || user?.email?.split('@')[0] || "there";
-  
-  // Mock data - will be replaced with real data later
-  const currentStreak = 7;
   const topMistake = "Past tense pronunciation";
 
   const handleStartLesson = () => {
@@ -70,20 +68,9 @@ const Home = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 gap-4 mb-8">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
-              <Flame className="w-4 h-4 text-primary" />
-              Streak
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <div className="text-2xl font-bold text-primary">{currentStreak}</div>
-            <p className="text-xs text-muted-foreground">days in a row</p>
-          </CardContent>
-        </Card>
-
+      <div className="grid grid-cols-1 gap-4 mb-8">
+        <StreakDisplay compact={true} showTitle={false} />
+        
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
