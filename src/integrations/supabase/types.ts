@@ -242,33 +242,45 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          current_streak: number | null
           display_name: string | null
           id: string
+          last_activity_date: string | null
           learning_goals: string[] | null
           level: string | null
+          longest_streak: number | null
           native_language: string | null
+          streak_updated_at: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          current_streak?: number | null
           display_name?: string | null
           id?: string
+          last_activity_date?: string | null
           learning_goals?: string[] | null
           level?: string | null
+          longest_streak?: number | null
           native_language?: string | null
+          streak_updated_at?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
+          current_streak?: number | null
           display_name?: string | null
           id?: string
+          last_activity_date?: string | null
           learning_goals?: string[] | null
           level?: string | null
+          longest_streak?: number | null
           native_language?: string | null
+          streak_updated_at?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -382,8 +394,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_user_streak: {
+        Args: { check_user_id: string }
+        Returns: {
+          current_streak: number
+          longest_streak: number
+        }[]
+      }
       check_user_achievements: {
         Args: { check_user_id: string }
+        Returns: undefined
+      }
+      update_user_streaks: {
+        Args: { target_user_id: string }
         Returns: undefined
       }
     }
