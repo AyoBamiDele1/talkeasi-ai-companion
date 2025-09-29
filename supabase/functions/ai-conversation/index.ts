@@ -84,7 +84,7 @@ Format your response as JSON with:
   } catch (error) {
     console.error('AI conversation error:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error occurred' }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -143,7 +143,7 @@ Format your response as JSON with:
           console.error('Streaming error:', error);
           controller.enqueue(`data: ${JSON.stringify({
             type: 'error',
-            error: error.message
+            error: error instanceof Error ? error.message : 'Unknown error occurred'
           })}\n\n`);
           controller.close();
         }
@@ -162,7 +162,7 @@ Format your response as JSON with:
   } catch (error) {
     console.error('Streaming conversation error:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error occurred' }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

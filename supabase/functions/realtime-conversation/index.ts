@@ -70,7 +70,9 @@ serve(async (req) => {
           }
         };
         
-        openAISocket.send(JSON.stringify(sessionConfig));
+        if (openAISocket && openAISocket.readyState === WebSocket.OPEN) {
+          openAISocket.send(JSON.stringify(sessionConfig));
+        }
         return;
       }
 

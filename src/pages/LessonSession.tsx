@@ -22,6 +22,7 @@ import { useStreamingAudio } from '@/hooks/useStreamingAudio';
 import { useAuth } from '@/hooks/useAuth';
 import ProcessingIndicator from '@/components/ProcessingIndicator';
 import RealtimeVoiceInterface from '@/components/RealtimeVoiceInterface';
+import PronunciationAnalysis from '@/components/PronunciationAnalysis';
 
 interface Message {
   id: string;
@@ -30,6 +31,7 @@ interface Message {
   timestamp: Date;
   corrections?: string[];
   feedback?: string;
+  pronunciationAnalysis?: any;
 }
 
 const LessonSession = () => {
@@ -46,6 +48,7 @@ const LessonSession = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [useRealtimeMode, setUseRealtimeMode] = useState(true);
   const [useElevenLabs, setUseElevenLabs] = useState(false); // Default to OpenAI TTS to avoid provider errors
+  const [showAdvancedAnalysis, setShowAdvancedAnalysis] = useState(false);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -439,6 +442,13 @@ const LessonSession = () => {
             >
               {useElevenLabs ? 'ElevenLabs' : 'OpenAI'}
             </Badge>
+            <Badge 
+              variant={showAdvancedAnalysis ? "default" : "outline"} 
+              className="text-xs cursor-pointer"
+              onClick={() => setShowAdvancedAnalysis(!showAdvancedAnalysis)}
+            >
+              Analysis
+            </Badge>
             {messages.filter(m => m.type === 'user').length >= 3 && (
               <Button variant="outline" size="sm" onClick={completeLesson}>
                 Complete
@@ -496,6 +506,14 @@ const LessonSession = () => {
                       </div>
                       <p className="text-xs text-success-foreground font-medium">{message.feedback}</p>
                     </div>
+                  )}
+
+                  {/* Advanced Pronunciation Analysis */}
+                  {message.pronunciationAnalysis && (
+                    <PronunciationAnalysis
+                      analysis={message.pronunciationAnalysis}
+                      isVisible={showAdvancedAnalysis}
+                    />
                   )}
                 </CardContent>
               </Card>
