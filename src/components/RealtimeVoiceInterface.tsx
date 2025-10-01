@@ -230,16 +230,26 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       const aiData = aiResponse.data;
       console.log('AI response:', aiData);
 
+      // Update user message with corrections and feedback
+      const updatedUserMessage: ConversationMessage = {
+        ...userMessage,
+        corrections: aiData.corrections || [],
+        feedback: aiData.feedback
+      };
+
       // Add assistant message
       const assistantMessage: ConversationMessage = {
         id: `assistant-${messageIdCounter.current++}`,
         role: 'assistant',
         content: aiData.response,
-        timestamp: new Date(),
-        corrections: aiData.corrections || [],
-        feedback: aiData.feedback
+        timestamp: new Date()
       };
-      const finalMessages = [...newMessagesWithUser, assistantMessage];
+      
+      const finalMessages = [
+        ...messages, 
+        updatedUserMessage, 
+        assistantMessage
+      ];
       setMessages(finalMessages);
       onMessageUpdate?.(finalMessages);
 
@@ -318,12 +328,51 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
 
   // Handle realtime messages
   const [currentTranscript, setCurrentTranscript] = useState('');
+  const [currentUserTranscript, setCurrentUserTranscript] = useState('');
   const [isAISpeaking, setIsAISpeaking] = useState(false);
+  const [pendingUserMessageId, setPendingUserMessageId] = useState<string | null>(null);
 
-  const handleRealtimeMessage = (message: any) => {
+  const handleRealtimeMessage = async (message: any) => {
     console.log('Realtime message:', message);
     
-    if (message.type === 'response.output_audio_transcript.delta') {
+    // Handle user speech transcript
+    if (message.type === 'conversation.item.input_audio_transcription.completed') {
+      const userText = message.transcript || '';
+      setCurrentUserTranscript(userText);
+      
+      // Add user message immediately
+      const userMsgId = `user-${Date.now()}`;
+      setPendingUserMessageId(userMsgId);
+      setMessages(prev => [...prev, {
+        id: userMsgId,
+        role: 'user',
+        content: userText,
+        timestamp: new Date()
+      }]);
+      
+      // Get corrections in background
+      try {
+        const aiResponse = await supabase.functions.invoke('ai-conversation', {
+          body: { 
+            userText, 
+            lessonContext: lessonContext || 'General English conversation practice',
+            difficulty: 'Intermediate'
+          }
+        });
+        
+        if (!aiResponse.error && aiResponse.data) {
+          const aiData = aiResponse.data;
+          // Update user message with corrections
+          setMessages(prev => prev.map(msg => 
+            msg.id === userMsgId 
+              ? { ...msg, corrections: aiData.corrections || [], feedback: aiData.feedback }
+              : msg
+          ));
+        }
+      } catch (error) {
+        console.error('Failed to get corrections:', error);
+      }
+    } else if (message.type === 'response.output_audio_transcript.delta') {
       // Handle AI speech transcript
       setCurrentTranscript(prev => prev + (message.delta || ''));
     } else if (message.type === 'response.output_audio_transcript.done') {
@@ -337,6 +386,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
         }]);
         setCurrentTranscript('');
       }
+      setPendingUserMessageId(null);
     } else if (message.type === 'response.output_audio.done') {
       // AI finished speaking audio - reset to listening state
       setIsAISpeaking(false);
