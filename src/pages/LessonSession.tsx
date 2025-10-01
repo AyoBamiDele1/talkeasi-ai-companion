@@ -474,7 +474,7 @@ const LessonSession = () => {
           {messages.map((message) => (
             <div
               key={message.id}
-              className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+              className={`flex flex-col ${message.type === 'user' ? 'items-end' : 'items-start'} gap-2`}
             >
               <Card className={`max-w-[80%] ${
                 message.type === 'user' 
@@ -483,40 +483,57 @@ const LessonSession = () => {
               }`}>
                 <CardContent className="p-3">
                   <p className="text-sm">{message.text}</p>
-                  
-                  {message.corrections && message.corrections.length > 0 && (
-                    <div className="mt-2 p-2 bg-warning/10 rounded border-l-2 border-warning">
-                      <div className="flex items-center gap-1 mb-1">
-                        <AlertCircle className="w-3 h-3 text-warning" />
-                        <span className="text-xs font-medium text-warning">Correction</span>
-                      </div>
-                      {message.corrections.map((correction, index) => (
-                        <p key={index} className="text-xs text-warning-foreground font-medium">
-                          {correction}
-                        </p>
-                      ))}
-                    </div>
-                  )}
-                  
-                  {message.feedback && (
-                    <div className="mt-2 p-2 bg-success/10 rounded border-l-2 border-success">
-                      <div className="flex items-center gap-1 mb-1">
-                        <CheckCircle className="w-3 h-3 text-success" />
-                        <span className="text-xs font-medium text-success">Feedback</span>
-                      </div>
-                      <p className="text-xs text-success-foreground font-medium">{message.feedback}</p>
-                    </div>
-                  )}
-
-                  {/* Advanced Pronunciation Analysis */}
-                  {message.pronunciationAnalysis && (
-                    <PronunciationAnalysis
-                      analysis={message.pronunciationAnalysis}
-                      isVisible={showAdvancedAnalysis}
-                    />
-                  )}
+                  <p className="text-xs opacity-70 mt-1">
+                    {message.timestamp.toLocaleTimeString()}
+                  </p>
                 </CardContent>
               </Card>
+              
+              {/* Show corrections immediately after user messages - ALWAYS VISIBLE */}
+              {message.type === 'user' && message.corrections && message.corrections.length > 0 && (
+                <Card className="max-w-[85%] bg-amber-500/10 border-amber-500/50 shadow-sm">
+                  <CardContent className="p-3">
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1">
+                        <p className="text-xs font-bold text-amber-700 dark:text-amber-300 mb-1.5">
+                          💡 Let's improve this:
+                        </p>
+                        <ul className="text-xs space-y-1">
+                          {message.corrections.map((correction, idx) => (
+                            <li key={idx} className="flex items-start gap-1.5">
+                              <span className="text-amber-600 dark:text-amber-400 font-bold">→</span>
+                              <span className="text-foreground/90">{correction}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+              
+              {/* Show positive feedback */}
+              {message.type === 'user' && message.feedback && (
+                <Card className="max-w-[85%] bg-green-500/10 border-green-500/50 shadow-sm">
+                  <CardContent className="p-3">
+                    <div className="flex items-start gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
+                      <p className="text-xs text-foreground/90 italic flex-1">{message.feedback}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+              
+              {/* Show detailed pronunciation analysis if enabled */}
+              {message.type === 'user' && message.pronunciationAnalysis && showAdvancedAnalysis && (
+                <div className="max-w-[85%] w-full">
+                  <PronunciationAnalysis
+                    analysis={message.pronunciationAnalysis}
+                    isVisible={true}
+                  />
+                </div>
+              )}
             </div>
           ))}
         </div>
