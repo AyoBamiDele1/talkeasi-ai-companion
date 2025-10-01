@@ -7,18 +7,36 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import StreakDisplay from "@/components/StreakDisplay";
+import { speakGreeting, getUserDisplayName } from "@/utils/voiceGreeting";
 
 const Home = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [userProfile, setUserProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [hasGreeted, setHasGreeted] = useState(false);
   
   useEffect(() => {
     if (user) {
       fetchUserProfile();
     }
   }, [user]);
+
+  useEffect(() => {
+    // Play voice greeting on first load (once per session)
+    if (user && userProfile && !hasGreeted) {
+      const greetedThisSession = sessionStorage.getItem('hasGreeted');
+      
+      if (!greetedThisSession) {
+        setTimeout(async () => {
+          const displayName = await getUserDisplayName(user.id);
+          await speakGreeting(displayName);
+          sessionStorage.setItem('hasGreeted', 'true');
+          setHasGreeted(true);
+        }, 1000); // Give time for page to settle
+      }
+    }
+  }, [user, userProfile, hasGreeted]);
 
   const fetchUserProfile = async () => {
     try {

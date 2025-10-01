@@ -1,6 +1,7 @@
 import { useState, useEffect, createContext, useContext } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { speakGreeting, getUserDisplayName } from '@/utils/voiceGreeting';
 
 interface AuthContextType {
   user: User | null;
@@ -55,15 +56,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password
     });
+    
+    // Play voice greeting after successful login
+    if (!error && data.user) {
+      setTimeout(async () => {
+        const displayName = await getUserDisplayName(data.user.id);
+        await speakGreeting(displayName);
+      }, 500); // Small delay to ensure UI has updated
+    }
+    
     return { error };
   };
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    // Clear greeting flag so user gets greeted again on next login
+    sessionStorage.removeItem('hasGreeted');
   };
 
   return (
