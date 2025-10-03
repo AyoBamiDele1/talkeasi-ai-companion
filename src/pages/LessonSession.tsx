@@ -95,6 +95,9 @@ const LessonSession = () => {
     const firstScenario = scenarios[0] || 'general conversation';
     
     switch (lessonData.title) {
+      case 'Friendly Chat':
+        return "Hey! What's on your mind today?";
+      
       case 'Business Introduction':
         return "Hello! I'm your AI English tutor. Let's practice professional introductions in business settings. I'll be your colleague. How would you introduce yourself?";
       
@@ -246,12 +249,16 @@ const LessonSession = () => {
       
       setProcessingStage('thinking');
       
-      // Get AI response using conversation edge function (revert to working method)
+      // Get AI response using conversation edge function with conversation history
       const conversationResponse = await supabase.functions.invoke('ai-conversation', {
         body: { 
           userText: transcribedText, 
           lessonContext: lesson?.title || 'English Conversation Practice',
-          difficulty: lesson?.difficulty || 'Intermediate'
+          difficulty: lesson?.difficulty || 'Intermediate',
+          conversationHistory: messages.map(msg => ({
+            sender: msg.type,
+            text: msg.text
+          }))
         }
       });
 
