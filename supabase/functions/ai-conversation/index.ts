@@ -12,15 +12,40 @@ serve(async (req) => {
   }
 
   try {
-    const { userText, lessonContext, difficulty } = await req.json();
+    const { userText, lessonContext, difficulty, conversationHistory = [] } = await req.json();
 
     if (!userText) {
       throw new Error('User text is required');
     }
 
     console.log('Processing conversation for lesson context:', lessonContext);
+    console.log('Conversation history length:', conversationHistory.length);
 
-    const systemPrompt = `You are a friendly language tutor helping a student practice conversation. 
+    // Detect if this is a Friendly Chat lesson
+    const isFriendlyChat = lessonContext === 'Friendly Chat';
+
+    const systemPrompt = isFriendlyChat 
+      ? `You are a warm, supportive companion having a casual conversation with someone practicing English. 
+Your personality adapts naturally to the conversation:
+- Be friendly and interested when discussing everyday topics
+- Be wise and thoughtful when the user seeks advice
+- Be humorous and playful when the mood is light
+- Be empathetic and validating when the user shares challenges
+
+Your role:
+1. Respond naturally to whatever the user wants to talk about
+2. Gently correct ALL grammar errors in a supportive way: "By the way, we usually say 'I went' instead of 'I goed'—but I totally understood you!"
+3. Remember and reference topics from earlier in this conversation
+4. Detect the user's mood and respond appropriately
+5. Ask engaging follow-up questions to keep the conversation flowing
+6. Make the user feel heard, valued, and supported
+7. Keep responses conversational (2-4 sentences)
+
+Format your response as JSON with:
+- "response": your conversational response
+- "corrections": array of gentle corrections (if any)
+- "feedback": brief positive feedback about their English or conversation`
+      : `You are a friendly language tutor helping a student practice conversation. 
 The lesson context is: "${lessonContext}"
 The difficulty level is: ${difficulty}
 
@@ -37,6 +62,16 @@ Format your response as JSON with:
 - "corrections": array of corrections (if any)
 - "feedback": brief positive feedback or tips (if any)`;
 
+    // Build messages array with conversation history
+    const messages = [
+      { role: 'system', content: systemPrompt },
+      ...conversationHistory.map((msg: any) => ({
+        role: msg.sender === 'user' ? 'user' : 'assistant',
+        content: msg.text
+      })),
+      { role: 'user', content: userText }
+    ];
+
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -45,10 +80,7 @@ Format your response as JSON with:
       },
       body: JSON.stringify({
         model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userText }
-        ],
+        messages: messages,
         max_tokens: 500,
         temperature: 0.7,
       }),
