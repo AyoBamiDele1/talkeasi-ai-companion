@@ -72,7 +72,16 @@ const Lessons = () => {
         };
       }) || [];
 
-      setLessons(lessonsWithProgress);
+      // Sort lessons: AI Companion category first, then alphabetically by title
+      const sortedLessons = lessonsWithProgress.sort((a, b) => {
+        // AI Companion category first
+        if (a.category === 'AI Companion' && b.category !== 'AI Companion') return -1;
+        if (a.category !== 'AI Companion' && b.category === 'AI Companion') return 1;
+        // Then sort alphabetically by title
+        return a.title.localeCompare(b.title);
+      });
+
+      setLessons(sortedLessons);
     } catch (error) {
       console.error('Error fetching lessons:', error);
     } finally {
