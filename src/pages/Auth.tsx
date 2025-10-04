@@ -192,7 +192,7 @@ export default function Auth() {
                         </button>
                       </div>
                     </div>
-                    <Button type="submit" className="w-full" disabled={isLoading}>
+                    <Button type="submit" className="w-full font-semibold" disabled={isLoading}>
                       {isLoading ? "Creating account..." : "Create Account"}
                     </Button>
                   </form>
