@@ -108,21 +108,8 @@ const ProfileHelpSupport = ({
 
         {/* Resources & Links */}
         <Card>
-          <CardHeader>
-            <CardTitle>Resources & Links</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {resourceLinks.map((link, index) => <div key={index} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors">
-                <div className="flex items-center gap-3">
-                  <link.icon className="w-5 h-5 text-primary" />
-                  <div>
-                    <h4 className="font-medium">{link.title}</h4>
-                    <p className="text-sm text-muted-foreground">{link.description}</p>
-                  </div>
-                </div>
-                <ExternalLink className="w-4 h-4 text-muted-foreground" />
-              </div>)}
-          </CardContent>
+          
+          
         </Card>
 
         {/* App Information */}
