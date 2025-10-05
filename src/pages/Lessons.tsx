@@ -72,12 +72,41 @@ const Lessons = () => {
         };
       }) || [];
 
-      // Sort lessons: AI Companion category first, then alphabetically by title
+      // Custom lesson order
+      const lessonOrder = [
+        'Friendly Chat',
+        'Casual Conversations',
+        'Phone Conversations',
+        'Job Interview Practice',
+        'Business Introduction',
+        'Presentation Skills',
+        'Team Meetings & Project Management',
+        'Customer Service Excellence',
+        'IT Support & Technical Communication',
+        'Software Development Collaboration',
+        'Airport & Immigration Procedures',
+        'Banking & Financial Services',
+        'Housing & Living Arrangements',
+        'Travel & Tourism',
+        'Doctor Appointments & Health Discussions',
+        'Research & Academic Discussions',
+        'University Life & Campus Communication',
+        'Contract Negotiations & Legal Discussions',
+        'Cultural Exchange & Social Integration',
+        'Medical Emergency Communication'
+      ];
+
       const sortedLessons = lessonsWithProgress.sort((a, b) => {
-        // AI Companion category first
-        if (a.category === 'AI Companion' && b.category !== 'AI Companion') return -1;
-        if (a.category !== 'AI Companion' && b.category === 'AI Companion') return 1;
-        // Then sort alphabetically by title
+        const indexA = lessonOrder.indexOf(a.title);
+        const indexB = lessonOrder.indexOf(b.title);
+        
+        // If both are in the order list, sort by their position
+        if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+        // If only A is in the list, it comes first
+        if (indexA !== -1) return -1;
+        // If only B is in the list, it comes first
+        if (indexB !== -1) return 1;
+        // If neither is in the list, sort alphabetically
         return a.title.localeCompare(b.title);
       });
 
