@@ -74,23 +74,23 @@ const Home = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background p-6 pb-20">
+    <div className="flex flex-col min-h-screen bg-background p-4 md:p-6 pb-20">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-foreground mb-2">
+      <div className="mb-4 md:mb-6">
+        <h1 className="text-xl md:text-2xl font-bold text-foreground mb-1">
           {getGreeting()}, {userName}! 👋
         </h1>
-        <p className="text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           Ready to improve your English today?
         </p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 gap-4 mb-8">
+      <div className="grid grid-cols-1 gap-3 md:gap-4 mb-4 md:mb-6">
         <StreakDisplay compact={true} showTitle={false} />
         
         <Card>
-          <CardHeader className="pb-3">
+          <CardHeader className="pb-2 md:pb-3">
             <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-warning" />
               Focus Area
@@ -106,12 +106,12 @@ const Home = () => {
       </div>
 
       {/* Start Lesson Button */}
-      <div className="flex-1 flex flex-col justify-center items-center">
-        <div className="text-center mb-8">
-          <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mb-4 mx-auto">
-            <Mic className="w-12 h-12 text-primary" />
+      <div className="flex flex-col items-center mt-4">
+        <div className="text-center mb-4 md:mb-6">
+          <div className="w-16 h-16 md:w-20 md:h-20 bg-primary/10 rounded-full flex items-center justify-center mb-3 mx-auto">
+            <Mic className="w-8 h-8 md:w-10 md:h-10 text-primary" />
           </div>
-          <h2 className="text-xl font-semibold text-foreground mb-2">
+          <h2 className="text-lg md:text-xl font-semibold text-foreground mb-1">
             Start Your Practice
           </h2>
           <p className="text-muted-foreground text-sm">
