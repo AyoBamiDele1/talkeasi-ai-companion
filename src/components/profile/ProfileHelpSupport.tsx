@@ -134,21 +134,7 @@ const ProfileHelpSupport = ({
         </Card>
 
         {/* Emergency Contact */}
-        <Card className="border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <Phone className="w-5 h-5 text-orange-600" />
-              <div>
-                <h4 className="font-medium text-orange-800 dark:text-orange-200">
-                  Emergency Technical Support
-                </h4>
-                <p className="text-sm text-orange-700 dark:text-orange-300">
-                  For critical issues affecting your learning: +234 800 HELP (4357)
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        
       </div>
     </div>;
 };
