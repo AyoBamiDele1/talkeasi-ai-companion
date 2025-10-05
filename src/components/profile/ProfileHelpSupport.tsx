@@ -73,10 +73,7 @@ const ProfileHelpSupport = ({
 
       <div className="space-y-6">
         {/* Quick Actions */}
-        <Card>
-          
-          
-        </Card>
+        
 
         {/* Frequently Asked Questions */}
         <Card>
