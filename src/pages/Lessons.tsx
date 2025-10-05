@@ -72,33 +72,27 @@ const Lessons = () => {
         };
       }) || [];
 
-      // Custom lesson order
-      const lessonOrder = [
+      // MVP lesson list - only show these 8 lessons
+      const mvpLessons = [
         'Friendly Chat',
         'Casual Conversations',
         'Phone Conversations',
         'Job Interview Practice',
         'Business Introduction',
-        'Presentation Skills',
         'Team Meetings & Project Management',
-        'Customer Service Excellence',
-        'IT Support & Technical Communication',
-        'Software Development Collaboration',
-        'Airport & Immigration Procedures',
-        'Banking & Financial Services',
-        'Housing & Living Arrangements',
-        'Travel & Tourism',
-        'Doctor Appointments & Health Discussions',
-        'Research & Academic Discussions',
-        'University Life & Campus Communication',
-        'Contract Negotiations & Legal Discussions',
-        'Cultural Exchange & Social Integration',
-        'Medical Emergency Communication'
+        'Presentation Skills',
+        'Customer Service Excellence'
       ];
 
-      const sortedLessons = lessonsWithProgress.sort((a, b) => {
-        const indexA = lessonOrder.indexOf(a.title);
-        const indexB = lessonOrder.indexOf(b.title);
+      // Filter to only show MVP lessons
+      const filteredLessons = lessonsWithProgress.filter(lesson => 
+        mvpLessons.includes(lesson.title)
+      );
+
+      // Sort lessons by MVP order
+      const sortedLessons = filteredLessons.sort((a, b) => {
+        const indexA = mvpLessons.indexOf(a.title);
+        const indexB = mvpLessons.indexOf(b.title);
         
         // If both are in the order list, sort by their position
         if (indexA !== -1 && indexB !== -1) return indexA - indexB;
