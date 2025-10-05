@@ -274,19 +274,7 @@ const ProfileLanguageSettings = ({
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label>Date Format</Label>
-              <Select defaultValue="dd/mm/yyyy">
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="dd/mm/yyyy">DD/MM/YYYY</SelectItem>
-                  <SelectItem value="mm/dd/yyyy">MM/DD/YYYY</SelectItem>
-                  <SelectItem value="yyyy-mm-dd">YYYY-MM-DD</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            
           </CardContent>
         </Card>
 
