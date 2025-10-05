@@ -1,12 +1,9 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Mic, TrendingUp } from "lucide-react";
+import { Mic } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import StreakDisplay from "@/components/StreakDisplay";
 import { speakGreeting, getUserDisplayName } from "@/utils/voiceGreeting";
 
 const Home = () => {
@@ -67,7 +64,6 @@ const Home = () => {
   };
 
   const userName = userProfile?.display_name || user?.email?.split('@')[0] || "there";
-  const topMistake = "Past tense pronunciation";
 
   const handleStartLesson = () => {
     navigate('/lessons');
@@ -83,26 +79,6 @@ const Home = () => {
         <p className="text-sm text-muted-foreground">
           Ready to improve your English today?
         </p>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 gap-3 md:gap-4 mb-4 md:mb-6">
-        <StreakDisplay compact={true} showTitle={false} />
-        
-        <Card>
-          <CardHeader className="pb-2 md:pb-3">
-            <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-warning" />
-              Focus Area
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <Badge variant="secondary" className="text-xs">
-              {topMistake}
-            </Badge>
-            <p className="text-xs text-muted-foreground mt-1">Work on this</p>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Start Lesson Button */}
