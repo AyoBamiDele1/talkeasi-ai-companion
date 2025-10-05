@@ -82,7 +82,7 @@ const Home = () => {
       </div>
 
       {/* Start Lesson Button */}
-      <div className="flex flex-col items-center mt-4">
+      <div className="flex-1 flex flex-col items-center justify-center">
         <div className="text-center mb-4 md:mb-6">
           <div className="w-16 h-16 md:w-20 md:h-20 bg-primary/10 rounded-full flex items-center justify-center mb-3 mx-auto">
             <Mic className="w-8 h-8 md:w-10 md:h-10 text-primary" />
