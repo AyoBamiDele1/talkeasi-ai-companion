@@ -405,6 +405,15 @@ export type Database = {
         Args: { check_user_id: string }
         Returns: undefined
       }
+      get_public_profile: {
+        Args: { profile_user_id: string }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          level: string
+          user_id: string
+        }[]
+      }
       update_user_streaks: {
         Args: { target_user_id: string }
         Returns: undefined
