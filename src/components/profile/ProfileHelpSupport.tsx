@@ -34,13 +34,6 @@ const ProfileHelpSupport = ({
     action: "Start Chat",
     available: "9 AM - 6 PM WAT",
     badge: "Premium"
-  }, {
-    icon: Phone,
-    title: "Phone Support",
-    description: "Call our support line",
-    action: "+234 800 123 4567",
-    available: "Business Hours",
-    badge: "Premium"
   }];
   const resourceLinks = [{
     title: "User Guide",

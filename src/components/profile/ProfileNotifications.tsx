@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Bell, Clock, Trophy, MessageSquare } from "lucide-react";
+import { ArrowLeft, Bell, Trophy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface ProfileNotificationsProps {
@@ -14,14 +14,8 @@ const ProfileNotifications = ({ onBack }: ProfileNotificationsProps) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [notifications, setNotifications] = useState({
-    dailyReminders: true,
     lessonCompleted: true,
-    streakMilestones: true,
-    weeklyProgress: false,
-    newFeatures: true,
-    emailDigest: false,
-    pushNotifications: true,
-    soundAlerts: true
+    streakMilestones: true
   });
 
   const handleSave = async () => {
@@ -47,66 +41,18 @@ const ProfileNotifications = ({ onBack }: ProfileNotificationsProps) => {
 
   const notificationSections = [
     {
-      title: "Learning Reminders",
-      icon: Clock,
-      items: [
-        {
-          key: "dailyReminders",
-          label: "Daily Practice Reminders",
-          description: "Get reminded to practice every day at your preferred time"
-        },
-        {
-          key: "weeklyProgress",
-          label: "Weekly Progress Summary",
-          description: "Receive a weekly summary of your learning progress"
-        }
-      ]
-    },
-    {
-      title: "Achievement Notifications",
+      title: "In-App Notifications",
       icon: Trophy,
       items: [
         {
           key: "lessonCompleted",
-          label: "Lesson Completion",
-          description: "Get notified when you complete a lesson"
+          label: "Lesson Completion Alerts",
+          description: "Get notified when you complete a lesson (in-app only)"
         },
         {
           key: "streakMilestones",
           label: "Streak Milestones",
-          description: "Celebrate your learning streaks and milestones"
-        }
-      ]
-    },
-    {
-      title: "Communication",
-      icon: MessageSquare,
-      items: [
-        {
-          key: "newFeatures",
-          label: "New Features & Updates",
-          description: "Stay informed about new app features and improvements"
-        },
-        {
-          key: "emailDigest",
-          label: "Email Digest",
-          description: "Receive weekly learning insights via email"
-        }
-      ]
-    },
-    {
-      title: "App Preferences",
-      icon: Bell,
-      items: [
-        {
-          key: "pushNotifications",
-          label: "Push Notifications",
-          description: "Enable push notifications on your device"
-        },
-        {
-          key: "soundAlerts",
-          label: "Sound Alerts",
-          description: "Play sounds for notifications and achievements"
+          description: "Celebrate your learning streaks and milestones (in-app only)"
         }
       ]
     }
@@ -159,37 +105,6 @@ const ProfileNotifications = ({ onBack }: ProfileNotificationsProps) => {
             </CardContent>
           </Card>
         ))}
-
-        {/* Quiet Hours */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Quiet Hours</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label className="text-base">Enable Quiet Hours</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Disable notifications during specific hours
-                  </p>
-                </div>
-                <Switch defaultChecked={false} />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4 opacity-50">
-                <div>
-                  <Label className="text-sm">From</Label>
-                  <div className="mt-1 p-2 border rounded text-sm">10:00 PM</div>
-                </div>
-                <div>
-                  <Label className="text-sm">To</Label>
-                  <div className="mt-1 p-2 border rounded text-sm">8:00 AM</div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Save Button */}
         <Button
