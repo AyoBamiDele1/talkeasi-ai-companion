@@ -442,20 +442,6 @@ const LessonSession = () => {
             <Badge variant="secondary" className="text-xs">
               {lesson?.difficulty || 'Intermediate'}
             </Badge>
-            <Badge 
-              variant={useElevenLabs ? "default" : "outline"} 
-              className="text-xs cursor-pointer"
-              onClick={() => setUseElevenLabs(!useElevenLabs)}
-            >
-              {useElevenLabs ? 'ElevenLabs' : 'OpenAI'}
-            </Badge>
-            <Badge 
-              variant={showAdvancedAnalysis ? "default" : "outline"} 
-              className="text-xs cursor-pointer"
-              onClick={() => setShowAdvancedAnalysis(!showAdvancedAnalysis)}
-            >
-              Analysis
-            </Badge>
             {messages.filter(m => m.type === 'user').length >= 3 && (
               <Button variant="outline" size="sm" onClick={completeLesson}>
                 Complete
