@@ -20,9 +20,7 @@ const ProfileSettings = ({ onBack }: ProfileSettingsProps) => {
   const [settings, setSettings] = useState({
     displayName: "",
     darkMode: false,
-    soundEffects: true,
-    autoPlay: false,
-    notifications: true
+    autoPlay: false
   });
 
   useEffect(() => {
@@ -151,37 +149,15 @@ const ProfileSettings = ({ onBack }: ProfileSettingsProps) => {
                 onCheckedChange={(checked) => setSettings(prev => ({ ...prev, darkMode: checked }))}
               />
             </div>
-            
-            <div className="flex items-center justify-between">
-              <div>
-                <Label className="text-base">Sound Effects</Label>
-                <p className="text-sm text-muted-foreground">Play sounds for interactions</p>
-              </div>
-              <Switch
-                checked={settings.soundEffects}
-                onCheckedChange={(checked) => setSettings(prev => ({ ...prev, soundEffects: checked }))}
-              />
-            </div>
 
             <div className="flex items-center justify-between">
               <div>
-                <Label className="text-base">Auto-play Audio</Label>
+                <Label className="text-base">Auto-play AI Responses</Label>
                 <p className="text-sm text-muted-foreground">Automatically play AI responses</p>
               </div>
               <Switch
                 checked={settings.autoPlay}
                 onCheckedChange={(checked) => setSettings(prev => ({ ...prev, autoPlay: checked }))}
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div>
-                <Label className="text-base">Push Notifications</Label>
-                <p className="text-sm text-muted-foreground">Receive learning reminders</p>
-              </div>
-              <Switch
-                checked={settings.notifications}
-                onCheckedChange={(checked) => setSettings(prev => ({ ...prev, notifications: checked }))}
               />
             </div>
           </CardContent>
