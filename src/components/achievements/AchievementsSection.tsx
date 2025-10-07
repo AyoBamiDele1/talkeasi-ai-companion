@@ -7,11 +7,12 @@ import { Achievement } from "@/hooks/useAchievements";
 
 interface AchievementsSectionProps {
   achievements: Achievement[];
-  totalPoints: number;
+  totalPoints?: number;
   loading: boolean;
+  simplified?: boolean;
 }
 
-export const AchievementsSection = ({ achievements, totalPoints, loading }: AchievementsSectionProps) => {
+export const AchievementsSection = ({ achievements, totalPoints, loading, simplified = false }: AchievementsSectionProps) => {
   if (loading) {
     return (
       <Card>
@@ -29,6 +30,31 @@ export const AchievementsSection = ({ achievements, totalPoints, loading }: Achi
     );
   }
 
+  // Simplified version for MVP
+  if (simplified) {
+    return (
+      <Card>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Trophy className="w-5 h-5 text-primary" />
+            Achievements
+          </CardTitle>
+        </CardHeader>
+        
+        <CardContent className="space-y-3">
+          {achievements.map((achievement) => (
+            <AchievementCard 
+              key={achievement.id} 
+              achievement={achievement} 
+              size="small"
+            />
+          ))}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Full version (for future use)
   const unlockedAchievements = achievements.filter(a => a.unlocked);
   const categories = [...new Set(achievements.map(a => a.category))];
   
