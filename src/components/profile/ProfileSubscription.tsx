@@ -15,46 +15,40 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
       name: "Free",
       price: "$0",
       period: "/month",
-      description: "Perfect for beginners",
+      description: "Perfect for quick daily practice",
       features: [
-        "5 lessons per day",
-        "Basic conversation practice",
-        "Progress tracking",
-        "Community support"
+        "1 short lesson per day",
+        "1 minute of conversation with AI Tutor",
+        "Basic progress tracking"
       ],
       current: true
     },
     {
-      name: "Premium",
-      price: "$9.99",
-      period: "/month",
-      description: "Unlock your full potential",
+      name: "Daily Access Pass",
+      price: "$0.34",
+      period: "/day",
+      description: "Practice freely for 24 hours",
       features: [
-        "Unlimited lessons",
-        "Advanced AI tutoring",
-        "Personalized feedback",
-        "Priority support",
-        "Offline access",
-        "Custom learning paths",
-        "Advanced analytics"
+        "Unlimited access to all lessons",
+        "Up to 10 minutes of AI Tutor talk time",
+        "Add more minutes anytime with Voice Top-Ups"
+      ],
+      note: "Voice interactions use AI resources, so fair use limits apply. You can always top up for longer sessions.",
+      current: false
+    },
+    {
+      name: "Premium",
+      price: "$2",
+      period: "/month (~₦3,000/month)",
+      description: "Best for consistent learners who want full access",
+      features: [
+        "Unlimited lessons & AI conversations",
+        "Full progress tracking and reports",
+        "All topics unlocked (Beginner → Advanced)",
+        "Personalized learning path"
       ],
       current: false,
       popular: true
-    },
-    {
-      name: "Pro",
-      price: "$19.99",
-      period: "/month",
-      description: "For serious learners",
-      features: [
-        "Everything in Premium",
-        "1-on-1 virtual coaching",
-        "Business English specialization",
-        "Certification preparation",
-        "API access",
-        "White-label options"
-      ],
-      current: false
     }
   ];
 
@@ -141,12 +135,18 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
                 ))}
               </ul>
               
+              {plan.note && (
+                <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
+                  {plan.note}
+                </p>
+              )}
+              
               <Button
                 className="w-full"
                 variant={plan.current ? "outline" : "default"}
                 disabled={plan.current}
               >
-                {plan.current ? "Current Plan" : `Upgrade to ${plan.name}`}
+                {plan.current ? "Current Plan" : "Upgrade"}
               </Button>
             </CardContent>
           </Card>
