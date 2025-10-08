@@ -34,10 +34,22 @@ export const useProgress = () => {
     if (!user) return;
 
     try {
-      // Fetch total lessons
+      // Fetch total MVP lessons (8 core lessons)
+      const mvpLessonTitles = [
+        'Friendly Chat',
+        'Casual Conversations',
+        'Business Introduction',
+        'Phone Conversations',
+        'Job Interview Practice',
+        'Team Meetings & Project Management',
+        'Customer Service Excellence',
+        'Presentation Skills'
+      ];
+      
       const { count: totalLessons } = await supabase
         .from('lessons')
-        .select('*', { count: 'exact', head: true });
+        .select('*', { count: 'exact', head: true })
+        .in('title', mvpLessonTitles);
 
       // Fetch user progress
       const { data: progressData } = await supabase
