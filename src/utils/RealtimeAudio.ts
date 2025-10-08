@@ -81,9 +81,14 @@ class AudioQueue {
   private queue: Uint8Array[] = [];
   private isPlaying = false;
   private audioContext: AudioContext;
+  private currentSource: AudioBufferSourceNode | null = null;
+  private gainNode: GainNode;
 
   constructor(audioContext: AudioContext) {
     this.audioContext = audioContext;
+    // Create gain node for smooth transitions
+    this.gainNode = audioContext.createGain();
+    this.gainNode.connect(audioContext.destination);
   }
 
   async addToQueue(audioData: Uint8Array) {
@@ -103,19 +108,40 @@ class AudioQueue {
     const audioData = this.queue.shift()!;
 
     try {
+      // Ensure audio context is running
+      if (this.audioContext.state === 'suspended') {
+        await this.audioContext.resume();
+      }
+
       const wavData = this.createWavFromPCM(audioData);
-      // Convert to ArrayBuffer (copy data to handle SharedArrayBuffer)
-      const buffer = new Uint8Array(wavData).buffer;
-      const audioBuffer = await this.audioContext.decodeAudioData(buffer);
+      // Create a proper copy to avoid SharedArrayBuffer issues
+      const arrayCopy = new ArrayBuffer(wavData.byteLength);
+      new Uint8Array(arrayCopy).set(new Uint8Array(wavData.buffer));
+      
+      const audioBuffer = await this.audioContext.decodeAudioData(arrayCopy);
       
       const source = this.audioContext.createBufferSource();
       source.buffer = audioBuffer;
-      source.connect(this.audioContext.destination);
       
-      source.onended = () => this.playNext();
+      // Use gain node for smoother playback
+      source.connect(this.gainNode);
+      
+      // Add small fade in/out to prevent clicks
+      const now = this.audioContext.currentTime;
+      this.gainNode.gain.setValueAtTime(0.01, now);
+      this.gainNode.gain.exponentialRampToValueAtTime(1, now + 0.01);
+      
+      this.currentSource = source;
+      
+      source.onended = () => {
+        this.currentSource = null;
+        this.playNext();
+      };
+      
       source.start(0);
     } catch (error) {
       console.error('Error playing audio:', error);
+      this.currentSource = null;
       this.playNext(); // Continue with next segment even if current fails
     }
   }
@@ -168,7 +194,17 @@ class AudioQueue {
   }
 
   clear() {
+    // Stop current playback
+    if (this.currentSource) {
+      try {
+        this.currentSource.stop();
+      } catch (e) {
+        // Ignore if already stopped
+      }
+      this.currentSource = null;
+    }
     this.queue = [];
+    this.isPlaying = false;
   }
 }
 

@@ -103,6 +103,8 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   const { toast } = useToast();
   const navigate = useNavigate();
   const messageIdCounter = useRef(0);
+  const idleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const IDLE_TIMEOUT_MS = 180000; // 3 minutes of inactivity
 
   // Convert blob to base64
   const blobToBase64 = (blob: Blob): Promise<string> => {
@@ -332,8 +334,29 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   const [isAISpeaking, setIsAISpeaking] = useState(false);
   const [pendingUserMessageId, setPendingUserMessageId] = useState<string | null>(null);
 
+  // Reset idle timer on any activity
+  const resetIdleTimer = () => {
+    if (idleTimeoutRef.current) {
+      clearTimeout(idleTimeoutRef.current);
+    }
+    
+    if (isSessionActive && isHandsFreeMode) {
+      idleTimeoutRef.current = setTimeout(() => {
+        console.log('Session auto-ended due to inactivity');
+        toast({
+          title: "Session Ended",
+          description: "Auto-ended due to inactivity to save costs",
+        });
+        endSession();
+      }, IDLE_TIMEOUT_MS);
+    }
+  };
+
   const handleRealtimeMessage = async (message: any) => {
     console.log('Realtime message:', message);
+    
+    // Reset idle timer on any activity
+    resetIdleTimer();
     
     // Handle user speech transcript
     if (message.type === 'conversation.item.input_audio_transcription.completed') {
@@ -427,6 +450,9 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       setIsHandsFreeMode(true);
       setMessages([]);
       
+      // Start idle timer
+      resetIdleTimer();
+      
       const welcomeMessage: ConversationMessage = {
         id: 'welcome',
         role: 'assistant',
@@ -477,6 +503,12 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   // End session
   const endSession = () => {
     stopAudio();
+    
+    // Clear idle timer
+    if (idleTimeoutRef.current) {
+      clearTimeout(idleTimeoutRef.current);
+      idleTimeoutRef.current = null;
+    }
     
     // Disconnect realtime chat if active
     if (realtimeChatRef.current) {
