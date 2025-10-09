@@ -72,15 +72,11 @@ const Lessons = () => {
         };
       }) || [];
 
-      // MVP lesson list - only show these 8 lessons
+      // MVP lesson list - only show these 4 core lessons
       const mvpLessons = [
         'Friendly Chat',
-        'Casual Conversations',
-        'Phone Conversations',
-        'Job Interview Practice',
         'Business Introduction',
-        'Team Meetings & Project Management',
-        'Presentation Skills',
+        'Job Interview Practice',
         'Customer Service Excellence'
       ];
 

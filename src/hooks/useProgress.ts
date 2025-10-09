@@ -35,16 +35,12 @@ export const useProgress = () => {
 
     try {
       // Fetch total MVP lessons (8 core lessons)
-      const mvpLessonTitles = [
-        'Friendly Chat',
-        'Casual Conversations',
-        'Business Introduction',
-        'Phone Conversations',
-        'Job Interview Practice',
-        'Team Meetings & Project Management',
-        'Customer Service Excellence',
-        'Presentation Skills'
-      ];
+    const mvpLessonTitles = [
+      'Friendly Chat',
+      'Business Introduction',
+      'Job Interview Practice',
+      'Customer Service Excellence'
+    ];
       
       const { count: totalLessons } = await supabase
         .from('lessons')
