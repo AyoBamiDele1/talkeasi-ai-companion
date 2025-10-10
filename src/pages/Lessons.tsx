@@ -68,16 +68,15 @@ const Lessons = () => {
           ...lesson,
           completed: !!progress,
           rating: rating && rating > 0 ? rating : undefined,
-          content: lesson.content as any // Type assertion for JSON content
+          content: lesson.content as any
         };
       }) || [];
 
-      // MVP lesson list - only show these 4 core lessons
+      // MVP lesson list - only show these 3 core lessons
       const mvpLessons = [
         'Friendly Chat',
-        'Business Introduction',
-        'Job Interview Practice',
-        'Customer Service Excellence'
+        'Phone Conversation',
+        'Job Interview Practice'
       ];
 
       // Filter to only show MVP lessons
@@ -90,13 +89,9 @@ const Lessons = () => {
         const indexA = mvpLessons.indexOf(a.title);
         const indexB = mvpLessons.indexOf(b.title);
         
-        // If both are in the order list, sort by their position
         if (indexA !== -1 && indexB !== -1) return indexA - indexB;
-        // If only A is in the list, it comes first
         if (indexA !== -1) return -1;
-        // If only B is in the list, it comes first
         if (indexB !== -1) return 1;
-        // If neither is in the list, sort alphabetically
         return a.title.localeCompare(b.title);
       });
 
@@ -108,18 +103,7 @@ const Lessons = () => {
     }
   };
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case "Beginner":
-        return "bg-green-100 text-green-800";
-      case "Intermediate":
-        return "bg-yellow-100 text-yellow-800";
-      case "Advanced":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
+  // Removed difficulty function - AI adapts automatically
 
   const handleLessonStart = (lessonId: string) => {
     navigate(`/lesson/${lessonId}`);
@@ -171,13 +155,6 @@ const Lessons = () => {
                   <Clock className="w-4 h-4" />
                   <span className="text-sm">{lesson.duration_minutes} min</span>
                 </div>
-                
-                <Badge 
-                  variant="secondary" 
-                  className={`text-xs ${getDifficultyColor(lesson.difficulty)}`}
-                >
-                  {lesson.difficulty}
-                </Badge>
 
                 <Badge variant="outline" className="text-xs">
                   {lesson.category}

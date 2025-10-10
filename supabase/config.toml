@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.ai-pronunciation-analysis]
 verify_jwt = false
+
+[functions.lovable-ai-conversation]
+verify_jwt = false

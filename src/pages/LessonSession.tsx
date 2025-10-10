@@ -23,6 +23,7 @@ import { useAuth } from '@/hooks/useAuth';
 import ProcessingIndicator from '@/components/ProcessingIndicator';
 import RealtimeVoiceInterface from '@/components/RealtimeVoiceInterface';
 import PronunciationAnalysis from '@/components/PronunciationAnalysis';
+import ConversationTimer from '@/components/ConversationTimer';
 
 interface Message {
   id: string;
@@ -46,9 +47,10 @@ const LessonSession = () => {
   const [showCompletion, setShowCompletion] = useState(false);
   const [lesson, setLesson] = useState<any>(null);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [useRealtimeMode, setUseRealtimeMode] = useState(true);
-  const [useElevenLabs, setUseElevenLabs] = useState(false); // Default to OpenAI TTS to avoid provider errors
+  const [useRealtimeMode, setUseRealtimeMode] = useState(false); // Use new Lovable AI flow
+  const [useElevenLabs, setUseElevenLabs] = useState(true); // Use ElevenLabs for TTS
   const [showAdvancedAnalysis, setShowAdvancedAnalysis] = useState(false);
+  const [isSessionActive, setIsSessionActive] = useState(false);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -101,11 +103,8 @@ const LessonSession = () => {
       case 'Business Introduction':
         return "Hello! I'm your AI English tutor. Let's practice professional introductions in business settings. I'll be your colleague. How would you introduce yourself?";
       
-      case 'Phone Conversations':
-        return "Hello! I'm your AI English tutor. Let's practice professional phone conversations. I'll be receiving your business call. Go ahead and make your call!";
-      
-      case 'Customer Service Excellence':
-        return "Hello! I'm your AI English tutor. Let's practice customer service scenarios. I'll be a customer with a concern. How can you help me today?";
+      case 'Phone Conversation':
+        return "Ring ring! Hello, this is Sarah calling from Tech Solutions. How can I help you today?";
       
       case 'Job Interview Practice':
         return "Hello! I'm your AI English tutor. Let's practice job interview scenarios. I'll be the interviewer. Tell me, why are you interested in this position?";
@@ -192,6 +191,7 @@ const LessonSession = () => {
 
       mediaRecorder.start();
       setIsRecording(true);
+      setIsSessionActive(true);
       toast({
         title: "Recording started",
         description: "Speak your response clearly"
@@ -210,6 +210,7 @@ const LessonSession = () => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
+      setIsSessionActive(false);
     }
   }, [isRecording]);
 
@@ -227,73 +228,56 @@ const LessonSession = () => {
         fileReader.readAsDataURL(audioBlob);
       });
 
-      // Transcribe audio using speech-to-text edge function
-      const transcriptionResponse = await supabase.functions.invoke('speech-to-text', {
-        body: { audio: audioBase64 }
-      });
-
-      if (transcriptionResponse.error) {
-        throw new Error('Transcription failed: ' + transcriptionResponse.error.message);
-      }
-
-      const transcribedText = transcriptionResponse.data?.text || "Could not transcribe audio";
-      
-      // Add user message immediately
-      const userMessage: Message = {
-        id: Date.now().toString(),
-        type: 'user',
-        text: transcribedText,
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, userMessage]);
-      
+      // Use new Lovable AI conversation edge function
       setProcessingStage('thinking');
       
-      // Get AI response using conversation edge function with conversation history
-      const conversationResponse = await supabase.functions.invoke('ai-conversation', {
+      const conversationHistory = messages.map(msg => ({
+        role: msg.type === 'ai' ? 'assistant' : 'user',
+        content: msg.text
+      }));
+
+      const response = await supabase.functions.invoke('lovable-ai-conversation', {
         body: { 
-          userText: transcribedText, 
+          audioBase64,
           lessonContext: lesson?.title || 'English Conversation Practice',
-          difficulty: lesson?.difficulty || 'Intermediate',
-          conversationHistory: messages.map(msg => ({
-            sender: msg.type,
-            text: msg.text
-          }))
+          conversationHistory
         }
       });
 
-      if (conversationResponse.error) {
-        throw new Error('AI response failed: ' + conversationResponse.error.message);
+      if (response.error) {
+        throw new Error('Conversation failed: ' + response.error.message);
       }
 
-      const aiData = conversationResponse.data;
-      console.log('AI conversation response:', aiData);
-      const fullAiResponse = aiData?.response || "I didn't quite catch that. Could you try again?";
-
-      // Add AI message with corrections and feedback
+      const { userText, aiText, audioContent } = response.data;
+      
+      // Add user message
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        type: 'user',
+        text: userText,
+        timestamp: new Date()
+      };
+      
+      // Add AI message
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: 'ai',
-        text: fullAiResponse,
+        text: aiText,
         timestamp: new Date()
       };
-
-      // Update user message with corrections and feedback then add AI message
-      setMessages(prev => prev.map(msg => 
-        msg.id === userMessage.id 
-          ? { ...msg, corrections: aiData?.corrections || [], feedback: aiData?.feedback }
-          : msg
-      ).concat([aiMessage]));
-
-      setProcessingStage('generating');
+      
+      setMessages(prev => [...prev, userMessage, aiMessage]);
+      
+      // Play AI audio response
+      setProcessingStage('speaking');
       setIsAISpeaking(true);
       
-      // Generate optimized TTS for the response
-      await speakTextOptimized(fullAiResponse);
-
-      setCurrentStreamText('');
-      setProcessingStage(null);
-      setIsAISpeaking(false);
+      const audio = new Audio(`data:audio/mpeg;base64,${audioContent}`);
+      audio.onended = () => {
+        setIsAISpeaking(false);
+        setProcessingStage(null);
+      };
+      await audio.play();
 
     } catch (error) {
       console.error('Error processing audio:', error);
@@ -436,18 +420,23 @@ const LessonSession = () => {
           <ArrowLeft className="w-5 h-5" />
         </Button>
         
-        <div className="text-center">
+        <div className="flex flex-col items-center gap-2">
           <h1 className="font-semibold text-sm">{lesson?.title || 'Lesson Session'}</h1>
-          <div className="flex items-center justify-center gap-2 mt-1">
-            <Badge variant="secondary" className="text-xs">
-              {lesson?.difficulty || 'Intermediate'}
-            </Badge>
-            {messages.filter(m => m.type === 'user').length >= 3 && (
-              <Button variant="outline" size="sm" onClick={completeLesson}>
-                Complete
-              </Button>
-            )}
-          </div>
+          <ConversationTimer 
+            isActive={isSessionActive} 
+            maxMinutes={lesson?.duration_minutes || 5}
+            onTimeUp={() => {
+              toast({
+                title: "Time's up!",
+                description: "Your free session time has ended. Consider upgrading for longer sessions.",
+              });
+            }}
+          />
+          {messages.filter(m => m.type === 'user').length >= 3 && (
+            <Button variant="outline" size="sm" onClick={completeLesson}>
+              Complete
+            </Button>
+          )}
         </div>
 
         <Button
