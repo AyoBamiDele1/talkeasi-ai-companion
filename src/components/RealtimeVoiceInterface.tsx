@@ -586,33 +586,26 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
 
         {/* Mode Selection (when not active) */}
         {!isSessionActive && (
-          <>
-            <div className="flex gap-2 mb-2">
-              <Button
-                size="lg"
-                variant="outline"
-                className="flex-1 h-12"
-                onClick={startSession}
-              >
-                <Mic className="w-4 h-4 mr-2" />
-                Push to Talk
-                <Badge variant="secondary" className="ml-2 text-xs">FREE</Badge>
-              </Button>
-              <Button
-                size="lg"
-                className="flex-1 h-12 bg-green-600 hover:bg-green-700"
-                onClick={startHandsFreeSession}
-                disabled={isConnecting}
-              >
-                <Phone className="w-4 h-4 mr-2" />
-                {isConnecting ? "Connecting..." : "Hands-Free"}
-                <Badge variant="secondary" className="ml-2 text-xs bg-yellow-100 text-yellow-800">Premium</Badge>
-              </Button>
-            </div>
-            <p className="text-xs text-muted-foreground text-center mb-4">
-              Push to Talk uses FREE Gemini AI. Hands-Free uses OpenAI Realtime API (~$0.06/min).
-            </p>
-          </>
+          <div className="flex gap-2 mb-4">
+            <Button
+              size="lg"
+              variant="outline"
+              className="flex-1 h-12"
+              onClick={startSession}
+            >
+              <Mic className="w-4 h-4 mr-2" />
+              Push to Talk
+            </Button>
+            <Button
+              size="lg"
+              className="flex-1 h-12 bg-green-600 hover:bg-green-700"
+              onClick={startHandsFreeSession}
+              disabled={isConnecting}
+            >
+              <Phone className="w-4 h-4 mr-2" />
+              {isConnecting ? "Connecting..." : "Hands-Free"}
+            </Button>
+          </div>
         )}
         
         {/* Controls */}
