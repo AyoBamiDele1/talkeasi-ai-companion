@@ -47,7 +47,7 @@ const LessonSession = () => {
   const [showCompletion, setShowCompletion] = useState(false);
   const [lesson, setLesson] = useState<any>(null);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [useRealtimeMode, setUseRealtimeMode] = useState(false); // Use new Lovable AI flow
+  const [useRealtimeMode, setUseRealtimeMode] = useState(true); // Use RealtimeVoiceInterface with hands-free option
   const [useElevenLabs, setUseElevenLabs] = useState(true); // Use ElevenLabs for TTS
   const [showAdvancedAnalysis, setShowAdvancedAnalysis] = useState(false);
   const [isSessionActive, setIsSessionActive] = useState(false);
