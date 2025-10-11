@@ -112,14 +112,27 @@ Remember: Your role is to catch and correct mistakes, not just to chat. Every un
     );
 
     if (!elevenLabsResponse.ok) {
-      throw new Error(`ElevenLabs API error: ${await elevenLabsResponse.text()}`);
+      const errorText = await elevenLabsResponse.text();
+      console.error('ElevenLabs error:', errorText);
+      
+      // Check if it's a free tier limit error
+      if (errorText.includes('detected_unusual_activity')) {
+        throw new Error('ELEVENLABS_LIMIT: Please add your own ElevenLabs API key in Settings to continue using text-to-speech.');
+      }
+      
+      throw new Error(`ElevenLabs API error: ${errorText}`);
     }
 
-    // Convert audio to base64
+    // Convert audio to base64 in chunks to prevent stack overflow
     const audioBuffer = await elevenLabsResponse.arrayBuffer();
-    const base64Audio = btoa(
-      String.fromCharCode(...new Uint8Array(audioBuffer))
-    );
+    const uint8Array = new Uint8Array(audioBuffer);
+    const chunkSize = 8192;
+    let base64Audio = '';
+    
+    for (let i = 0; i < uint8Array.length; i += chunkSize) {
+      const chunk = uint8Array.slice(i, i + chunkSize);
+      base64Audio += btoa(String.fromCharCode.apply(null, Array.from(chunk)));
+    }
 
     console.log('Successfully generated response and audio');
 

@@ -286,11 +286,22 @@ const LessonSession = () => {
       setIsAISpeaking(false);
       streamingAudio.reset();
       
-      toast({
-        title: "Processing error",
-        description: "Could not process your speech. Please try again.",
-        variant: "destructive"
-      });
+      // Check for specific error types
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      
+      if (errorMessage.includes('ELEVENLABS_LIMIT')) {
+        toast({
+          title: "ElevenLabs Limit Reached",
+          description: "The free tier has been exhausted. Please add your own ElevenLabs API key to continue.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Processing error",
+          description: "Could not process your speech. Please try again.",
+          variant: "destructive"
+        });
+      }
     }
   };
 
