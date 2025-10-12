@@ -158,10 +158,13 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   };
 
   // Start recording
+  const recordingStartTimeRef = useRef<number>(0);
+  
   const startRecording = async () => {
     try {
       await audioRecorderRef.current.start();
       setIsRecording(true);
+      recordingStartTimeRef.current = Date.now();
       console.log('Recording started');
     } catch (error) {
       console.error('Error starting recording:', error);
@@ -177,11 +180,31 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   const stopRecording = async () => {
     try {
       setIsRecording(false);
+      
+      // Check minimum recording duration
+      const recordingDuration = Date.now() - recordingStartTimeRef.current;
+      console.log(`Recording duration: ${recordingDuration}ms`);
+      
+      if (recordingDuration < 500) {
+        toast({
+          title: "Recording Too Short",
+          description: "Please hold the button longer to record your speech (minimum 0.5 seconds).",
+          variant: "destructive",
+        });
+        await audioRecorderRef.current.stop(); // Clean up
+        return;
+      }
+      
       setIsProcessing(true);
       
       // Stop recording and get audio blob
       const audioBlob = await audioRecorderRef.current.stop();
-      console.log('Recording stopped, processing audio...');
+      console.log(`Recording stopped. Audio blob size: ${audioBlob.size} bytes`);
+      
+      // Check if audio blob is valid
+      if (audioBlob.size < 1000) {
+        throw new Error('Audio recording is too small or invalid');
+      }
       
       // Convert to base64
       const base64Audio = await blobToBase64(audioBlob);

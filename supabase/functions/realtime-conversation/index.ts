@@ -43,6 +43,11 @@ serve(async (req) => {
       const data = JSON.parse(event.data);
       console.log("OpenAI message type:", data.type);
 
+      // Log error details if it's an error message
+      if (data.type === 'error') {
+        console.error("OpenAI error details:", JSON.stringify(data, null, 2));
+      }
+
       // Handle session.created event - configure session
       if (data.type === 'session.created' && !sessionConfigured) {
         sessionConfigured = true;
