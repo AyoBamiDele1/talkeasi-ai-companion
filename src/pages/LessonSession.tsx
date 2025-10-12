@@ -48,7 +48,7 @@ const LessonSession = () => {
   const [lesson, setLesson] = useState<any>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [useRealtimeMode, setUseRealtimeMode] = useState(true); // Use RealtimeVoiceInterface with hands-free option
-  const [useElevenLabs, setUseElevenLabs] = useState(true); // Use ElevenLabs for TTS
+  const [useElevenLabs, setUseElevenLabs] = useState(false); // Use OpenAI TTS only
   const [showAdvancedAnalysis, setShowAdvancedAnalysis] = useState(false);
   const [isSessionActive, setIsSessionActive] = useState(false);
   
@@ -228,27 +228,21 @@ const LessonSession = () => {
         fileReader.readAsDataURL(audioBlob);
       });
 
-      // Use new Lovable AI conversation edge function
-      setProcessingStage('thinking');
-      
-      const conversationHistory = messages.map(msg => ({
-        role: msg.type === 'ai' ? 'assistant' : 'user',
-        content: msg.text
-      }));
-
-      const response = await supabase.functions.invoke('lovable-ai-conversation', {
-        body: { 
-          audioBase64,
-          lessonContext: lesson?.title || 'English Conversation Practice',
-          conversationHistory
-        }
+      // Step 1: Speech to text (OpenAI Whisper)
+      const sttResponse = await supabase.functions.invoke('speech-to-text', {
+        body: { audio: audioBase64 }
       });
 
-      if (response.error) {
-        throw new Error('Conversation failed: ' + response.error.message);
+      if (sttResponse.error) {
+        throw new Error(sttResponse.error.message);
       }
 
-      const { userText, aiText, audioContent } = response.data;
+      const userText = sttResponse.data?.text;
+      if (!userText || userText.trim().length === 0) {
+        throw new Error('No speech detected. Please try again.');
+      }
+
+      console.log('Transcribed text:', userText);
       
       // Add user message
       const userMessage: Message = {
@@ -257,21 +251,57 @@ const LessonSession = () => {
         text: userText,
         timestamp: new Date()
       };
+      setMessages(prev => [...prev, userMessage]);
+
+      // Step 2: Get AI response (GPT-4o-mini)
+      setProcessingStage('thinking');
+      const aiResponse = await supabase.functions.invoke('ai-conversation', {
+        body: { 
+          userText, 
+          lessonContext: lesson?.title || 'English Conversation Practice',
+          difficulty: 'Intermediate'
+        }
+      });
+
+      if (aiResponse.error) {
+        throw new Error(aiResponse.error.message);
+      }
+
+      const aiData = aiResponse.data;
+      
+      // Update user message with corrections
+      setMessages(prev => prev.map(msg => 
+        msg.id === userMessage.id 
+          ? { ...msg, corrections: aiData.corrections || [], feedback: aiData.feedback }
+          : msg
+      ));
       
       // Add AI message
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: 'ai',
-        text: aiText,
+        text: aiData.response,
         timestamp: new Date()
       };
-      
-      setMessages(prev => [...prev, userMessage, aiMessage]);
-      
-      // Play AI audio response
+      setMessages(prev => [...prev, aiMessage]);
+
+      // Step 3: Convert to speech (OpenAI TTS)
       setProcessingStage('speaking');
+      const ttsResponse = await supabase.functions.invoke('text-to-speech', {
+        body: { text: aiData.response, voice: 'alloy' }
+      });
+
+      if (ttsResponse.error) {
+        throw new Error(ttsResponse.error.message);
+      }
+
+      const audioContent = ttsResponse.data?.audioContent;
+      if (!audioContent) {
+        throw new Error('No audio content returned from TTS');
+      }
+
+      // Play AI audio response
       setIsAISpeaking(true);
-      
       const audio = new Audio(`data:audio/mpeg;base64,${audioContent}`);
       audio.onended = () => {
         setIsAISpeaking(false);
@@ -286,22 +316,11 @@ const LessonSession = () => {
       setIsAISpeaking(false);
       streamingAudio.reset();
       
-      // Check for specific error types
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      
-      if (errorMessage.includes('ELEVENLABS_LIMIT')) {
-        toast({
-          title: "ElevenLabs Limit Reached",
-          description: "The free tier has been exhausted. Please add your own ElevenLabs API key to continue.",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Processing error",
-          description: "Could not process your speech. Please try again.",
-          variant: "destructive"
-        });
-      }
+      toast({
+        title: "Processing error",
+        description: error instanceof Error ? error.message : "Could not process your speech. Please try again.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -322,18 +341,10 @@ const LessonSession = () => {
 
         console.log(`Generating TTS for sentence ${i}:`, sentence);
 
-        // Generate TTS for this sentence using the selected provider
-        const ttsResponse = useElevenLabs 
-          ? await supabase.functions.invoke('elevenlabs-tts', {
-              body: { 
-                text: sentence, 
-                voiceId: '9BWtsMINqrJLrRacOk9x', // Aria voice - natural sounding
-                modelId: 'eleven_turbo_v2_5' // Fast, low latency model
-              }
-            })
-          : await supabase.functions.invoke('text-to-speech', {
-              body: { text: sentence, voice: 'alloy' }
-            });
+        // Generate TTS using OpenAI
+        const ttsResponse = await supabase.functions.invoke('text-to-speech', {
+          body: { text: sentence, voice: 'alloy' }
+        });
 
         if (ttsResponse.error) {
           console.error('TTS failed for sentence:', sentence, ttsResponse.error);
@@ -364,18 +375,10 @@ const LessonSession = () => {
     try {
       setIsAISpeaking(true);
       
-      // Generate speech using the selected TTS provider
-      const ttsResponse = useElevenLabs 
-        ? await supabase.functions.invoke('elevenlabs-tts', {
-            body: { 
-              text, 
-              voiceId: '9BWtsMINqrJLrRacOk9x', // Aria voice - natural sounding
-              modelId: 'eleven_turbo_v2_5' // Fast, low latency model
-            }
-          })
-        : await supabase.functions.invoke('text-to-speech', {
-            body: { text, voice: 'alloy' }
-          });
+      // Generate speech using OpenAI TTS
+      const ttsResponse = await supabase.functions.invoke('text-to-speech', {
+        body: { text, voice: 'alloy' }
+      });
 
       if (ttsResponse.error) {
         throw new Error('Speech generation failed');
@@ -536,7 +539,6 @@ const LessonSession = () => {
       {useRealtimeMode ? (
         <RealtimeVoiceInterface
           lessonContext={lesson?.title || 'English Conversation Practice'}
-          useElevenLabs={useElevenLabs} // Pass the TTS provider preference
           onTranscriptUpdate={(transcript) => {
             setCurrentStreamText(transcript);
           }}

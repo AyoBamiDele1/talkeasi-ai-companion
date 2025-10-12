@@ -22,7 +22,6 @@ interface RealtimeVoiceInterfaceProps {
   onTranscriptUpdate?: (transcript: string) => void;
   onConversationEnd?: () => void;
   onMessageUpdate?: (messages: ConversationMessage[]) => void;
-  useElevenLabs?: boolean;
 }
 
 // Audio recording class
@@ -86,8 +85,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   lessonContext,
   onTranscriptUpdate,
   onConversationEnd,
-  onMessageUpdate,
-  useElevenLabs = false
+  onMessageUpdate
 }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -278,62 +276,28 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       setMessages(finalMessages);
       onMessageUpdate?.(finalMessages);
 
-      // Step 3: Convert AI response to speech
+      // Step 3: Convert AI response to speech using OpenAI TTS
       console.log('Converting text to speech...');
-      // Try primary provider, then fallback to OpenAI if ElevenLabs fails
-      let audioContent: string | undefined;
-      let usedFallback = false;
+      const ttsResponse = await supabase.functions.invoke('text-to-speech', {
+        body: { text: aiData.response, voice: 'alloy' }
+      });
 
-      if (useElevenLabs) {
-        const primary = await supabase.functions.invoke('elevenlabs-tts', {
-          body: {
-            text: aiData.response,
-            voiceId: '9BWtsMINqrJLrRacOk9x',
-            modelId: 'eleven_turbo_v2_5',
-          },
-        });
-
-        if (!primary.error && primary.data?.audioContent) {
-          audioContent = primary.data.audioContent;
-        } else {
-          // Fallback to OpenAI TTS
-          const fallback = await supabase.functions.invoke('text-to-speech', {
-            body: { text: aiData.response, voice: 'alloy' },
-          });
-          if (fallback.error) {
-            throw new Error(fallback.error.message || 'Text-to-speech failed');
-          }
-          usedFallback = true;
-          audioContent = fallback.data?.audioContent;
+      if (ttsResponse.error) {
+        console.error('OpenAI TTS failed, falling back to browser TTS:', ttsResponse.error);
+        // Browser fallback to avoid blocking the flow
+        if (typeof speechSynthesis !== 'undefined') {
+          const utter = new SpeechSynthesisUtterance(aiData.response);
+          utter.onend = () => setIsSpeaking(false);
+          speechSynthesis.speak(utter);
+          toast({ title: 'Using browser voice', description: 'Cloud TTS unavailable, fell back to your device voice.' });
+          return; // Skip audio playback since browser is speaking
         }
-      } else {
-        const resp = await supabase.functions.invoke('text-to-speech', {
-          body: { text: aiData.response, voice: 'alloy' },
-        });
-        if (resp.error) {
-          console.error('OpenAI TTS failed, falling back to browser TTS:', resp.error);
-          // Browser fallback to avoid blocking the flow
-          if (typeof speechSynthesis !== 'undefined') {
-            const utter = new SpeechSynthesisUtterance(aiData.response);
-            utter.onend = () => setIsSpeaking(false);
-            speechSynthesis.speak(utter);
-            toast({ title: 'Using browser voice', description: 'Cloud TTS unavailable, fell back to your device voice.' });
-            return; // Skip audio playback since browser is speaking
-          }
-          throw new Error(resp.error.message || 'Text-to-speech failed');
-        }
-        audioContent = resp.data?.audioContent;
+        throw new Error(ttsResponse.error.message || 'Text-to-speech failed');
       }
 
+      const audioContent = ttsResponse.data?.audioContent;
       if (!audioContent) {
         throw new Error('No audio content returned from TTS');
-      }
-
-      if (usedFallback) {
-        toast({
-          title: 'Voice provider unavailable',
-          description: 'Switched to backup voice (OpenAI).',
-        });
       }
 
       // Play the audio
