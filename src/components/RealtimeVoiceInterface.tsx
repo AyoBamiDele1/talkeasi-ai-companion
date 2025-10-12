@@ -381,6 +381,17 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     // Reset idle timer on any activity
     resetIdleTimer();
     
+    // Surface errors from the voice service
+    if (message.type === 'error') {
+      console.error('Realtime API error:', message);
+      toast({
+        title: 'Voice service error',
+        description: message.error?.message || 'Unknown error from Realtime API',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
     // Handle user speech transcript
     if (message.type === 'conversation.item.input_audio_transcription.completed') {
       const userText = message.transcript || '';
