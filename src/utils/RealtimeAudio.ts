@@ -229,43 +229,57 @@ export class RealtimeChat {
     return new Promise((resolve, reject) => {
       try {
         // Use the full WebSocket URL for the edge function
+        console.log('Connecting to WebSocket...');
         this.ws = new WebSocket(`wss://qcxjjhgfgyfhwacxppcp.functions.supabase.co/realtime-conversation`);
         
         this.ws.onopen = () => {
-          console.log('Connected to realtime chat');
+          console.log('WebSocket connected successfully');
           this.isConnected = true;
           resolve();
         };
 
         this.ws.onmessage = async (event) => {
-          const data = JSON.parse(event.data);
-          console.log('Received message:', data.type);
+          try {
+            const data = JSON.parse(event.data);
+            console.log('Received message:', data.type);
 
-          if (data.type === 'connection_established') {
-            // Start audio recording
-            await this.startAudioRecording();
-          } else if (data.type === 'response.output_audio.delta') {
-            // Play audio chunk - OpenAI sends audio in 'audio' field, not 'delta'
-            if (data.audio) {
-              await this.handleAudioDelta(data.audio);
+            // Handle errors from the server
+            if (data.error) {
+              console.error('Server error:', data.error);
+              this.onMessage({ type: 'error', error: data.error });
+              return;
             }
-          } else {
-            // Forward to message handler
-            this.onMessage(data);
+
+            if (data.type === 'connection_established') {
+              console.log('Connection established, starting audio recording...');
+              // Start audio recording
+              await this.startAudioRecording();
+            } else if (data.type === 'response.output_audio.delta') {
+              // Play audio chunk - OpenAI sends audio in 'audio' field, not 'delta'
+              if (data.audio) {
+                await this.handleAudioDelta(data.audio);
+              }
+            } else {
+              // Forward to message handler
+              this.onMessage(data);
+            }
+          } catch (error) {
+            console.error('Error processing message:', error);
           }
         };
 
         this.ws.onerror = (error) => {
           console.error('WebSocket error:', error);
-          reject(error);
+          reject(new Error('Failed to connect to voice service'));
         };
 
-        this.ws.onclose = () => {
-          console.log('WebSocket closed');
+        this.ws.onclose = (event) => {
+          console.log('WebSocket closed:', event.code, event.reason);
           this.isConnected = false;
           this.cleanup();
         };
       } catch (error) {
+        console.error('Error creating WebSocket:', error);
         reject(error);
       }
     });

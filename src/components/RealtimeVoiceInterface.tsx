@@ -31,34 +31,65 @@ class AudioRecorder {
   private stream: MediaStream | null = null;
 
   async start(): Promise<void> {
-    this.audioChunks = [];
-    this.stream = await navigator.mediaDevices.getUserMedia({ 
-      audio: {
-        sampleRate: 44100,
-        channelCount: 1,
-        echoCancellation: true,
-        noiseSuppression: true,
-        autoGainControl: true
-      } 
-    });
-    
-    this.mediaRecorder = new MediaRecorder(this.stream, {
-      mimeType: 'audio/webm;codecs=opus'
-    });
-    
-    this.mediaRecorder.ondataavailable = (event) => {
-      if (event.data.size > 0) {
-        this.audioChunks.push(event.data);
+    try {
+      this.audioChunks = [];
+      
+      // Request microphone access
+      this.stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          sampleRate: 44100,
+          channelCount: 1,
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        } 
+      });
+      
+      // Check if MediaRecorder is supported
+      if (!window.MediaRecorder) {
+        throw new Error('MediaRecorder is not supported in this browser');
       }
-    };
-    
-    this.mediaRecorder.start();
+      
+      // Create MediaRecorder with fallback mime types
+      let mimeType = 'audio/webm;codecs=opus';
+      if (!MediaRecorder.isTypeSupported(mimeType)) {
+        mimeType = 'audio/webm';
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+          mimeType = 'audio/ogg;codecs=opus';
+          if (!MediaRecorder.isTypeSupported(mimeType)) {
+            mimeType = ''; // Use default
+          }
+        }
+      }
+      
+      this.mediaRecorder = new MediaRecorder(this.stream, mimeType ? { mimeType } : undefined);
+      
+      this.mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          this.audioChunks.push(event.data);
+        }
+      };
+      
+      this.mediaRecorder.start();
+      console.log('MediaRecorder started successfully');
+    } catch (error) {
+      this.cleanup();
+      throw error;
+    }
   }
 
   async stop(): Promise<Blob> {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       if (!this.mediaRecorder) {
-        throw new Error('No media recorder available');
+        this.cleanup();
+        reject(new Error('No media recorder available'));
+        return;
+      }
+
+      if (this.mediaRecorder.state === 'inactive') {
+        this.cleanup();
+        reject(new Error('MediaRecorder is already stopped'));
+        return;
       }
 
       this.mediaRecorder.onstop = () => {
@@ -186,7 +217,13 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       
       // Check if audio blob is valid
       if (audioBlob.size < 1000) {
-        throw new Error('Audio recording is too small or invalid');
+        setIsProcessing(false);
+        toast({
+          title: "Recording Too Short",
+          description: "Please speak for a bit longer and try again.",
+          variant: "destructive",
+        });
+        return;
       }
       
       // Convert to base64
@@ -333,11 +370,20 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     // Surface errors from the voice service
     if (message.type === 'error') {
       console.error('Realtime API error:', message);
+      const errorMsg = typeof message.error === 'string' 
+        ? message.error 
+        : message.error?.message || 'Unknown error from voice service';
+      
       toast({
         title: 'Voice service error',
-        description: message.error?.message || 'Unknown error from Realtime API',
+        description: errorMsg,
         variant: 'destructive',
       });
+      
+      // If it's a critical error, end the session
+      if (errorMsg.includes('API key') || errorMsg.includes('connection')) {
+        endSession();
+      }
       return;
     }
     
