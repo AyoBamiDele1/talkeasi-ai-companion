@@ -75,7 +75,7 @@ const Lessons = () => {
       // MVP lesson list - only show these 3 core lessons
       const mvpLessons = [
         'Friendly Chat',
-        'Phone Conversation',
+        'Discussing Healthy Habits and Lifestyle',
         'Job Interview Practice'
       ];
 
