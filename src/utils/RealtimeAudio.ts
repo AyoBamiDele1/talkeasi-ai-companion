@@ -245,8 +245,10 @@ export class RealtimeChat {
             // Start audio recording
             await this.startAudioRecording();
           } else if (data.type === 'response.output_audio.delta') {
-            // Play audio chunk
-            await this.handleAudioDelta(data.delta);
+            // Play audio chunk - OpenAI sends audio in 'audio' field, not 'delta'
+            if (data.audio) {
+              await this.handleAudioDelta(data.audio);
+            }
           } else {
             // Forward to message handler
             this.onMessage(data);
@@ -272,6 +274,7 @@ export class RealtimeChat {
   private async startAudioRecording() {
     try {
       this.audioContext = new AudioContext({ sampleRate: 24000 });
+      console.log('Audio context created with sample rate:', this.audioContext.sampleRate);
       
       this.recorder = new AudioRecorder((audioData) => {
         if (this.ws && this.isConnected) {
@@ -292,7 +295,10 @@ export class RealtimeChat {
   }
 
   private async handleAudioDelta(delta: string) {
-    if (!this.audioContext) return;
+    if (!this.audioContext) {
+      console.error('Audio context not initialized');
+      return;
+    }
 
     try {
       // Convert base64 to Uint8Array
@@ -302,6 +308,7 @@ export class RealtimeChat {
         bytes[i] = binaryString.charCodeAt(i);
       }
       
+      console.log('Playing audio chunk, size:', bytes.length);
       await playAudioData(this.audioContext, bytes);
     } catch (error) {
       console.error('Error handling audio delta:', error);

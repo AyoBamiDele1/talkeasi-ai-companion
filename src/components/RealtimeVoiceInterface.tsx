@@ -178,21 +178,6 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   const stopRecording = async () => {
     try {
       setIsRecording(false);
-      
-      // Check minimum recording duration
-      const recordingDuration = Date.now() - recordingStartTimeRef.current;
-      console.log(`Recording duration: ${recordingDuration}ms`);
-      
-      if (recordingDuration < 300) {
-        toast({
-          title: "Recording Too Short",
-          description: "Please hold the button a bit longer (minimum 0.3 seconds).",
-          variant: "destructive",
-        });
-        await audioRecorderRef.current.stop(); // Clean up
-        return;
-      }
-      
       setIsProcessing(true);
       
       // Stop recording and get audio blob
