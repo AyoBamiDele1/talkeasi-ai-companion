@@ -183,10 +183,10 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       const recordingDuration = Date.now() - recordingStartTimeRef.current;
       console.log(`Recording duration: ${recordingDuration}ms`);
       
-      if (recordingDuration < 500) {
+      if (recordingDuration < 300) {
         toast({
           title: "Recording Too Short",
-          description: "Please hold the button longer to record your speech (minimum 0.5 seconds).",
+          description: "Please hold the button a bit longer (minimum 0.3 seconds).",
           variant: "destructive",
         });
         await audioRecorderRef.current.stop(); // Clean up
