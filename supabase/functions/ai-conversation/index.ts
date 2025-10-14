@@ -41,10 +41,7 @@ Your role:
 6. Make the user feel heard, valued, and supported
 7. Keep responses conversational (2-4 sentences)
 
-Format your response as JSON with:
-- "response": your conversational response
-- "corrections": array of gentle corrections (if any)
-- "feedback": brief positive feedback about their English or conversation`
+Respond naturally in plain text - do NOT use JSON formatting or include words like "response", "corrections", or "feedback" in your output.`
       : `You are a friendly language tutor helping a student practice conversation. 
 The lesson context is: "${lessonContext}"
 The difficulty level is: ${difficulty}
@@ -57,10 +54,7 @@ Your role:
 5. Keep responses concise (1-3 sentences)
 6. Provide corrections and feedback when appropriate
 
-Format your response as JSON with:
-- "response": your conversational response
-- "corrections": array of corrections (if any)
-- "feedback": brief positive feedback or tips (if any)`;
+Respond naturally in plain text - do NOT use JSON formatting or include words like "response", "corrections", or "feedback" in your output.`;
 
     // Build messages array with conversation history
     const messages = [
@@ -97,17 +91,20 @@ Format your response as JSON with:
 
     console.log('AI response generated successfully');
 
-    // Try to parse as JSON, fallback to simple response
-    let parsedResponse;
-    try {
-      parsedResponse = JSON.parse(aiResponse);
-    } catch {
-      parsedResponse = {
-        response: aiResponse,
-        corrections: [],
-        feedback: null
-      };
+    // Extract corrections from the response text
+    const corrections: string[] = [];
+    const correctionPattern = /"([^"]+)"\s*→\s*"([^"]+)"/g;
+    let match;
+    while ((match = correctionPattern.exec(aiResponse)) !== null) {
+      corrections.push(`${match[1]} → ${match[2]}`);
     }
+
+    // Return structured response
+    const parsedResponse = {
+      response: aiResponse,
+      corrections,
+      feedback: corrections.length > 0 ? "Great effort! Keep practicing!" : null
+    };
 
     return new Response(JSON.stringify(parsedResponse), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
