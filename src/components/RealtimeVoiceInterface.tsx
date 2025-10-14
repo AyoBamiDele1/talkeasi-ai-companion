@@ -126,6 +126,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   const [isSessionActive, setIsSessionActive] = useState(false);
   const [isHandsFreeMode, setIsHandsFreeMode] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [isRecorderReady, setIsRecorderReady] = useState(false);
   
   const audioRecorderRef = useRef<AudioRecorder>(new AudioRecorder());
   const realtimeChatRef = useRef<RealtimeChat | null>(null);
@@ -191,12 +192,16 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   
   const startRecording = async () => {
     try {
+      setIsRecorderReady(false);
       await audioRecorderRef.current.start();
       setIsRecording(true);
+      setIsRecorderReady(true);
       recordingStartTimeRef.current = Date.now();
       console.log('Recording started');
     } catch (error) {
       console.error('Error starting recording:', error);
+      setIsRecording(false);
+      setIsRecorderReady(false);
       toast({
         title: "Recording Error",
         description: "Failed to start recording. Please check your microphone permissions.",
@@ -207,8 +212,16 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
 
   // Stop recording and process
   const stopRecording = async () => {
+    // Prevent stopping if recorder isn't ready
+    if (!isRecorderReady) {
+      console.log('Recorder not ready, ignoring stop request');
+      setIsRecording(false);
+      return;
+    }
+
     try {
       setIsRecording(false);
+      setIsRecorderReady(false);
       setIsProcessing(true);
       
       // Stop recording and get audio blob
@@ -334,6 +347,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       });
     } finally {
       setIsProcessing(false);
+      setIsRecorderReady(false);
     }
   };
 
