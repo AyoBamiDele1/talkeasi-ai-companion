@@ -269,6 +269,15 @@ const LessonSession = () => {
 
       const aiData = aiResponse.data;
       
+      // Check if API returned an error
+      if (aiData?.error) {
+        throw new Error(aiData.error);
+      }
+
+      if (!aiData?.response) {
+        throw new Error('No response from AI');
+      }
+      
       // Update user message with corrections
       setMessages(prev => prev.map(msg => 
         msg.id === userMessage.id 

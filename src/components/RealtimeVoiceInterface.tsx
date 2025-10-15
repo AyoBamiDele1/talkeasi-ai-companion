@@ -288,6 +288,15 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       const aiData = aiResponse.data;
       console.log('AI response:', aiData);
 
+      // Check if API returned an error
+      if (aiData?.error) {
+        throw new Error(aiData.error);
+      }
+
+      if (!aiData?.response) {
+        throw new Error('No response from AI');
+      }
+
       // Update user message with corrections and feedback
       const updatedUserMessage: ConversationMessage = {
         ...userMessage,
