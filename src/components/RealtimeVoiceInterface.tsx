@@ -2,7 +2,6 @@ import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
 import { Mic, MicOff, Volume2, VolumeX, ArrowLeft, MessageSquare, Phone, PhoneOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
@@ -802,38 +801,39 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
         {/* Mode Selection (when not active) */}
         {!isSessionActive && (
           <div className="space-y-3 mb-4">
-            <Card
-              className="cursor-pointer transition-all hover:border-primary"
+            <Button
+              size="lg"
+              variant="outline"
+              className="w-full h-12"
               onClick={startSession}
             >
-              <CardContent className="p-4">
-                <h3 className="font-semibold text-base mb-1">Tap to Talk</h3>
-                <p className="text-sm text-muted-foreground mb-2">Press and hold the microphone to speak</p>
-                <p className="text-xs font-medium">$0.03 per 5 minutes</p>
-              </CardContent>
-            </Card>
-
-            <Card
-              className="cursor-pointer transition-all hover:border-primary"
+              <Mic className="w-4 h-4 mr-2" />
+              Push to Talk (Budget)
+              <Badge variant="secondary" className="ml-auto">$0.031/5min</Badge>
+            </Button>
+            
+            <Button
+              size="lg"
+              variant="outline"
+              className="w-full h-12 border-blue-200 hover:bg-blue-50"
               onClick={startDeepSeekHandsFreeSession}
+              disabled={isConnecting}
             >
-              <CardContent className="p-4">
-                <h3 className="font-semibold text-base mb-1">Hands-Free (Enhanced)</h3>
-                <p className="text-sm text-muted-foreground mb-2">Continuous listening with smart optimization</p>
-                <p className="text-xs font-medium">$0.04 per 5 minutes</p>
-              </CardContent>
-            </Card>
-
-            <Card
-              className="cursor-pointer transition-all hover:border-primary"
+              <Phone className="w-4 h-4 mr-2 text-blue-600" />
+              <span className="text-blue-700">DeepSeek Hands-Free (Enhanced)</span>
+              <Badge variant="secondary" className="ml-auto bg-blue-100 text-blue-700">$0.04/5min • 600-1200ms</Badge>
+            </Button>
+            
+            <Button
+              size="lg"
+              className="w-full h-12 bg-green-600 hover:bg-green-700"
               onClick={startHandsFreeSession}
+              disabled={isConnecting}
             >
-              <CardContent className="p-4">
-                <h3 className="font-semibold text-base mb-1">Hands-Free (Premium)</h3>
-                <p className="text-sm text-muted-foreground mb-2">Ultra-low latency real-time streaming</p>
-                <p className="text-xs font-medium">$0.30 per 5 minutes</p>
-              </CardContent>
-            </Card>
+              <Phone className="w-4 h-4 mr-2" />
+              {isConnecting ? "Connecting..." : "OpenAI Hands-Free (Premium)"}
+              <Badge variant="secondary" className="ml-auto bg-green-800">$0.30/5min • 300ms</Badge>
+            </Button>
           </div>
         )}
         
