@@ -46,7 +46,7 @@ const ConversationTimer: React.FC<ConversationTimerProps> = ({
   const progress = (seconds / maxSeconds) * 100;
 
   return (
-    <div className="flex items-center gap-2 px-4 py-2 bg-secondary/50 rounded-lg">
+    <div className="flex items-center gap-2 px-4 py-2 bg-secondary/90 rounded-lg backdrop-blur-sm">
       <Clock className="w-4 h-4 text-primary" />
       <div className="flex flex-col gap-1">
         <div className="text-sm font-medium">
