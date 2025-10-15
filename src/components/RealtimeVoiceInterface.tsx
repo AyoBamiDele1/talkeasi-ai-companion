@@ -846,8 +846,8 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
               disabled={isConnecting}
             >
               <div className="flex items-center w-full">
-                <Phone className="w-4 h-4 mr-2 text-blue-600" />
-                <span className="font-semibold text-blue-700">Hands-Free (Enhanced)</span>
+                <Phone className="w-4 h-4 mr-2 text-white" />
+                <span className="font-semibold text-white">Hands-Free (Enhanced)</span>
                 <Badge variant="secondary" className="ml-auto bg-blue-100 text-blue-700">$0.04/5min</Badge>
               </div>
               <p className="text-xs text-muted-foreground mt-1">Speak naturally — no tapping needed.</p>
