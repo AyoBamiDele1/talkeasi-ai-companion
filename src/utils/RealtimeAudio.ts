@@ -254,15 +254,17 @@ export class RealtimeChat {
               console.log('Connection established, starting audio recording...');
               // Start audio recording
               await this.startAudioRecording();
-            } else if (data.type === 'response.audio.delta') {
-              // Play audio chunk
+            } else if (data.type === 'response.audio.delta' || data.type === 'response.output_audio.delta') {
+              // Play audio chunk (supports both legacy and new event types)
               if (data.delta) {
                 console.log('Received audio delta');
                 await this.handleAudioDelta(data.delta);
               }
-            } else if (data.type === 'response.audio_transcript.delta') {
-              // Handle transcript
+            } else if (data.type === 'response.audio_transcript.delta' || data.type === 'response.output_audio_transcript.delta') {
+              // Handle transcript (supports both legacy and new event types)
               console.log('Transcript delta:', data.delta);
+              // Forward transcript events to the UI as well
+              this.onMessage(data);
             } else {
               // Forward to message handler
               this.onMessage(data);
