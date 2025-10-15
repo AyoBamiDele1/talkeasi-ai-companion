@@ -835,7 +835,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
                 <span className="font-semibold">Tap to Talk</span>
                 <Badge variant="secondary" className="ml-auto">$0.031/5min</Badge>
               </div>
-              <p className="text-xs text-muted-foreground mt-1">Press and hold to speak</p>
+              <p className="text-xs text-white/80 mt-1">Press and hold to speak</p>
             </Button>
             
             <Button
