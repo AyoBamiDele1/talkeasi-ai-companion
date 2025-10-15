@@ -36,7 +36,7 @@ serve(async (req) => {
     }
 
     try {
-      // Create ephemeral client secret (no configuration parameters)
+      // Create ephemeral client secret (no body parameters needed)
       console.log("Creating ephemeral client secret...");
       const sessionResponse = await fetch("https://api.openai.com/v1/realtime/client_secrets", {
         method: "POST",
@@ -44,9 +44,7 @@ serve(async (req) => {
           "Authorization": `Bearer ${openAIApiKey}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          model: "gpt-4o-realtime-preview-2024-12-17"
-        }),
+        body: JSON.stringify({}),
       });
 
       if (!sessionResponse.ok) {
