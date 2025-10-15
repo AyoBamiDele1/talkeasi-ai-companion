@@ -833,7 +833,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
               <div className="flex items-center w-full">
                 <Mic className="w-4 h-4 mr-2" />
                 <span className="font-semibold">Tap to Talk</span>
-                <Badge variant="secondary" className="ml-auto bg-gray-700 text-white">$0.031/5min</Badge>
+                <Badge variant="secondary" className="ml-auto bg-white text-gray-700">$0.031/5min</Badge>
               </div>
               <p className="text-xs text-white/80 mt-1">Press and hold to speak</p>
             </Button>
@@ -848,7 +848,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
               <div className="flex items-center w-full">
                 <Phone className="w-4 h-4 mr-2 text-white" />
                 <span className="font-semibold text-white">Hands-Free (Enhanced)</span>
-                <Badge variant="secondary" className="ml-auto bg-gray-700 text-white">$0.04/5min</Badge>
+                <Badge variant="secondary" className="ml-auto bg-white text-gray-700">$0.04/5min</Badge>
               </div>
               <p className="text-xs text-white/80 mt-1">Speak naturally — no tapping needed.</p>
             </Button>
@@ -863,7 +863,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
               <div className="flex items-center w-full">
                 <Phone className="w-4 h-4 mr-2" />
                 <span className="font-semibold">{isConnecting ? "Connecting..." : "Hands-Free (Premium)"}</span>
-                <Badge variant="secondary" className="ml-auto bg-gray-700 text-white">$0.30/5min</Badge>
+                <Badge variant="secondary" className="ml-auto bg-white text-gray-700">$0.30/5min</Badge>
               </div>
               <p className="text-xs text-white/80 mt-1">Fastest and most natural conversation.</p>
             </Button>
