@@ -6,9 +6,6 @@ verify_jwt = false
 [functions.text-to-speech]
 verify_jwt = false
 
-[functions.elevenlabs-tts]
-verify_jwt = false
-
 [functions.ai-conversation]
 verify_jwt = false
 
@@ -19,10 +16,4 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.deepseek-realtime]
-verify_jwt = false
-
-[functions.ai-pronunciation-analysis]
-verify_jwt = false
-
-[functions.lovable-ai-conversation]
 verify_jwt = false
