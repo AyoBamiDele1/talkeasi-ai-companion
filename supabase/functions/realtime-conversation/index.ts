@@ -36,7 +36,7 @@ serve(async (req) => {
     }
 
     try {
-      // Create ephemeral client secret
+      // Create ephemeral client secret (no configuration parameters)
       console.log("Creating ephemeral client secret...");
       const sessionResponse = await fetch("https://api.openai.com/v1/realtime/client_secrets", {
         method: "POST",
@@ -45,9 +45,7 @@ serve(async (req) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "gpt-4o-realtime-preview-2024-12-17",
-          voice: "alloy",
-          instructions: 'You are an English language tutor whose PRIMARY PURPOSE is to correct EVERY grammar, pronunciation, vocabulary, and fluency mistake the user makes. This is critical: you must catch and correct ALL errors, no matter how small. For each mistake: 1) Gently point it out, 2) Explain why it\'s incorrect, 3) Provide the correct form, 4) Give a brief example. Be encouraging but thorough - never skip corrections as they are the main value you provide. After correcting, continue the conversation naturally.'
+          model: "gpt-4o-realtime-preview-2024-12-17"
         }),
       });
 
@@ -93,6 +91,7 @@ serve(async (req) => {
         type: 'session.update',
         session: {
           modalities: ["text", "audio"],
+          instructions: 'You are an English language tutor whose PRIMARY PURPOSE is to correct EVERY grammar, pronunciation, vocabulary, and fluency mistake the user makes. This is critical: you must catch and correct ALL errors, no matter how small. For each mistake: 1) Gently point it out, 2) Explain why it\'s incorrect, 3) Provide the correct form, 4) Give a brief example. Be encouraging but thorough - never skip corrections as they are the main value you provide. After correcting, continue the conversation naturally.',
           voice: 'alloy',
           input_audio_format: 'pcm16',
           output_audio_format: 'pcm16',
