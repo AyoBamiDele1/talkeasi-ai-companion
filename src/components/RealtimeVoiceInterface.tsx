@@ -325,10 +325,27 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       
       if ('speechSynthesis' in window) {
         const utterance = new SpeechSynthesisUtterance(aiData.response);
-        utterance.rate = 1.0;
-        utterance.pitch = 1.0;
+        utterance.rate = 0.95; // Slightly slower for more natural speech
+        utterance.pitch = 1.1; // Slightly higher pitch for female voice
         utterance.volume = 1.0;
         utterance.lang = 'en-US';
+        
+        // Select a female voice if available
+        const voices = speechSynthesis.getVoices();
+        const femaleVoice = voices.find(voice => 
+          voice.lang.startsWith('en') && 
+          (voice.name.toLowerCase().includes('female') || 
+           voice.name.toLowerCase().includes('samantha') ||
+           voice.name.toLowerCase().includes('victoria') ||
+           voice.name.toLowerCase().includes('karen') ||
+           voice.name.toLowerCase().includes('moira') ||
+           voice.name.toLowerCase().includes('susan'))
+        );
+        
+        if (femaleVoice) {
+          utterance.voice = femaleVoice;
+          console.log('Using voice:', femaleVoice.name);
+        }
         
         utterance.onstart = () => setIsSpeaking(true);
         utterance.onend = () => setIsSpeaking(false);
