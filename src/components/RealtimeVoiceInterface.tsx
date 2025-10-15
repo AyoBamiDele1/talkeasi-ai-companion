@@ -804,35 +804,44 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
             <Button
               size="lg"
               variant="outline"
-              className="w-full h-12"
+              className="w-full h-auto py-3 flex-col items-start"
               onClick={startSession}
             >
-              <Mic className="w-4 h-4 mr-2" />
-              Tap to Talk
-              <Badge variant="secondary" className="ml-auto">$0.031/5min</Badge>
+              <div className="flex items-center w-full">
+                <Mic className="w-4 h-4 mr-2" />
+                <span className="font-semibold">Tap to Talk</span>
+                <Badge variant="secondary" className="ml-auto">$0.031/5min</Badge>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">Press and hold to speak</p>
             </Button>
             
             <Button
               size="lg"
               variant="outline"
-              className="w-full h-12 border-blue-200 hover:bg-blue-50"
+              className="w-full h-auto py-3 flex-col items-start border-blue-200 hover:bg-blue-50"
               onClick={startDeepSeekHandsFreeSession}
               disabled={isConnecting}
             >
-              <Phone className="w-4 h-4 mr-2 text-blue-600" />
-              <span className="text-blue-700">Hands-Free (Enhanced)</span>
-              <Badge variant="secondary" className="ml-auto bg-blue-100 text-blue-700">$0.04/5min</Badge>
+              <div className="flex items-center w-full">
+                <Phone className="w-4 h-4 mr-2 text-blue-600" />
+                <span className="font-semibold text-blue-700">Hands-Free (Enhanced)</span>
+                <Badge variant="secondary" className="ml-auto bg-blue-100 text-blue-700">$0.04/5min</Badge>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">Continuous conversation with smart detection</p>
             </Button>
             
             <Button
               size="lg"
-              className="w-full h-12 bg-green-600 hover:bg-green-700"
+              className="w-full h-auto py-3 flex-col items-start bg-green-600 hover:bg-green-700"
               onClick={startHandsFreeSession}
               disabled={isConnecting}
             >
-              <Phone className="w-4 h-4 mr-2" />
-              {isConnecting ? "Connecting..." : "Hands-Free (Premium)"}
-              <Badge variant="secondary" className="ml-auto bg-green-800">$0.30/5min</Badge>
+              <div className="flex items-center w-full">
+                <Phone className="w-4 h-4 mr-2" />
+                <span className="font-semibold">{isConnecting ? "Connecting..." : "Hands-Free (Premium)"}</span>
+                <Badge variant="secondary" className="ml-auto bg-green-800">$0.30/5min</Badge>
+              </div>
+              <p className="text-xs text-white/80 mt-1">Real-time streaming with fastest response</p>
             </Button>
           </div>
         )}
