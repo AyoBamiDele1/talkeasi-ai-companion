@@ -121,7 +121,7 @@ serve(async (req) => {
                 instructions: 'You are an English language tutor whose PRIMARY PURPOSE is to correct EVERY grammar, pronunciation, vocabulary, and fluency mistake the user makes. This is critical: you must catch and correct ALL errors, no matter how small. For each mistake: 1) Gently point it out, 2) Explain why it\'s incorrect, 3) Provide the correct form, 4) Give a brief example. Be encouraging but thorough - never skip corrections as they are the main value you provide. After correcting, continue the conversation naturally.',
                 audio: {
                   input: {
-                    format: { type: 'pcm16', rate: 24000 },
+                    format: { type: 'audio/pcm', rate: 24000 },
                     transcription: { model: 'whisper-1' },
                     turn_detection: {
                       type: 'server_vad',
@@ -131,7 +131,7 @@ serve(async (req) => {
                     }
                   },
                   output: {
-                    format: { type: 'pcm16', rate: 24000 },
+                    format: { type: 'audio/pcm', rate: 24000 },
                     voice: 'alloy',
                     speed: 1
                   }
