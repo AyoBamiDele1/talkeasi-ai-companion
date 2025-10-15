@@ -36,15 +36,18 @@ serve(async (req) => {
     }
 
     try {
-      // Create ephemeral client secret (no body parameters needed)
-      console.log("Creating ephemeral client secret...");
-      const sessionResponse = await fetch("https://api.openai.com/v1/realtime/client_secrets", {
+      // Create ephemeral session token
+      console.log("Creating ephemeral session token...");
+      const sessionResponse = await fetch("https://api.openai.com/v1/realtime/sessions", {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${openAIApiKey}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({}),
+        body: JSON.stringify({
+          model: "gpt-4o-realtime-preview-2024-12-17",
+          voice: "alloy"
+        }),
       });
 
       if (!sessionResponse.ok) {
