@@ -515,6 +515,22 @@ export class DeepSeekRealtimeChat {
     }
   }
 
+  pauseListening() {
+    if (this.browserSTT) {
+      console.log('[DeepSeek Realtime] Pausing STT to prevent feedback loop');
+      this.browserSTT.stop();
+    }
+  }
+
+  resumeListening() {
+    if (this.browserSTT) {
+      console.log('[DeepSeek Realtime] Resuming STT');
+      setTimeout(() => {
+        this.browserSTT?.start();
+      }, 500); // Small delay to avoid picking up tail end of AI speech
+    }
+  }
+
   private handleTranscriptResult(result: TranscriptResult) {
     // Forward transcript to UI immediately
     this.onTranscript(result.text, result.isFinal);

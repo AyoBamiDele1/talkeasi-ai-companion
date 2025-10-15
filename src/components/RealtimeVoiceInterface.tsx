@@ -585,6 +585,11 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
               }
             });
           } else if (message.type === 'response.text.done') {
+            // Pause STT to prevent audio feedback loop
+            if (deepSeekChatRef.current) {
+              deepSeekChatRef.current.pauseListening();
+            }
+            
             // Speak the response using browser TTS
             if ('speechSynthesis' in window) {
               const utterance = new SpeechSynthesisUtterance(message.text);
@@ -612,6 +617,11 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
               utterance.onend = () => {
                 setIsSpeaking(false);
                 setIsProcessing(false);
+                
+                // Resume STT after AI finishes speaking
+                if (deepSeekChatRef.current) {
+                  deepSeekChatRef.current.resumeListening();
+                }
               };
               
               speechSynthesis.speak(utterance);
