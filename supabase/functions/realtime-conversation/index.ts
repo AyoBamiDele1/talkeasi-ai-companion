@@ -36,18 +36,15 @@ serve(async (req) => {
     }
 
     try {
-      // Create ephemeral session token
-      console.log("Creating ephemeral session token...");
-      const sessionResponse = await fetch("https://api.openai.com/v1/realtime/sessions", {
+      // Create GA client secret (no beta session)
+      console.log("Creating GA client secret...");
+      const sessionResponse = await fetch("https://api.openai.com/v1/realtime/client_secrets", {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${openAIApiKey}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          model: "gpt-4o-realtime-preview-2024-12-17",
-          voice: "alloy"
-        }),
+        body: JSON.stringify({}),
       });
 
       if (!sessionResponse.ok) {
@@ -59,16 +56,23 @@ serve(async (req) => {
       }
 
       const sessionData = await sessionResponse.json();
-      console.log("Client secret created successfully");
+      console.log("Client secret response keys:", Object.keys(sessionData || {}));
 
-      if (!sessionData.client_secret?.value) {
-        console.error("No client secret in response");
+      // Support multiple possible response shapes from GA endpoint
+      const ephemeralKey: string | undefined =
+        (sessionData?.client_secret && sessionData.client_secret.value) ||
+        (typeof sessionData?.client_secret === 'string' ? sessionData.client_secret : undefined) ||
+        (typeof sessionData?.value === 'string' ? sessionData.value : undefined) ||
+        (typeof sessionData?.secret === 'string' ? sessionData.secret : undefined) ||
+        (sessionData?.data && sessionData.data.client_secret && sessionData.data.client_secret.value);
+
+      if (!ephemeralKey) {
+        console.error("No client secret in response", sessionData);
         socket.send(JSON.stringify({ error: 'No client secret received' }));
         socket.close(1011, 'Invalid session response');
         return;
       }
 
-      const ephemeralKey = sessionData.client_secret.value;
       console.log("Using ephemeral key for connection");
 
       // Connect to OpenAI Realtime API with ephemeral key
