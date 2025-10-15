@@ -12,6 +12,9 @@ verify_jwt = false
 [functions.ai-conversation]
 verify_jwt = false
 
+[functions.deepseek-conversation]
+verify_jwt = false
+
 [functions.realtime-conversation]
 verify_jwt = false
 

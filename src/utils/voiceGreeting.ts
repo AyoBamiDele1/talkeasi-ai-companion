@@ -21,22 +21,21 @@ export const speakGreeting = async (userName: string): Promise<void> => {
     
     console.log('Speaking greeting:', message);
     
-    // Use text-to-speech edge function
-    const { data, error } = await supabase.functions.invoke('text-to-speech', {
-      body: { 
-        text: message,
-        voice: 'alloy'
-      }
-    });
-
-    if (error) {
-      console.error('TTS greeting error:', error);
-      return;
-    }
-
-    if (data?.audioContent) {
-      const audio = new Audio(`data:audio/mp3;base64,${data.audioContent}`);
-      await audio.play();
+    // Use browser speech synthesis (FREE)
+    if ('speechSynthesis' in window) {
+      const utterance = new SpeechSynthesisUtterance(message);
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+      utterance.volume = 1.0;
+      utterance.lang = 'en-US';
+      
+      utterance.onerror = (error) => {
+        console.error('Speech synthesis error:', error);
+      };
+      
+      speechSynthesis.speak(utterance);
+    } else {
+      console.warn('Speech synthesis not supported in this browser');
     }
   } catch (error) {
     console.error('Error playing greeting:', error);

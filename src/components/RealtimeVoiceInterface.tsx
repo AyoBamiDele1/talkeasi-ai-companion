@@ -271,9 +271,9 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       setMessages(newMessagesWithUser);
       onMessageUpdate?.(newMessagesWithUser);
 
-      // Step 2: Get AI response
+      // Step 2: Get AI response using DeepSeek (cost-optimized)
       console.log('Getting AI response...');
-      const aiResponse = await supabase.functions.invoke('ai-conversation', {
+      const aiResponse = await supabase.functions.invoke('deepseek-conversation', {
         body: { 
           userText, 
           lessonContext: lessonContext || 'General English conversation practice',
@@ -311,32 +311,28 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       setMessages(finalMessages);
       onMessageUpdate?.(finalMessages);
 
-      // Step 3: Convert AI response to speech using OpenAI TTS
+      // Step 3: Convert AI response to speech using browser TTS (FREE)
       console.log('Converting text to speech...');
-      const ttsResponse = await supabase.functions.invoke('text-to-speech', {
-        body: { text: aiData.response, voice: 'alloy' }
-      });
-
-      if (ttsResponse.error) {
-        console.error('OpenAI TTS failed, falling back to browser TTS:', ttsResponse.error);
-        // Browser fallback to avoid blocking the flow
-        if (typeof speechSynthesis !== 'undefined') {
-          const utter = new SpeechSynthesisUtterance(aiData.response);
-          utter.onend = () => setIsSpeaking(false);
-          speechSynthesis.speak(utter);
-          toast({ title: 'Using browser voice', description: 'Cloud TTS unavailable, fell back to your device voice.' });
-          return; // Skip audio playback since browser is speaking
-        }
-        throw new Error(ttsResponse.error.message || 'Text-to-speech failed');
+      
+      if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance(aiData.response);
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
+        utterance.volume = 1.0;
+        utterance.lang = 'en-US';
+        
+        utterance.onstart = () => setIsSpeaking(true);
+        utterance.onend = () => setIsSpeaking(false);
+        utterance.onerror = (error) => {
+          console.error('Speech synthesis error:', error);
+          setIsSpeaking(false);
+        };
+        
+        speechSynthesis.speak(utterance);
+      } else {
+        console.warn('Speech synthesis not supported');
+        setIsSpeaking(false);
       }
-
-      const audioContent = ttsResponse.data?.audioContent;
-      if (!audioContent) {
-        throw new Error('No audio content returned from TTS');
-      }
-
-      // Play the audio
-      await playAudio(audioContent);
 
     } catch (error) {
       console.error('Voice processing error:', error);

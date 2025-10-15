@@ -253,9 +253,9 @@ const LessonSession = () => {
       };
       setMessages(prev => [...prev, userMessage]);
 
-      // Step 2: Get AI response (GPT-4o-mini)
+      // Step 2: Get AI response using DeepSeek (cost-optimized)
       setProcessingStage('thinking');
-      const aiResponse = await supabase.functions.invoke('ai-conversation', {
+      const aiResponse = await supabase.functions.invoke('deepseek-conversation', {
         body: { 
           userText, 
           lessonContext: lesson?.title || 'English Conversation Practice',
@@ -285,29 +285,33 @@ const LessonSession = () => {
       };
       setMessages(prev => [...prev, aiMessage]);
 
-      // Step 3: Convert to speech (OpenAI TTS)
+      // Step 3: Convert to speech using browser TTS (FREE)
       setProcessingStage('speaking');
-      const ttsResponse = await supabase.functions.invoke('text-to-speech', {
-        body: { text: aiData.response, voice: 'alloy' }
-      });
-
-      if (ttsResponse.error) {
-        throw new Error(ttsResponse.error.message);
-      }
-
-      const audioContent = ttsResponse.data?.audioContent;
-      if (!audioContent) {
-        throw new Error('No audio content returned from TTS');
-      }
-
-      // Play AI audio response
-      setIsAISpeaking(true);
-      const audio = new Audio(`data:audio/mpeg;base64,${audioContent}`);
-      audio.onended = () => {
+      
+      if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance(aiData.response);
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
+        utterance.volume = 1.0;
+        utterance.lang = 'en-US';
+        
+        utterance.onstart = () => setIsAISpeaking(true);
+        utterance.onend = () => {
+          setIsAISpeaking(false);
+          setProcessingStage(null);
+        };
+        utterance.onerror = (error) => {
+          console.error('Speech synthesis error:', error);
+          setIsAISpeaking(false);
+          setProcessingStage(null);
+        };
+        
+        speechSynthesis.speak(utterance);
+      } else {
+        console.warn('Speech synthesis not supported');
         setIsAISpeaking(false);
         setProcessingStage(null);
-      };
-      await audio.play();
+      }
 
     } catch (error) {
       console.error('Error processing audio:', error);
