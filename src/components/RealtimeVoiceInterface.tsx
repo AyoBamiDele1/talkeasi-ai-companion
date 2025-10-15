@@ -6,7 +6,7 @@ import { Mic, MicOff, Volume2, VolumeX, ArrowLeft, MessageSquare, Phone, PhoneOf
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import ProcessingIndicator from './ProcessingIndicator';
-import { RealtimeChat } from '@/utils/RealtimeAudio';
+import { RealtimeChat, DeepSeekRealtimeChat } from '@/utils/RealtimeAudio';
 
 interface ConversationMessage {
   id: string;
@@ -127,9 +127,11 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   const [isHandsFreeMode, setIsHandsFreeMode] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [isRecorderReady, setIsRecorderReady] = useState(false);
+  const [isDeepSeekMode, setIsDeepSeekMode] = useState(false);
   
   const audioRecorderRef = useRef<AudioRecorder>(new AudioRecorder());
   const realtimeChatRef = useRef<RealtimeChat | null>(null);
+  const deepSeekChatRef = useRef<DeepSeekRealtimeChat | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
   const messageIdCounter = useRef(0);
@@ -504,10 +506,11 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     }
   };
 
-  // Start hands-free session
+  // Start OpenAI hands-free session
   const startHandsFreeSession = async () => {
     try {
       setIsConnecting(true);
+      setIsDeepSeekMode(false);
       realtimeChatRef.current = new RealtimeChat(handleRealtimeMessage);
       await realtimeChatRef.current.connect();
       
@@ -528,14 +531,150 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       onMessageUpdate?.([welcomeMessage]);
       
       toast({
-        title: "Hands-Free Mode Active",
-        description: "Just start speaking naturally!",
+        title: "OpenAI Hands-Free Active",
+        description: "Premium mode with ~300ms latency",
       });
     } catch (error) {
       console.error('Failed to start hands-free session:', error);
       toast({
         title: "Connection Failed",
         description: error instanceof Error ? error.message : "Failed to connect to voice service",
+        variant: "destructive",
+      });
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
+  // Start DeepSeek hands-free session
+  const startDeepSeekHandsFreeSession = async () => {
+    try {
+      setIsConnecting(true);
+      setIsDeepSeekMode(true);
+      
+      deepSeekChatRef.current = new DeepSeekRealtimeChat(
+        (message) => {
+          console.log('[DeepSeek UI] Message:', message.type);
+          
+          if (message.type === 'response.text.delta') {
+            // Update assistant message with streaming text
+            setMessages(prev => {
+              const lastMsg = prev[prev.length - 1];
+              if (lastMsg && lastMsg.role === 'assistant') {
+                const updated = [...prev];
+                updated[updated.length - 1] = {
+                  ...lastMsg,
+                  content: message.fullText
+                };
+                return updated;
+              } else {
+                return [...prev, {
+                  id: `msg-${messageIdCounter.current++}`,
+                  role: 'assistant',
+                  content: message.fullText,
+                  timestamp: new Date()
+                }];
+              }
+            });
+          } else if (message.type === 'response.text.done') {
+            // Speak the response using browser TTS
+            if ('speechSynthesis' in window) {
+              const utterance = new SpeechSynthesisUtterance(message.text);
+              utterance.rate = 0.95;
+              utterance.pitch = 1.1;
+              utterance.volume = 1.0;
+              utterance.lang = 'en-US';
+              
+              const voices = speechSynthesis.getVoices();
+              const femaleVoice = voices.find(voice => 
+                voice.lang.startsWith('en') && 
+                (voice.name.toLowerCase().includes('female') || 
+                 voice.name.toLowerCase().includes('samantha') ||
+                 voice.name.toLowerCase().includes('victoria'))
+              );
+              
+              if (femaleVoice) {
+                utterance.voice = femaleVoice;
+              }
+              
+              utterance.onstart = () => setIsSpeaking(true);
+              utterance.onend = () => {
+                setIsSpeaking(false);
+                setIsProcessing(false);
+              };
+              
+              speechSynthesis.speak(utterance);
+            }
+            
+            setIsProcessing(false);
+            resetIdleTimer();
+            
+            if (message.cached) {
+              toast({
+                title: "Instant Response",
+                description: "Used cached response for instant reply!",
+              });
+            }
+          } else if (message.type === 'error') {
+            toast({
+              title: "Error",
+              description: message.error,
+              variant: "destructive",
+            });
+            setIsProcessing(false);
+          }
+        },
+        (text, isFinal) => {
+          // Handle transcript updates
+          setCurrentTranscript(text);
+          onTranscriptUpdate?.(text);
+          
+          if (isFinal) {
+            console.log('[DeepSeek UI] Final transcript:', text);
+            
+            // Add user message
+            const userMessage: ConversationMessage = {
+              id: `msg-${messageIdCounter.current++}`,
+              role: 'user',
+              content: text,
+              timestamp: new Date()
+            };
+            
+            setMessages(prev => [...prev, userMessage]);
+            onMessageUpdate?.(messages);
+            setCurrentTranscript('');
+            setIsProcessing(true);
+          }
+        }
+      );
+      
+      await deepSeekChatRef.current.connect(lessonContext || 'General English conversation practice');
+      
+      setIsSessionActive(true);
+      setIsHandsFreeMode(true);
+      setMessages([]);
+      
+      // Start idle timer
+      resetIdleTimer();
+      
+      const welcomeMessage: ConversationMessage = {
+        id: 'welcome',
+        role: 'assistant',
+        content: "Connected! I'm listening with DeepSeek. Just speak naturally - I'll respond in 600-1200ms.",
+        timestamp: new Date()
+      };
+      setMessages([welcomeMessage]);
+      onMessageUpdate?.([welcomeMessage]);
+      
+      toast({
+        title: "DeepSeek Hands-Free Active",
+        description: "Enhanced mode with 85% cost savings",
+      });
+    } catch (error) {
+      console.error('Failed to start DeepSeek session:', error);
+      toast({
+        title: "Connection Failed",
+        description: error instanceof Error ? error.message : "Failed to connect to DeepSeek service",
         variant: "destructive",
       });
     } finally {
@@ -581,11 +720,19 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       realtimeChatRef.current = null;
     }
     
+    // Disconnect DeepSeek chat if active
+    if (deepSeekChatRef.current) {
+      deepSeekChatRef.current.disconnect();
+      deepSeekChatRef.current = null;
+    }
+    
     setIsSessionActive(false);
     setIsHandsFreeMode(false);
+    setIsDeepSeekMode(false);
     setIsRecording(false);
     setIsProcessing(false);
     setMessages([]);
+    setCurrentTranscript('');
     onConversationEnd?.();
     
     toast({
@@ -605,9 +752,9 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
             </Badge>
             
             {isHandsFreeMode && (
-              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
+              <Badge variant="outline" className={`text-xs ${isDeepSeekMode ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-green-50 text-green-700 border-green-200'}`}>
                 <Phone className="w-3 h-3 mr-1" />
-                Hands-Free
+                {isDeepSeekMode ? 'DeepSeek' : 'OpenAI'} Hands-Free
               </Badge>
             )}
             
@@ -635,7 +782,9 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
           
           <p className="text-sm text-muted-foreground">
             {!isSessionActive 
-              ? "Choose your interaction mode" 
+              ? "Choose your interaction mode - Budget, Enhanced, or Premium" 
+              : isHandsFreeMode && currentTranscript
+              ? `Listening: "${currentTranscript}"`
               : isHandsFreeMode
               ? "Just speak naturally - I'm listening"
               : isRecording
@@ -651,24 +800,39 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
 
         {/* Mode Selection (when not active) */}
         {!isSessionActive && (
-          <div className="flex gap-2 mb-4">
+          <div className="space-y-3 mb-4">
             <Button
               size="lg"
               variant="outline"
-              className="flex-1 h-12"
+              className="w-full h-12"
               onClick={startSession}
             >
               <Mic className="w-4 h-4 mr-2" />
-              Push to Talk
+              Push to Talk (Budget)
+              <Badge variant="secondary" className="ml-auto">$0.031/5min</Badge>
             </Button>
+            
             <Button
               size="lg"
-              className="flex-1 h-12 bg-green-600 hover:bg-green-700"
+              variant="outline"
+              className="w-full h-12 border-blue-200 hover:bg-blue-50"
+              onClick={startDeepSeekHandsFreeSession}
+              disabled={isConnecting}
+            >
+              <Phone className="w-4 h-4 mr-2 text-blue-600" />
+              <span className="text-blue-700">DeepSeek Hands-Free (Enhanced)</span>
+              <Badge variant="secondary" className="ml-auto bg-blue-100 text-blue-700">$0.04/5min • 600-1200ms</Badge>
+            </Button>
+            
+            <Button
+              size="lg"
+              className="w-full h-12 bg-green-600 hover:bg-green-700"
               onClick={startHandsFreeSession}
               disabled={isConnecting}
             >
               <Phone className="w-4 h-4 mr-2" />
-              {isConnecting ? "Connecting..." : "Hands-Free"}
+              {isConnecting ? "Connecting..." : "OpenAI Hands-Free (Premium)"}
+              <Badge variant="secondary" className="ml-auto bg-green-800">$0.30/5min • 300ms</Badge>
             </Button>
           </div>
         )}

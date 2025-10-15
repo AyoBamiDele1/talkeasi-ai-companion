@@ -18,6 +18,9 @@ verify_jwt = false
 [functions.realtime-conversation]
 verify_jwt = false
 
+[functions.deepseek-realtime]
+verify_jwt = false
+
 [functions.ai-pronunciation-analysis]
 verify_jwt = false
 

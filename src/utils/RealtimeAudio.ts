@@ -381,3 +381,256 @@ export class RealtimeChat {
     this.cleanup();
   }
 }
+
+// ============= DeepSeek Realtime Chat with Browser STT =============
+
+import { BrowserSTT, TranscriptResult } from './BrowserSTT';
+import { ResponseCache } from './ResponseCache';
+import { NetworkMonitor, NetworkQuality } from './NetworkQuality';
+
+interface TextBatchItem {
+  text: string;
+  timestamp: number;
+  isFinal: boolean;
+}
+
+export class DeepSeekRealtimeChat {
+  private ws: WebSocket | null = null;
+  private browserSTT: BrowserSTT | null = null;
+  private responseCache: ResponseCache;
+  private networkMonitor: NetworkMonitor;
+  private isConnected = false;
+  private textBuffer: TextBatchItem[] = [];
+  private batchTimer: NodeJS.Timeout | null = null;
+  private currentNetworkQuality: NetworkQuality = 'good';
+  private lessonContext: string = '';
+  private conversationHistory: Array<{ role: string; content: string }> = [];
+
+  constructor(
+    private onMessage: (message: any) => void,
+    private onTranscript: (text: string, isFinal: boolean) => void
+  ) {
+    this.responseCache = new ResponseCache();
+    this.networkMonitor = new NetworkMonitor();
+  }
+
+  async connect(lessonContext: string): Promise<void> {
+    this.lessonContext = lessonContext;
+
+    return new Promise((resolve, reject) => {
+      try {
+        console.log('[DeepSeek Realtime] Connecting...');
+        
+        // Start network monitoring
+        this.networkMonitor.startMonitoring((metrics) => {
+          this.currentNetworkQuality = metrics.quality;
+          console.log('[DeepSeek Realtime] Network quality:', metrics.quality, 'latency:', metrics.latency.toFixed(0), 'ms');
+        });
+
+        // Connect to WebSocket
+        this.ws = new WebSocket(`wss://qcxjjhgfgyfhwacxppcp.functions.supabase.co/deepseek-realtime`);
+
+        this.ws.onopen = () => {
+          console.log('[DeepSeek Realtime] WebSocket connected');
+          this.isConnected = true;
+          this.startBrowserSTT();
+          resolve();
+        };
+
+        this.ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            console.log('[DeepSeek Realtime] Message:', data.type);
+
+            if (data.type === 'response.text.delta') {
+              // Forward streaming text to UI
+              this.onMessage(data);
+            } else if (data.type === 'response.text.done') {
+              // Cache the response
+              const lastUserMessage = this.conversationHistory[this.conversationHistory.length - 1];
+              if (lastUserMessage && lastUserMessage.role === 'user') {
+                this.responseCache.set(lastUserMessage.content, data.text);
+              }
+              
+              // Add to conversation history
+              this.conversationHistory.push({
+                role: 'assistant',
+                content: data.text
+              });
+
+              this.onMessage(data);
+            } else if (data.type === 'error') {
+              console.error('[DeepSeek Realtime] Error:', data.error);
+              this.onMessage(data);
+            } else {
+              this.onMessage(data);
+            }
+          } catch (error) {
+            console.error('[DeepSeek Realtime] Error processing message:', error);
+          }
+        };
+
+        this.ws.onerror = (error) => {
+          console.error('[DeepSeek Realtime] WebSocket error:', error);
+          reject(new Error('Failed to connect to DeepSeek realtime service'));
+        };
+
+        this.ws.onclose = () => {
+          console.log('[DeepSeek Realtime] WebSocket closed');
+          this.isConnected = false;
+          this.cleanup();
+        };
+      } catch (error) {
+        console.error('[DeepSeek Realtime] Error connecting:', error);
+        reject(error);
+      }
+    });
+  }
+
+  private startBrowserSTT() {
+    try {
+      console.log('[DeepSeek Realtime] Starting Browser STT...');
+
+      this.browserSTT = new BrowserSTT(
+        (result: TranscriptResult) => this.handleTranscriptResult(result),
+        (error: Error) => {
+          console.error('[DeepSeek Realtime] STT error:', error);
+          this.onMessage({ type: 'error', error: error.message });
+        },
+        () => {
+          console.log('[DeepSeek Realtime] STT ended');
+        },
+        {
+          continuous: true,
+          interimResults: true,
+          language: 'en-US'
+        }
+      );
+
+      this.browserSTT.start();
+      console.log('[DeepSeek Realtime] Browser STT started');
+    } catch (error) {
+      console.error('[DeepSeek Realtime] Error starting STT:', error);
+      throw error;
+    }
+  }
+
+  private handleTranscriptResult(result: TranscriptResult) {
+    // Forward transcript to UI immediately
+    this.onTranscript(result.text, result.isFinal);
+
+    // Add to buffer
+    this.textBuffer.push({
+      text: result.text,
+      timestamp: Date.now(),
+      isFinal: result.isFinal
+    });
+
+    // Get adaptive batching parameters
+    const batchSize = this.networkMonitor.getRecommendedBatchSize(this.currentNetworkQuality);
+    const silenceMs = this.networkMonitor.getRecommendedSilenceMs(this.currentNetworkQuality);
+
+    // Check if we should send immediately
+    if (result.isFinal && this.textBuffer.length >= batchSize) {
+      this.flushTextBuffer();
+    } else {
+      // Set timer to flush after silence
+      this.resetBatchTimer(silenceMs);
+    }
+  }
+
+  private resetBatchTimer(silenceMs: number) {
+    if (this.batchTimer) {
+      clearTimeout(this.batchTimer);
+    }
+
+    this.batchTimer = setTimeout(() => {
+      if (this.textBuffer.length > 0) {
+        this.flushTextBuffer();
+      }
+    }, silenceMs);
+  }
+
+  private flushTextBuffer() {
+    if (this.textBuffer.length === 0 || !this.ws || !this.isConnected) {
+      return;
+    }
+
+    // Combine text from buffer
+    const fullText = this.textBuffer
+      .map(item => item.text)
+      .join(' ')
+      .trim();
+
+    if (!fullText) {
+      this.textBuffer = [];
+      return;
+    }
+
+    console.log('[DeepSeek Realtime] Flushing buffer:', fullText);
+
+    // Check cache first
+    const cachedResponse = this.responseCache.get(fullText);
+    if (cachedResponse) {
+      console.log('[DeepSeek Realtime] Using cached response');
+      this.onMessage({
+        type: 'response.text.done',
+        text: cachedResponse,
+        cached: true
+      });
+      this.textBuffer = [];
+      return;
+    }
+
+    // Add to conversation history
+    this.conversationHistory.push({
+      role: 'user',
+      content: fullText
+    });
+
+    // Send to DeepSeek
+    this.ws.send(JSON.stringify({
+      type: 'text_message',
+      text: fullText,
+      lessonContext: this.lessonContext,
+      conversationHistory: this.conversationHistory.slice(-10) // Last 10 messages
+    }));
+
+    this.textBuffer = [];
+    
+    if (this.batchTimer) {
+      clearTimeout(this.batchTimer);
+      this.batchTimer = null;
+    }
+  }
+
+  private cleanup() {
+    if (this.browserSTT) {
+      this.browserSTT.stop();
+      this.browserSTT = null;
+    }
+    if (this.batchTimer) {
+      clearTimeout(this.batchTimer);
+      this.batchTimer = null;
+    }
+    this.networkMonitor.stopMonitoring();
+    this.textBuffer = [];
+  }
+
+  disconnect() {
+    this.isConnected = false;
+    if (this.ws) {
+      this.ws.close();
+      this.ws = null;
+    }
+    this.cleanup();
+  }
+
+  getCacheStats() {
+    return this.responseCache.getStats();
+  }
+
+  clearCache() {
+    this.responseCache.clear();
+  }
+}
