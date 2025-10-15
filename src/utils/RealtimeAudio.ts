@@ -254,11 +254,15 @@ export class RealtimeChat {
               console.log('Connection established, starting audio recording...');
               // Start audio recording
               await this.startAudioRecording();
-            } else if (data.type === 'response.output_audio.delta') {
-              // Play audio chunk - OpenAI sends audio in 'audio' field, not 'delta'
-              if (data.audio) {
-                await this.handleAudioDelta(data.audio);
+            } else if (data.type === 'response.audio.delta') {
+              // Play audio chunk
+              if (data.delta) {
+                console.log('Received audio delta');
+                await this.handleAudioDelta(data.delta);
               }
+            } else if (data.type === 'response.audio_transcript.delta') {
+              // Handle transcript
+              console.log('Transcript delta:', data.delta);
             } else {
               // Forward to message handler
               this.onMessage(data);
