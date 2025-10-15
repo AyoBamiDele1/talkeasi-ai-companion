@@ -808,7 +808,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
               onClick={startSession}
             >
               <Mic className="w-4 h-4 mr-2" />
-              Push to Talk (Budget)
+              Tap to Talk
               <Badge variant="secondary" className="ml-auto">$0.031/5min</Badge>
             </Button>
             
@@ -820,8 +820,8 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
               disabled={isConnecting}
             >
               <Phone className="w-4 h-4 mr-2 text-blue-600" />
-              <span className="text-blue-700">DeepSeek Hands-Free (Enhanced)</span>
-              <Badge variant="secondary" className="ml-auto bg-blue-100 text-blue-700">$0.04/5min • 600-1200ms</Badge>
+              <span className="text-blue-700">Hands-Free (Enhanced)</span>
+              <Badge variant="secondary" className="ml-auto bg-blue-100 text-blue-700">$0.04/5min</Badge>
             </Button>
             
             <Button
@@ -831,8 +831,8 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
               disabled={isConnecting}
             >
               <Phone className="w-4 h-4 mr-2" />
-              {isConnecting ? "Connecting..." : "OpenAI Hands-Free (Premium)"}
-              <Badge variant="secondary" className="ml-auto bg-green-800">$0.30/5min • 300ms</Badge>
+              {isConnecting ? "Connecting..." : "Hands-Free (Premium)"}
+              <Badge variant="secondary" className="ml-auto bg-green-800">$0.30/5min</Badge>
             </Button>
           </div>
         )}
