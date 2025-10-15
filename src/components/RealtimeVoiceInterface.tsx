@@ -862,7 +862,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
               <div className="flex items-center w-full">
                 <Phone className="w-4 h-4 mr-2" />
                 <span className="font-semibold">{isConnecting ? "Connecting..." : "Hands-Free (Premium)"}</span>
-                <Badge variant="secondary" className="ml-auto bg-green-800">$0.30/5min</Badge>
+                <Badge variant="secondary" className="ml-auto bg-white text-green-700">$0.30/5min</Badge>
               </div>
               <p className="text-xs text-white/80 mt-1">Fastest and most natural conversation.</p>
             </Button>
