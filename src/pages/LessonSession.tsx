@@ -437,6 +437,27 @@ const LessonSession = () => {
   const fallbackToSpeechSynthesis = (text: string) => {
     if ('speechSynthesis' in window) {
       const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 0.95;
+      utterance.pitch = 1.1;
+      utterance.volume = 1.0;
+      utterance.lang = 'en-US';
+      
+      // Select a natural female voice
+      const voices = speechSynthesis.getVoices();
+      const femaleVoice = voices.find(voice => 
+        voice.lang.startsWith('en') && 
+        (voice.name.toLowerCase().includes('female') || 
+         voice.name.toLowerCase().includes('samantha') ||
+         voice.name.toLowerCase().includes('victoria') ||
+         voice.name.toLowerCase().includes('karen') ||
+         voice.name.toLowerCase().includes('moira') ||
+         voice.name.toLowerCase().includes('susan'))
+      );
+      
+      if (femaleVoice) {
+        utterance.voice = femaleVoice;
+      }
+      
       utterance.onend = () => setIsAISpeaking(false);
       utterance.onerror = () => setIsAISpeaking(false);
       speechSynthesis.speak(utterance);

@@ -598,7 +598,10 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
                 voice.lang.startsWith('en') && 
                 (voice.name.toLowerCase().includes('female') || 
                  voice.name.toLowerCase().includes('samantha') ||
-                 voice.name.toLowerCase().includes('victoria'))
+                 voice.name.toLowerCase().includes('victoria') ||
+                 voice.name.toLowerCase().includes('karen') ||
+                 voice.name.toLowerCase().includes('moira') ||
+                 voice.name.toLowerCase().includes('susan'))
               );
               
               if (femaleVoice) {
