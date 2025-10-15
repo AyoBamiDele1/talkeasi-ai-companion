@@ -22,6 +22,8 @@ interface RealtimeVoiceInterfaceProps {
   onTranscriptUpdate?: (transcript: string) => void;
   onConversationEnd?: () => void;
   onMessageUpdate?: (messages: ConversationMessage[]) => void;
+  onSessionStart?: () => void;
+  onSessionEnd?: () => void;
 }
 
 // Audio recording class
@@ -116,7 +118,9 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   lessonContext,
   onTranscriptUpdate,
   onConversationEnd,
-  onMessageUpdate
+  onMessageUpdate,
+  onSessionStart,
+  onSessionEnd
 }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -517,6 +521,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       setIsSessionActive(true);
       setIsHandsFreeMode(true);
       setMessages([]);
+      onSessionStart?.(); // Notify parent
       
       // Start idle timer
       resetIdleTimer();
@@ -551,6 +556,9 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     try {
       setIsConnecting(true);
       setIsDeepSeekMode(true);
+      setIsSessionActive(true); // Set session active
+      setIsHandsFreeMode(true);
+      onSessionStart?.(); // Notify parent
       
       deepSeekChatRef.current = new DeepSeekRealtimeChat(
         (message) => {
@@ -687,6 +695,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     setIsSessionActive(true);
     setIsHandsFreeMode(false);
     setMessages([]);
+    onSessionStart?.(); // Notify parent
     
     // Add welcome message
     const welcomeMessage: ConversationMessage = {
@@ -733,6 +742,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     setIsProcessing(false);
     setMessages([]);
     setCurrentTranscript('');
+    onSessionEnd?.(); // Notify parent
     onConversationEnd?.();
     
     toast({

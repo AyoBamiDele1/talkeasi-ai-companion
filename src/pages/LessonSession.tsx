@@ -572,6 +572,12 @@ const LessonSession = () => {
           onTranscriptUpdate={(transcript) => {
             setCurrentStreamText(transcript);
           }}
+          onSessionStart={() => {
+            setIsSessionActive(true);
+          }}
+          onSessionEnd={() => {
+            setIsSessionActive(false);
+          }}
           onConversationEnd={() => {
             console.log('Conversation ended');
           }}
