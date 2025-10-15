@@ -827,7 +827,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
                 <span className="font-semibold text-blue-700">Hands-Free (Enhanced)</span>
                 <Badge variant="secondary" className="ml-auto bg-blue-100 text-blue-700">$0.04/5min</Badge>
               </div>
-              <p className="text-xs text-muted-foreground mt-1">Continuous conversation with smart detection</p>
+              <p className="text-xs text-muted-foreground mt-1">Speak naturally — no tapping needed.</p>
             </Button>
             
             <Button
@@ -841,7 +841,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
                 <span className="font-semibold">{isConnecting ? "Connecting..." : "Hands-Free (Premium)"}</span>
                 <Badge variant="secondary" className="ml-auto bg-green-800">$0.30/5min</Badge>
               </div>
-              <p className="text-xs text-white/80 mt-1">Real-time streaming with fastest response</p>
+              <p className="text-xs text-white/80 mt-1">Fastest and most natural conversation.</p>
             </Button>
           </div>
         )}
