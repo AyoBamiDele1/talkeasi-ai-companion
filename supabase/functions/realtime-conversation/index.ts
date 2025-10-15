@@ -36,9 +36,9 @@ serve(async (req) => {
     }
 
     try {
-      // Create ephemeral session token
-      console.log("Creating ephemeral session...");
-      const sessionResponse = await fetch("https://api.openai.com/v1/realtime/sessions", {
+      // Create ephemeral client secret
+      console.log("Creating ephemeral client secret...");
+      const sessionResponse = await fetch("https://api.openai.com/v1/realtime/client_secrets", {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${openAIApiKey}`,
@@ -60,7 +60,7 @@ serve(async (req) => {
       }
 
       const sessionData = await sessionResponse.json();
-      console.log("Session created successfully");
+      console.log("Client secret created successfully");
 
       if (!sessionData.client_secret?.value) {
         console.error("No client secret in response");
@@ -70,6 +70,7 @@ serve(async (req) => {
       }
 
       const ephemeralKey = sessionData.client_secret.value;
+      console.log("Using ephemeral key for connection");
 
       // Connect to OpenAI Realtime API with ephemeral key
       openAISocket = new WebSocket(
