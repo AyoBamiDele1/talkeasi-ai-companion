@@ -132,8 +132,8 @@ serve(async (req) => {
                   },
                   output: {
                     format: { type: 'audio/pcm', rate: 24000 },
-                    voice: 'shimmer',
-                    speed: 1
+                    voice: 'nova',
+                    speed: 0.95
                   }
                 }
               }
