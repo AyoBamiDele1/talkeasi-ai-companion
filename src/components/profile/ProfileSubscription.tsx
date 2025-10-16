@@ -91,8 +91,8 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
   });
 
   const calculateEstimatedTime = (credits: number) => {
-    // Using Tap to Talk mode as baseline: 3.6 credits per minute
-    const minutes = Math.floor(credits / 3.6);
+    // Using new budget rate as baseline: 0.6 credits per minute (3 credits per 5 min)
+    const minutes = Math.floor(credits / 0.6);
     if (minutes < 60) return `${minutes} minutes`;
     const hours = Math.floor(minutes / 60);
     const remainingMinutes = minutes % 60;
@@ -144,7 +144,7 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
             ≈ {calculateEstimatedTime(userCredits?.balance || 0)} of practice time
           </p>
           
-          {userCredits && userCredits.balance < 20 && userCredits.balance > 0 && (
+          {userCredits && userCredits.balance < 10 && userCredits.balance > 0 && (
             <div className="mt-4 p-3 bg-warning/10 border border-warning/20 rounded-lg flex items-start gap-2">
               <AlertCircle className="w-4 h-4 text-warning mt-0.5" />
               <div>
@@ -202,15 +202,15 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
         <CardContent>
           <div className="space-y-2">
             <div className="flex justify-between py-2 border-b">
-              <span className="text-sm font-medium">Tap to Talk</span>
-              <span className="text-sm text-muted-foreground">18 credits per 5 min</span>
+              <span className="text-sm font-medium">Tap to Talk (Browser STT + DeepSeek)</span>
+              <span className="text-sm text-muted-foreground">3 credits per 5 min</span>
             </div>
             <div className="flex justify-between py-2 border-b">
-              <span className="text-sm font-medium">Hands-Free Enhanced</span>
-              <span className="text-sm text-muted-foreground">8 credits per 5 min</span>
+              <span className="text-sm font-medium">Hands-Free Enhanced (Browser STT + DeepSeek)</span>
+              <span className="text-sm text-muted-foreground">3 credits per 5 min</span>
             </div>
             <div className="flex justify-between py-2">
-              <span className="text-sm font-medium">Hands-Free Premium</span>
+              <span className="text-sm font-medium">Hands-Free Premium (OpenAI Realtime)</span>
               <span className="text-sm text-muted-foreground">300 credits per 5 min</span>
             </div>
           </div>

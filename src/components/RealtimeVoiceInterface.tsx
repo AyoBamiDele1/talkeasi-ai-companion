@@ -598,11 +598,11 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
 
   // Start DeepSeek hands-free session
   const startDeepSeekHandsFreeSession = async () => {
-    // Check credits for non-trial users (Enhanced mode needs 5+ credits for 3 min)
-    if (!isTrialMode && userCredits < 5) {
+    // Check credits for non-trial users (Enhanced mode needs 3+ credits for 5 min)
+    if (!isTrialMode && userCredits < 3) {
       toast({
         title: "Insufficient Credits",
-        description: "You need at least 5 credits to start a session.",
+        description: "You need at least 3 credits to start a session.",
         variant: "destructive",
         action: <Button onClick={() => navigate('/profile')}>Buy Credits</Button>
       });
@@ -781,9 +781,9 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       const durationMinutes = durationMs / 60000;
       
       const creditRates = {
-        tap: 18,     // 18 credits per 5 min = 3.6 credits/min
-        enhanced: 8, // 8 credits per 5 min = 1.6 credits/min
-        premium: 300 // 300 credits per 5 min = 60 credits/min
+        tap: 3,      // 3 credits per 5 min = 0.6 credits/min (Browser STT + DeepSeek)
+        enhanced: 3, // 3 credits per 5 min = 0.6 credits/min (Browser STT + DeepSeek)
+        premium: 300 // 300 credits per 5 min = 60 credits/min (OpenAI Realtime API)
       };
       
       const creditsPerMinute = creditRates[currentMode] / 5;
@@ -871,7 +871,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
         )}
 
         {/* Low Balance Warning */}
-        {!isTrialMode && userCredits < 20 && userCredits > 0 && (
+        {!isTrialMode && userCredits < 10 && userCredits > 0 && (
           <Alert className="mb-4 bg-warning/10 border-warning/20">
             <AlertCircle className="h-4 w-4 text-warning" />
             <AlertTitle>Low Credits</AlertTitle>
@@ -950,9 +950,9 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
               <div className="flex items-center w-full">
                 <Mic className="w-4 h-4 mr-2" />
                 <span className="font-semibold">Tap to Talk</span>
-                <Badge variant="secondary" className="ml-auto bg-white text-gray-700">$0.031/5min</Badge>
+                <Badge variant="secondary" className="ml-auto bg-white text-gray-700">3 credits/5min</Badge>
               </div>
-              <p className="text-xs text-white/80 mt-1">Press and hold to speak</p>
+              <p className="text-xs text-white/80 mt-1">Browser STT + DeepSeek AI</p>
             </Button>
             
             <Button
@@ -965,9 +965,9 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
               <div className="flex items-center w-full">
                 <Phone className="w-4 h-4 mr-2 text-white" />
                 <span className="font-semibold text-white">Hands-Free (Enhanced)</span>
-                <Badge variant="secondary" className="ml-auto bg-white text-gray-700">$0.04/5min</Badge>
+                <Badge variant="secondary" className="ml-auto bg-white text-gray-700">3 credits/5min</Badge>
               </div>
-              <p className="text-xs text-white/80 mt-1">Speak naturally — no tapping needed.</p>
+              <p className="text-xs text-white/80 mt-1">Speak naturally — Browser STT + DeepSeek</p>
             </Button>
             
             <Button
@@ -980,9 +980,9 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
               <div className="flex items-center w-full">
                 <Phone className="w-4 h-4 mr-2" />
                 <span className="font-semibold">{isConnecting ? "Connecting..." : "Hands-Free (Premium)"}</span>
-                <Badge variant="secondary" className="ml-auto bg-white text-gray-700">$0.30/5min</Badge>
+                <Badge variant="secondary" className="ml-auto bg-white text-gray-700">300 credits/5min</Badge>
               </div>
-              <p className="text-xs text-white/80 mt-1">Fastest and most natural conversation.</p>
+              <p className="text-xs text-white/80 mt-1">OpenAI Realtime - Ultra low latency</p>
             </Button>
           </div>
         )}
