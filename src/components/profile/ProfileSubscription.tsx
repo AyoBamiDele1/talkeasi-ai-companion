@@ -91,11 +91,15 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
   });
 
   const calculateEstimatedTime = (credits: number) => {
-    // Assuming 1 credit per minute for tap-to-talk mode
-    const minutes = credits;
+    // Using Tap to Talk mode as baseline: 3.6 credits per minute
+    const minutes = Math.floor(credits / 3.6);
     if (minutes < 60) return `${minutes} minutes`;
     const hours = Math.floor(minutes / 60);
-    return `~${hours} hour${hours > 1 ? 's' : ''}`;
+    const remainingMinutes = minutes % 60;
+    if (remainingMinutes === 0) {
+      return `~${hours} hour${hours > 1 ? 's' : ''}`;
+    }
+    return `~${hours}h ${remainingMinutes}m`;
   };
 
   const handlePurchase = (packageId: string) => {
@@ -199,15 +203,15 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
           <div className="space-y-2">
             <div className="flex justify-between py-2 border-b">
               <span className="text-sm font-medium">Tap to Talk</span>
-              <span className="text-sm text-muted-foreground">5 credits per 5 min</span>
+              <span className="text-sm text-muted-foreground">18 credits per 5 min</span>
             </div>
             <div className="flex justify-between py-2 border-b">
               <span className="text-sm font-medium">Hands-Free Enhanced</span>
-              <span className="text-sm text-muted-foreground">7 credits per 5 min</span>
+              <span className="text-sm text-muted-foreground">8 credits per 5 min</span>
             </div>
             <div className="flex justify-between py-2">
               <span className="text-sm font-medium">Hands-Free Premium</span>
-              <span className="text-sm text-muted-foreground">50 credits per 5 min</span>
+              <span className="text-sm text-muted-foreground">300 credits per 5 min</span>
             </div>
           </div>
         </CardContent>

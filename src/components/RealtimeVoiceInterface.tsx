@@ -783,9 +783,9 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       const durationMinutes = durationMs / 60000;
       
       const creditRates = {
-        tap: 5,      // 5 credits per 5 min = 1 credit/min
-        enhanced: 7, // 7 credits per 5 min = 1.4 credits/min
-        premium: 50  // 50 credits per 5 min = 10 credits/min
+        tap: 18,     // 18 credits per 5 min = 3.6 credits/min
+        enhanced: 8, // 8 credits per 5 min = 1.6 credits/min
+        premium: 300 // 300 credits per 5 min = 60 credits/min
       };
       
       const creditsPerMinute = creditRates[currentMode] / 5;
