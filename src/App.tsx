@@ -29,10 +29,10 @@ const App = () => (
         <AuthProvider>
           <div className="min-h-screen bg-background">
             <Routes>
-              <Route path="/onboarding" element={<Index />} />
+              <Route path="/" element={<Index />} />
               <Route path="/trial" element={<Trial />} />
               <Route path="/auth" element={<Auth />} />
-              <Route path="/" element={
+              <Route path="/home" element={
                 <ProtectedRoute>
                   <Home />
                 </ProtectedRoute>
