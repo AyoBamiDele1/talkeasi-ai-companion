@@ -132,7 +132,7 @@ serve(async (req) => {
                   },
                   output: {
                     format: { type: 'audio/pcm', rate: 24000 },
-                    voice: 'nova',
+                    voice: 'alloy',
                     speed: 0.95
                   }
                 }
