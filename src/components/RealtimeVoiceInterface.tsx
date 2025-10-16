@@ -924,7 +924,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
           
           <p className="text-sm text-muted-foreground">
             {!isSessionActive 
-              ? "Choose your interaction mode - Budget, Enhanced, or Premium" 
+              ? (isTrialMode ? "Tap the microphone to start your free trial" : "Choose your interaction mode - Budget, Enhanced, or Premium")
               : isHandsFreeMode && currentTranscript
               ? `Listening: "${currentTranscript}"`
               : isHandsFreeMode
@@ -998,6 +998,17 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
               onClick={() => navigate('/lessons')}
             >
               <ArrowLeft className="w-5 h-5" />
+            </Button>
+          )}
+
+          {/* Trial Mode: Show microphone button to start session */}
+          {isTrialMode && !isSessionActive && (
+            <Button
+              size="lg"
+              className="w-20 h-20 rounded-full bg-primary hover:bg-primary/90"
+              onClick={startSession}
+            >
+              <Mic className="w-8 h-8" />
             </Button>
           )}
 
