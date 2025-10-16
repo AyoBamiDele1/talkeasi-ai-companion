@@ -544,7 +544,20 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
 
   // Start OpenAI hands-free session
   const startHandsFreeSession = async () => {
+    // Check credits for non-trial users (Premium mode needs 60+ credits for 1 min)
+    if (!isTrialMode && userCredits < 60) {
+      toast({
+        title: "Insufficient Credits",
+        description: "Premium mode needs at least 60 credits to start a session.",
+        variant: "destructive",
+        action: <Button onClick={() => navigate('/profile')}>Buy Credits</Button>
+      });
+      return;
+    }
+
     try {
+      setCurrentMode('premium');
+      setSessionStartTime(Date.now());
       setIsConnecting(true);
       setIsDeepSeekMode(false);
       realtimeChatRef.current = new RealtimeChat(handleRealtimeMessage);
@@ -585,7 +598,20 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
 
   // Start DeepSeek hands-free session
   const startDeepSeekHandsFreeSession = async () => {
+    // Check credits for non-trial users (Enhanced mode needs 5+ credits for 3 min)
+    if (!isTrialMode && userCredits < 5) {
+      toast({
+        title: "Insufficient Credits",
+        description: "You need at least 5 credits to start a session.",
+        variant: "destructive",
+        action: <Button onClick={() => navigate('/profile')}>Buy Credits</Button>
+      });
+      return;
+    }
+
     try {
+      setCurrentMode('enhanced');
+      setSessionStartTime(Date.now());
       setIsConnecting(true);
       setIsDeepSeekMode(true);
       setIsSessionActive(true); // Set session active
