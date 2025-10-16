@@ -48,7 +48,6 @@ const LessonSession = () => {
   const [lesson, setLesson] = useState<any>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [useRealtimeMode, setUseRealtimeMode] = useState(true); // Use RealtimeVoiceInterface with hands-free option
-  const [useElevenLabs, setUseElevenLabs] = useState(false); // Use OpenAI TTS only
   const [showAdvancedAnalysis, setShowAdvancedAnalysis] = useState(false);
   const [isSessionActive, setIsSessionActive] = useState(false);
   
