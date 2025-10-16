@@ -618,6 +618,13 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       setIsHandsFreeMode(true);
       onSessionStart?.(); // Notify parent
       
+      // Show different message for trial vs regular users
+      const initialToast = isTrialMode 
+        ? { title: "Trial Started", description: "Free 1-minute trial with AI voice coach" }
+        : { title: "DeepSeek Hands-Free Active", description: "Enhanced mode with low latency" };
+      
+      toast(initialToast);
+      
       deepSeekChatRef.current = new DeepSeekRealtimeChat(
         (message) => {
           console.log('[DeepSeek UI] Message:', message.type);
@@ -739,16 +746,13 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       const welcomeMessage: ConversationMessage = {
         id: 'welcome',
         role: 'assistant',
-        content: "Connected! I'm listening with DeepSeek. Just speak naturally - I'll respond in 600-1200ms.",
+        content: isTrialMode
+          ? "Welcome to your free trial! I can hear you now. Just start speaking naturally."
+          : "Connected! I'm listening with DeepSeek. Just speak naturally - I'll respond in 600-1200ms.",
         timestamp: new Date()
       };
       setMessages([welcomeMessage]);
       onMessageUpdate?.([welcomeMessage]);
-      
-      toast({
-        title: "DeepSeek Hands-Free Active",
-        description: "Enhanced mode with 85% cost savings",
-      });
     } catch (error) {
       console.error('Failed to start DeepSeek session:', error);
       toast({
@@ -763,6 +767,12 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
 
   // Start push-to-talk session
   const startSession = () => {
+    // Trial users automatically use DeepSeek hands-free for cost optimization
+    if (isTrialMode) {
+      startDeepSeekHandsFreeSession();
+      return;
+    }
+
     // Check credits for non-trial users
     if (!isTrialMode && userCredits < 5) {
       toast({
@@ -785,9 +795,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     const welcomeMessage: ConversationMessage = {
       id: 'welcome',
       role: 'assistant',
-      content: isTrialMode 
-        ? "Welcome to your free trial! Press and hold the microphone to start speaking."
-        : "Welcome! I'm ready to help you practice. Press and hold the microphone to start speaking.",
+      content: "Welcome! I'm ready to help you practice. Press and hold the microphone to start speaking.",
       timestamp: new Date()
     };
     setMessages([welcomeMessage]);
@@ -795,7 +803,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     
     toast({
       title: "Session Started",
-      description: isTrialMode ? "1-minute free trial active" : "Voice practice session is now active",
+      description: "Voice practice session is now active",
     });
   };
 
@@ -950,7 +958,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
           
           <p className="text-sm text-muted-foreground">
             {!isSessionActive 
-              ? (isTrialMode ? "Tap the microphone to start your free trial" : "Choose your interaction mode - Budget, Enhanced, or Premium")
+              ? (isTrialMode ? "Tap to start your free hands-free trial" : "Choose your interaction mode - Budget, Enhanced, or Premium")
               : isHandsFreeMode && currentTranscript
               ? `Listening: "${currentTranscript}"`
               : isHandsFreeMode

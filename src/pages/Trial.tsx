@@ -84,11 +84,11 @@ const Trial = () => {
                 Try TalkEasi Free!
               </h1>
               <p className="text-muted-foreground mb-4">
-                Practice with our AI coach for 1 minute — no signup needed
+                Experience hands-free AI conversation for 1 minute — no signup needed
               </p>
             </>
           )}
-          <p className="text-muted-foreground">💡 Say hello to your AI Coach!</p>
+          <p className="text-muted-foreground">💡 Just tap to start, then speak naturally — no buttons to hold!</p>
         </div>
         
         <RealtimeVoiceInterface 
