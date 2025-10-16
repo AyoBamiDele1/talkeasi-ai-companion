@@ -765,46 +765,10 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     }
   };
 
-  // Start push-to-talk session
+  // Start push-to-talk session - now uses Browser STT + DeepSeek for cost optimization
   const startSession = () => {
-    // Trial users automatically use DeepSeek hands-free for cost optimization
-    if (isTrialMode) {
-      startDeepSeekHandsFreeSession();
-      return;
-    }
-
-    // Check credits for non-trial users
-    if (!isTrialMode && userCredits < 5) {
-      toast({
-        title: "Insufficient Credits",
-        description: "You need at least 5 credits to start a session.",
-        variant: "destructive",
-        action: <Button onClick={() => navigate('/profile')}>Buy Credits</Button>
-      });
-      return;
-    }
-
-    setCurrentMode('tap');
-    setSessionStartTime(Date.now());
-    setIsSessionActive(true);
-    setIsHandsFreeMode(false);
-    setMessages([]);
-    onSessionStart?.(); // Notify parent
-    
-    // Add welcome message
-    const welcomeMessage: ConversationMessage = {
-      id: 'welcome',
-      role: 'assistant',
-      content: "Welcome! I'm ready to help you practice. Press and hold the microphone to start speaking.",
-      timestamp: new Date()
-    };
-    setMessages([welcomeMessage]);
-    onMessageUpdate?.([welcomeMessage]);
-    
-    toast({
-      title: "Session Started",
-      description: "Voice practice session is now active",
-    });
+    // All modes now use DeepSeek hands-free (Browser STT + DeepSeek) for cost optimization
+    startDeepSeekHandsFreeSession();
   };
 
   // End session
