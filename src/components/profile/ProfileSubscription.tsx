@@ -30,6 +30,12 @@ interface CreditTransaction {
   created_at: string;
 }
 
+const convertNgnToUsd = (ngn: number): string => {
+  const USD_TO_NGN_RATE = 1500; // Fixed rate: 1 USD = 1500 NGN
+  const usd = ngn / USD_TO_NGN_RATE;
+  return usd.toFixed(2); // Return with 2 decimal places
+};
+
 const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -165,7 +171,12 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold mb-2">₦{pkg.price_ngn.toLocaleString()}</div>
+                <div className="text-3xl font-bold mb-2">
+                  ₦{pkg.price_ngn.toLocaleString()}
+                  <span className="text-sm text-muted-foreground font-normal ml-2">
+                    (~${convertNgnToUsd(pkg.price_ngn)})
+                  </span>
+                </div>
                 <p className="text-lg font-semibold mb-1">{pkg.credits} credits</p>
                 <p className="text-sm text-muted-foreground mb-4">
                   ≈ {calculateEstimatedTime(pkg.credits)}
