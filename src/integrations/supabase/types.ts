@@ -124,6 +124,72 @@ export type Database = {
           },
         ]
       }
+      credit_packages: {
+        Row: {
+          bonus_percentage: number | null
+          created_at: string | null
+          credits: number
+          display_order: number | null
+          id: string
+          is_active: boolean | null
+          name: string
+          price_ngn: number
+        }
+        Insert: {
+          bonus_percentage?: number | null
+          created_at?: string | null
+          credits: number
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          price_ngn: number
+        }
+        Update: {
+          bonus_percentage?: number | null
+          created_at?: string | null
+          credits?: number
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          price_ngn?: number
+        }
+        Relationships: []
+      }
+      credit_transactions: {
+        Row: {
+          amount: number
+          balance_after: number
+          created_at: string | null
+          description: string
+          id: string
+          metadata: Json | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          balance_after: number
+          created_at?: string | null
+          description: string
+          id?: string
+          metadata?: Json | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          balance_after?: number
+          created_at?: string | null
+          description?: string
+          id?: string
+          metadata?: Json | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       friendships: {
         Row: {
           addressee_id: string
@@ -344,6 +410,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_credits: {
+        Row: {
+          balance: number
+          created_at: string | null
+          id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       user_progress: {
         Row: {

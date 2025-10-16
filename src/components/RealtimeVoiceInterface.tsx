@@ -1,10 +1,12 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Mic, MicOff, Volume2, VolumeX, ArrowLeft, MessageSquare, Phone, PhoneOff } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Mic, MicOff, Volume2, VolumeX, ArrowLeft, MessageSquare, Phone, PhoneOff, Coins, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 import ProcessingIndicator from './ProcessingIndicator';
 import { RealtimeChat, DeepSeekRealtimeChat } from '@/utils/RealtimeAudio';
 
@@ -24,6 +26,7 @@ interface RealtimeVoiceInterfaceProps {
   onMessageUpdate?: (messages: ConversationMessage[]) => void;
   onSessionStart?: () => void;
   onSessionEnd?: () => void;
+  isTrialMode?: boolean;
 }
 
 // Audio recording class
@@ -120,7 +123,8 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   onConversationEnd,
   onMessageUpdate,
   onSessionStart,
-  onSessionEnd
+  onSessionEnd,
+  isTrialMode = false
 }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -132,15 +136,43 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   const [isConnecting, setIsConnecting] = useState(false);
   const [isRecorderReady, setIsRecorderReady] = useState(false);
   const [isDeepSeekMode, setIsDeepSeekMode] = useState(false);
+  const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
+  const [currentMode, setCurrentMode] = useState<'tap' | 'enhanced' | 'premium'>('tap');
+  const [userCredits, setUserCredits] = useState<number>(0);
   
   const audioRecorderRef = useRef<AudioRecorder>(new AudioRecorder());
   const realtimeChatRef = useRef<RealtimeChat | null>(null);
   const deepSeekChatRef = useRef<DeepSeekRealtimeChat | null>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const messageIdCounter = useRef(0);
   const idleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const IDLE_TIMEOUT_MS = 180000; // 3 minutes of inactivity
+
+  // Fetch user credits on mount
+  useEffect(() => {
+    if (!isTrialMode && user) {
+      fetchUserCredits();
+    }
+  }, [user, isTrialMode]);
+
+  const fetchUserCredits = async () => {
+    if (!user) return;
+    
+    const { data, error } = await supabase
+      .from('user_credits')
+      .select('balance')
+      .eq('user_id', user.id)
+      .single();
+    
+    if (error) {
+      console.error('Error fetching credits:', error);
+      return;
+    }
+    
+    setUserCredits(data?.balance || 0);
+  };
 
   // Convert blob to base64
   const blobToBase64 = (blob: Blob): Promise<string> => {
@@ -705,6 +737,19 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
 
   // Start push-to-talk session
   const startSession = () => {
+    // Check credits for non-trial users
+    if (!isTrialMode && userCredits < 5) {
+      toast({
+        title: "Insufficient Credits",
+        description: "You need at least 5 credits to start a session.",
+        variant: "destructive",
+        action: <Button onClick={() => navigate('/profile')}>Buy Credits</Button>
+      });
+      return;
+    }
+
+    setCurrentMode('tap');
+    setSessionStartTime(Date.now());
     setIsSessionActive(true);
     setIsHandsFreeMode(false);
     setMessages([]);
@@ -714,7 +759,9 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     const welcomeMessage: ConversationMessage = {
       id: 'welcome',
       role: 'assistant',
-      content: "Welcome! I'm ready to help you practice. Press and hold the microphone to start speaking.",
+      content: isTrialMode 
+        ? "Welcome to your free trial! Press and hold the microphone to start speaking."
+        : "Welcome! I'm ready to help you practice. Press and hold the microphone to start speaking.",
       timestamp: new Date()
     };
     setMessages([welcomeMessage]);
@@ -722,13 +769,58 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     
     toast({
       title: "Session Started",
-      description: "Voice practice session is now active",
+      description: isTrialMode ? "1-minute free trial active" : "Voice practice session is now active",
     });
   };
 
   // End session
-  const endSession = () => {
+  const endSession = async () => {
     stopAudio();
+    
+    // Deduct credits for non-trial users
+    if (!isTrialMode && sessionStartTime && user) {
+      const durationMs = Date.now() - sessionStartTime;
+      const durationMinutes = durationMs / 60000;
+      
+      const creditRates = {
+        tap: 5,      // 5 credits per 5 min = 1 credit/min
+        enhanced: 7, // 7 credits per 5 min = 1.4 credits/min
+        premium: 50  // 50 credits per 5 min = 10 credits/min
+      };
+      
+      const creditsPerMinute = creditRates[currentMode] / 5;
+      const creditsToDeduct = Math.ceil(durationMinutes * creditsPerMinute);
+      
+      try {
+        const { data, error } = await supabase.functions.invoke('deduct-credits', {
+          body: {
+            amount: creditsToDeduct,
+            description: `${durationMinutes.toFixed(1)} min ${currentMode} session`,
+            metadata: {
+              mode: currentMode,
+              duration_minutes: durationMinutes,
+              lesson_id: lessonContext
+            }
+          }
+        });
+        
+        if (error) throw error;
+        
+        await fetchUserCredits();
+        
+        toast({
+          title: "Session Ended",
+          description: `${creditsToDeduct} credits used. Balance: ${data.new_balance}`
+        });
+      } catch (error) {
+        console.error('Credit deduction failed:', error);
+        toast({
+          title: "Error",
+          description: "Failed to process credits. Contact support.",
+          variant: "destructive"
+        });
+      }
+    }
     
     // Clear idle timer
     if (idleTimeoutRef.current) {
@@ -748,6 +840,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       deepSeekChatRef.current = null;
     }
     
+    setSessionStartTime(null);
     setIsSessionActive(false);
     setIsHandsFreeMode(false);
     setIsDeepSeekMode(false);
@@ -758,15 +851,41 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     onSessionEnd?.(); // Notify parent
     onConversationEnd?.();
     
-    toast({
-      title: "Session Ended",
-      description: "Voice practice session has ended",
-    });
+    if (isTrialMode) {
+      toast({
+        title: "Trial Session Ended",
+        description: "Thanks for trying TalkEasi!",
+      });
+    }
   };
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-card border-t p-4 z-50">
       <div className="max-w-md mx-auto">
+        {/* Credit Balance Badge (only for authenticated users) */}
+        {!isTrialMode && (
+          <div className="fixed top-4 right-4 z-50">
+            <Badge variant="secondary" className="text-lg px-4 py-2">
+              <Coins className="w-4 h-4 mr-2" />
+              {userCredits} credits
+            </Badge>
+          </div>
+        )}
+
+        {/* Low Balance Warning */}
+        {!isTrialMode && userCredits < 20 && userCredits > 0 && (
+          <Alert className="mb-4 bg-warning/10 border-warning/20">
+            <AlertCircle className="h-4 w-4 text-warning" />
+            <AlertTitle>Low Credits</AlertTitle>
+            <AlertDescription>
+              You have {userCredits} credits remaining.
+              <Button variant="link" onClick={() => navigate('/profile')} className="ml-2 p-0 h-auto">
+                Top Up Now
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Status */}
         <div className="text-center mb-4">
           <div className="flex items-center justify-center gap-2 mb-2">
@@ -822,7 +941,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
         </div>
 
         {/* Mode Selection (when not active) */}
-        {!isSessionActive && (
+        {!isSessionActive && !isTrialMode && (
           <div className="space-y-3 mb-4">
             <Button
               size="lg"
@@ -872,13 +991,15 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
         
         {/* Controls */}
         <div className="flex items-center justify-center space-x-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate('/lessons')}
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
+          {!isTrialMode && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate('/lessons')}
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+          )}
 
           {isSessionActive && !isHandsFreeMode && (
             <Button

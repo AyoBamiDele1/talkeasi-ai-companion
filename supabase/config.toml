@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.deepseek-realtime]
 verify_jwt = false
+
+[functions.deduct-credits]
+verify_jwt = true

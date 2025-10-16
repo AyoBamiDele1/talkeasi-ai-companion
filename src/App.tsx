@@ -12,7 +12,7 @@ import Lessons from "./pages/Lessons";
 import LessonSession from "./pages/LessonSession";
 import Progress from "./pages/Progress";
 import Profile from "./pages/Profile";
-
+import Trial from "./pages/Trial";
 import Leaderboards from "./pages/Leaderboards";
 import Friends from "./pages/Friends";
 import NotFound from "./pages/NotFound";
@@ -30,6 +30,7 @@ const App = () => (
           <div className="min-h-screen bg-background">
             <Routes>
               <Route path="/onboarding" element={<Index />} />
+              <Route path="/trial" element={<Trial />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/" element={
                 <ProtectedRoute>
