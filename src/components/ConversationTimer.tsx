@@ -55,7 +55,7 @@ const ConversationTimer: React.FC<ConversationTimerProps> = ({
           Speaking time: {formatTime(seconds)}
         </div>
         <div className="text-xs text-foreground/70">
-          {formatTime(remainingSeconds)} left {label ? `(${label})` : '(Free Plan)'}
+          {formatTime(remainingSeconds)} left {label && `(${label})`}
         </div>
       </div>
       <div className="ml-2 w-32 h-2 bg-secondary rounded-full overflow-hidden">

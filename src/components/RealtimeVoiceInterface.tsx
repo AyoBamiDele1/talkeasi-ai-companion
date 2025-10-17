@@ -944,7 +944,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
             <Button
               size="lg"
               variant="outline"
-              className="w-full h-auto py-2 flex-col items-start hover:bg-green-700"
+              className="w-full h-auto py-2 flex-col items-start hover:bg-[#f25aa1]"
               onClick={startSession}
             >
               <div className="flex items-center w-full">
@@ -958,7 +958,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
             <Button
               size="lg"
               variant="outline"
-              className="w-full h-auto py-2 flex-col items-start hover:bg-green-700"
+              className="w-full h-auto py-2 flex-col items-start hover:bg-[#f25aa1]"
               onClick={startDeepSeekHandsFreeSession}
               disabled={isConnecting}
             >
@@ -973,7 +973,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
             <Button
               size="lg"
               variant="outline"
-              className="w-full h-auto py-2 flex-col items-start hover:bg-green-700"
+              className="w-full h-auto py-2 flex-col items-start hover:bg-[#f25aa1]"
               onClick={startHandsFreeSession}
               disabled={isConnecting}
             >

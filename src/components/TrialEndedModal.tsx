@@ -38,7 +38,7 @@ const TrialEndedModal = ({ open, onOpenChange }: TrialEndedModalProps) => {
             <span className="flex flex-col items-center gap-1">
               <span className="text-base font-semibold">👤 Create Free Account</span>
               <span className="text-xs opacity-90">
-                Get 5 bonus credits (= 5 more minutes)
+                Get 5 bonus credits to continue
               </span>
             </span>
           </Button>
@@ -50,7 +50,7 @@ const TrialEndedModal = ({ open, onOpenChange }: TrialEndedModalProps) => {
             className="w-full"
             onClick={() => navigate('/auth?mode=login')}
           >
-            🔑 Login to Top Up Credits
+            🔑 Already have an account? Login.
           </Button>
         </div>
 

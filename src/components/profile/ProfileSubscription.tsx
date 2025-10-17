@@ -202,15 +202,15 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
         <CardContent>
           <div className="space-y-2">
             <div className="flex justify-between py-2 border-b">
-              <span className="text-sm font-medium">Tap to Talk (Browser STT + DeepSeek)</span>
+              <span className="text-sm font-medium">Tap to Talk</span>
               <span className="text-sm text-muted-foreground">3 credits per 5 min</span>
             </div>
             <div className="flex justify-between py-2 border-b">
-              <span className="text-sm font-medium">Hands-Free Enhanced (Browser STT + DeepSeek)</span>
+              <span className="text-sm font-medium">Hands-Free Enhanced</span>
               <span className="text-sm text-muted-foreground">3 credits per 5 min</span>
             </div>
             <div className="flex justify-between py-2">
-              <span className="text-sm font-medium">Hands-Free Premium (OpenAI Realtime)</span>
+              <span className="text-sm font-medium">Hands-Free Premium</span>
               <span className="text-sm text-muted-foreground">300 credits per 5 min</span>
             </div>
           </div>

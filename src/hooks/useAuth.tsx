@@ -61,14 +61,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       password
     });
     
-    // Play voice greeting after successful login
-    if (!error && data.user) {
-      setTimeout(async () => {
-        const displayName = await getUserDisplayName(data.user.id);
-        await speakGreeting(displayName);
-      }, 500); // Small delay to ensure UI has updated
-    }
-    
     return { error };
   };
 
