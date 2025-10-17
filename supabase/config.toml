@@ -20,3 +20,6 @@ verify_jwt = false
 
 [functions.deduct-credits]
 verify_jwt = true
+
+[functions.ensure-credits]
+verify_jwt = true

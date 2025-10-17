@@ -49,10 +49,10 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
         .from('user_credits')
         .select('balance')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
       
-      if (error) throw error;
-      return data;
+      if (error && (error as any).code !== 'PGRST116') throw error;
+      return data ?? { balance: 0 } as any;
     },
     enabled: !!user?.id
   });

@@ -164,14 +164,28 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       .from('user_credits')
       .select('balance')
       .eq('user_id', user.id)
-      .single();
+      .maybeSingle();
     
-    if (error) {
+    if (error && (error as any).code !== 'PGRST116') {
       console.error('Error fetching credits:', error);
       return;
     }
+
+    if (!data) {
+      // Initialize credits so first-time users aren't blocked
+      const { data: ensureData, error: ensureError } = await supabase.functions.invoke('ensure-credits', {
+        body: { initial_balance: 5 }
+      });
+      if (ensureError) {
+        console.error('Failed to initialize credits:', ensureError);
+        setUserCredits(0);
+        return;
+      }
+      setUserCredits((ensureData as any)?.balance ?? 0);
+      return;
+    }
     
-    setUserCredits(data?.balance || 0);
+    setUserCredits(data.balance || 0);
   };
 
   // Convert blob to base64
