@@ -850,7 +850,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
           </div>
           
           <p className="text-sm text-muted-foreground">
-            {!isSessionActive ? isTrialMode ? "Tap to start your free hands-free trial" : "💡 Credits are used by time — your balance decreases as you talk." : isHandsFreeMode && currentTranscript ? `Listening: "${currentTranscript}"` : isHandsFreeMode ? "Just speak naturally - I'm listening" : isRecording ? "Release to stop recording" : isProcessing ? "Processing your speech..." : isSpeaking || isAISpeaking ? "AI is responding..." : "Hold microphone button to speak"}
+            {!isSessionActive ? isTrialMode ? "Tap to start your free hands-free trial" : "💡 You spend credits while talking." : isHandsFreeMode && currentTranscript ? `Listening: "${currentTranscript}"` : isHandsFreeMode ? "Just speak naturally - I'm listening" : isRecording ? "Release to stop recording" : isProcessing ? "Processing your speech..." : isSpeaking || isAISpeaking ? "AI is responding..." : "Hold microphone button to speak"}
           </p>
         </div>
 
