@@ -91,7 +91,7 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
   });
 
   const calculateEstimatedTime = (credits: number) => {
-    // Using new budget rate as baseline: 0.6 credits per minute (3 credits per 5 min)
+    // Using new budget rate as baseline: 0.6 credits per minute
     const minutes = Math.floor(credits / 0.6);
     if (minutes < 60) return `${minutes} minutes`;
     const hours = Math.floor(minutes / 60);
@@ -203,15 +203,15 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
           <div className="space-y-2">
             <div className="flex justify-between py-2 border-b">
               <span className="text-sm font-medium">Tap to Talk</span>
-              <span className="text-sm text-muted-foreground">3 credits per 5 min</span>
+              <span className="text-sm text-muted-foreground">0.6 credits per minute</span>
             </div>
             <div className="flex justify-between py-2 border-b">
               <span className="text-sm font-medium">Hands-Free Enhanced</span>
-              <span className="text-sm text-muted-foreground">3 credits per 5 min</span>
+              <span className="text-sm text-muted-foreground">0.6 credits per minute</span>
             </div>
             <div className="flex justify-between py-2">
               <span className="text-sm font-medium">Hands-Free Premium</span>
-              <span className="text-sm text-muted-foreground">300 credits per 5 min</span>
+              <span className="text-sm text-muted-foreground">60 credits per minute</span>
             </div>
           </div>
         </CardContent>

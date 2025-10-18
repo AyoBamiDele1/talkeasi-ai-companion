@@ -727,10 +727,10 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       const durationMinutes = durationMs / 60000;
       const creditRates = {
         tap: 3,
-        // 3 credits per 5 min = 0.6 credits/min (Browser STT + DeepSeek)
+        // 0.6 credits per minute (Browser STT + DeepSeek)
         enhanced: 3,
-        // 3 credits per 5 min = 0.6 credits/min (Browser STT + DeepSeek)
-        premium: 300 // 300 credits per 5 min = 60 credits/min (OpenAI Realtime API)
+        // 0.6 credits per minute (Browser STT + DeepSeek)
+        premium: 300 // 60 credits per minute (OpenAI Realtime API)
       };
       const creditsPerMinute = creditRates[currentMode] / 5;
       const creditsToDeduct = Math.ceil(durationMinutes * creditsPerMinute);
