@@ -414,9 +414,26 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       setMessages(finalMessages);
       onMessageUpdate?.(finalMessages);
 
-      // Step 3: Convert AI response to speech using browser TTS (FREE)
+      // Step 3: Convert AI response to speech
       console.log('Converting text to speech...');
+      if (isTrialMode) {
+        try {
+          const ttsRes = await supabase.functions.invoke('text-to-speech', {
+            body: { text: aiData.response, voice: 'verse' }
+          });
+          if (ttsRes.error || !(ttsRes.data as any)?.audioContent) {
+            console.warn('TTS failed, falling back to browser TTS', ttsRes.error);
+            speakWithFemale(aiData.response);
+          } else {
+            await playAudio((ttsRes.data as any).audioContent);
+          }
+        } catch (e) {
+          console.error('TTS error, fallback to browser TTS', e);
+          speakWithFemale(aiData.response);
+        }
+      } else {
         speakWithFemale(aiData.response);
+      }
 
     } catch (error) {
       console.error('Voice processing error:', error);
