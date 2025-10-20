@@ -131,6 +131,62 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
   const [currentMode, setCurrentMode] = useState<'tap' | 'enhanced' | 'premium'>('tap');
   const [userCredits, setUserCredits] = useState<number>(0);
+  // Preferred female TTS voice handling
+  const [femaleVoice, setFemaleVoice] = useState<SpeechSynthesisVoice | null>(null);
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    const pick = () => {
+      const voices = speechSynthesis.getVoices();
+      if (!voices || voices.length === 0) return;
+      const preferred = ['Samantha','Victoria','Karen','Moira','Susan','Google UK English Female']
+        .map(n => n.toLowerCase());
+      let v = voices.find(v => v.lang?.toLowerCase().startsWith('en') && preferred.some(n => v.name.toLowerCase().includes(n)))
+        || voices.find(v => v.lang?.toLowerCase().startsWith('en') && /female/i.test(v.name))
+        || voices.find(v => v.lang?.toLowerCase().startsWith('en'))
+        || voices[0] || null;
+      setFemaleVoice(v || null);
+    };
+    speechSynthesis.addEventListener('voiceschanged', pick);
+    pick();
+    return () => speechSynthesis.removeEventListener('voiceschanged', pick);
+  }, []);
+
+  const speakWithFemale = (text: string, onEnd?: () => void) => {
+    if (!('speechSynthesis' in window)) return;
+    const trySpeak = () => {
+      // Ensure no previous utterance plays with default voice
+      speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 0.95;
+      utterance.pitch = 1.1;
+      utterance.volume = 1.0;
+      utterance.lang = 'en-US';
+      const voices = speechSynthesis.getVoices();
+      let v = femaleVoice
+        || voices.find(v => v.lang?.toLowerCase().startsWith('en') && /female/i.test(v.name))
+        || voices.find(v => v.lang?.toLowerCase().startsWith('en'))
+        || null;
+      if (v) utterance.voice = v;
+      utterance.onstart = () => setIsSpeaking(true);
+      utterance.onend = () => { setIsSpeaking(false); onEnd?.(); };
+      utterance.onerror = () => { setIsSpeaking(false); onEnd?.(); };
+      speechSynthesis.speak(utterance);
+    };
+    if (femaleVoice || speechSynthesis.getVoices().length > 0) {
+      trySpeak();
+      return;
+    }
+    const handler = () => {
+      speechSynthesis.removeEventListener('voiceschanged', handler);
+      trySpeak();
+    };
+    speechSynthesis.addEventListener('voiceschanged', handler);
+    setTimeout(() => {
+      speechSynthesis.removeEventListener('voiceschanged', handler);
+      trySpeak();
+    }, 1000);
+  };
+
   const audioRecorderRef = useRef<AudioRecorder>(new AudioRecorder());
   const realtimeChatRef = useRef<RealtimeChat | null>(null);
   const deepSeekChatRef = useRef<DeepSeekRealtimeChat | null>(null);
@@ -353,31 +409,8 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
 
       // Step 3: Convert AI response to speech using browser TTS (FREE)
       console.log('Converting text to speech...');
-      if ('speechSynthesis' in window) {
-        const utterance = new SpeechSynthesisUtterance(aiData.response);
-        utterance.rate = 0.95; // Slightly slower for more natural speech
-        utterance.pitch = 1.1; // Slightly higher pitch for female voice
-        utterance.volume = 1.0;
-        utterance.lang = 'en-US';
+        speakWithFemale(aiData.response);
 
-        // Select a female voice if available
-        const voices = speechSynthesis.getVoices();
-        const femaleVoice = voices.find(voice => voice.lang.startsWith('en') && (voice.name.toLowerCase().includes('female') || voice.name.toLowerCase().includes('samantha') || voice.name.toLowerCase().includes('victoria') || voice.name.toLowerCase().includes('karen') || voice.name.toLowerCase().includes('moira') || voice.name.toLowerCase().includes('susan')));
-        if (femaleVoice) {
-          utterance.voice = femaleVoice;
-          console.log('Using voice:', femaleVoice.name);
-        }
-        utterance.onstart = () => setIsSpeaking(true);
-        utterance.onend = () => setIsSpeaking(false);
-        utterance.onerror = error => {
-          console.error('Speech synthesis error:', error);
-          setIsSpeaking(false);
-        };
-        speechSynthesis.speak(utterance);
-      } else {
-        console.warn('Speech synthesis not supported');
-        setIsSpeaking(false);
-      }
     } catch (error) {
       console.error('Voice processing error:', error);
       toast({
@@ -625,29 +658,14 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
           }
 
           // Speak the response using browser TTS
-          if ('speechSynthesis' in window) {
-            const utterance = new SpeechSynthesisUtterance(message.text);
-            utterance.rate = 0.95;
-            utterance.pitch = 1.1;
-            utterance.volume = 1.0;
-            utterance.lang = 'en-US';
-            const voices = speechSynthesis.getVoices();
-            const femaleVoice = voices.find(voice => voice.lang.startsWith('en') && (voice.name.toLowerCase().includes('female') || voice.name.toLowerCase().includes('samantha') || voice.name.toLowerCase().includes('victoria') || voice.name.toLowerCase().includes('karen') || voice.name.toLowerCase().includes('moira') || voice.name.toLowerCase().includes('susan')));
-            if (femaleVoice) {
-              utterance.voice = femaleVoice;
+          speakWithFemale(message.text, () => {
+            // Resume STT after AI finishes speaking
+            if (deepSeekChatRef.current) {
+              deepSeekChatRef.current.resumeListening();
             }
-            utterance.onstart = () => setIsSpeaking(true);
-            utterance.onend = () => {
-              setIsSpeaking(false);
-              setIsProcessing(false);
+            setIsProcessing(false);
+          });
 
-              // Resume STT after AI finishes speaking
-              if (deepSeekChatRef.current) {
-                deepSeekChatRef.current.resumeListening();
-              }
-            };
-            speechSynthesis.speak(utterance);
-          }
           setIsProcessing(false);
           resetIdleTimer();
           if (message.cached) {
