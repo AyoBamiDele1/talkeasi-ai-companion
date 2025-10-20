@@ -618,8 +618,10 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
 
   // Start DeepSeek hands-free session
   const startDeepSeekHandsFreeSession = async () => {
+    console.log('[Trial Debug] startDeepSeekHandsFreeSession called, isTrialMode:', isTrialMode);
     // Safety guard: Trial mode should never use hands-free
     if (isTrialMode) {
+      console.log('[Trial Debug] BLOCKED: Trial mode cannot use hands-free!');
       toast({
         title: "Trial uses Tap to Talk",
         description: "Sign up to unlock hands-free mode.",
@@ -758,6 +760,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
 
   // Start push-to-talk session (tap to talk mode)
   const startTapToTalkSession = () => {
+    console.log('[Trial Debug] Starting Tap to Talk session, isTrialMode:', isTrialMode);
     setCurrentMode('tap');
     setIsSessionActive(true);
     setIsHandsFreeMode(false);
@@ -768,15 +771,17 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     const welcomeMessage: ConversationMessage = {
       id: 'welcome',
       role: 'assistant',
-      content: "Session started! Hold the microphone button to speak.",
+      content: isTrialMode ? "Trial session started! Hold the microphone button to speak." : "Session started! Hold the microphone button to speak.",
       timestamp: new Date()
     };
     setMessages([welcomeMessage]);
     onMessageUpdate?.([welcomeMessage]);
+    console.log('[Trial Debug] Tap to Talk session started successfully');
   };
 
   // Start push-to-talk session - now uses Browser STT + DeepSeek for cost optimization
   const startSession = () => {
+    console.log('[Trial Debug] startSession called, isTrialMode:', isTrialMode);
     // "Tap to Talk" now starts a tap session, not hands-free
     startTapToTalkSession();
   };
