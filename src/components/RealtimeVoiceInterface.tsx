@@ -224,7 +224,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
         error: ensureError
       } = await supabase.functions.invoke('ensure-credits', {
         body: {
-          initial_balance: 5
+          initial_balance: 2
         }
       });
       if (ensureError) {
@@ -888,7 +888,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
           
           <p className="text-sm text-muted-foreground">
             {!isSessionActive 
-              ? (isTrialMode ? "Tap to start your free hands-free trial" : "💡 You spend credits while talking.") 
+              ? (isTrialMode ? "Tap to start your free Tap to Talk trial" : "💡 You spend credits while talking.") 
               : isHandsFreeMode && currentMode !== 'premium' && currentTranscript 
                 ? `Listening: "${currentTranscript}"` 
                 : isHandsFreeMode 
