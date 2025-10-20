@@ -38,7 +38,7 @@ const TrialEndedModal = ({ open, onOpenChange }: TrialEndedModalProps) => {
             <span className="flex flex-col items-center gap-1">
               <span className="text-base font-semibold">👤 Create Free Account</span>
               <span className="text-xs opacity-90">
-                Get 5 bonus credits to continue
+                Get 2 bonus credits to continue
               </span>
             </span>
           </Button>
@@ -55,7 +55,7 @@ const TrialEndedModal = ({ open, onOpenChange }: TrialEndedModalProps) => {
         </div>
 
         <p className="text-xs text-center text-muted-foreground">
-          Save your progress, unlock full lessons, and chat longer with your AI Coach.
+          Create an account to save progress, access full lessons, and continue learning.
         </p>
 
         {/* Optional: Social proof */}
