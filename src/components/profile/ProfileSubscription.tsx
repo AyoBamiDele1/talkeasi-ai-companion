@@ -217,51 +217,6 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
         </CardContent>
       </Card>
 
-      {/* Transaction History */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Transactions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {transactions && transactions.length > 0 ? (
-            <div className="space-y-2">
-              {transactions.map(txn => (
-                <div key={txn.id} className="flex justify-between items-center py-2 border-b last:border-b-0">
-                  <div>
-                    <p className="text-sm font-medium">{txn.description}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(txn.created_at).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <span className={`font-semibold ${
-                      txn.amount > 0 ? "text-green-600" : "text-red-600"
-                    }`}>
-                      {txn.amount > 0 ? '+' : ''}{txn.amount}
-                    </span>
-                    <p className="text-xs text-muted-foreground">
-                      Balance: {txn.balance_after}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">No transactions yet</p>
-              <p className="text-sm text-muted-foreground mt-2">
-                Your transaction history will appear here
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 };

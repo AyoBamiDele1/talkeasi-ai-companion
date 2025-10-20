@@ -711,10 +711,29 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     }
   };
 
+  // Start push-to-talk session (tap to talk mode)
+  const startTapToTalkSession = () => {
+    setCurrentMode('tap');
+    setIsSessionActive(true);
+    setIsHandsFreeMode(false);
+    setIsDeepSeekMode(false);
+    setMessages([]);
+    onSessionStart?.();
+    
+    const welcomeMessage: ConversationMessage = {
+      id: 'welcome',
+      role: 'assistant',
+      content: "Session started! Hold the microphone button to speak.",
+      timestamp: new Date()
+    };
+    setMessages([welcomeMessage]);
+    onMessageUpdate?.([welcomeMessage]);
+  };
+
   // Start push-to-talk session - now uses Browser STT + DeepSeek for cost optimization
   const startSession = () => {
-    // All modes now use DeepSeek hands-free (Browser STT + DeepSeek) for cost optimization
-    startDeepSeekHandsFreeSession();
+    // "Tap to Talk" now starts a tap session, not hands-free
+    startTapToTalkSession();
   };
 
   // End session
@@ -850,7 +869,16 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
           </div>
           
           <p className="text-sm text-muted-foreground">
-            {!isSessionActive ? isTrialMode ? "Tap to start your free hands-free trial" : "💡 You spend credits while talking." : isHandsFreeMode && currentTranscript ? `Listening: "${currentTranscript}"` : isHandsFreeMode ? "Just speak naturally - I'm listening" : isRecording ? "Release to stop recording" : isProcessing ? "Processing your speech..." : isSpeaking || isAISpeaking ? "AI is responding..." : "Hold microphone button to speak"}
+            {!isSessionActive 
+              ? (isTrialMode ? "Tap to start your free hands-free trial" : "💡 You spend credits while talking.") 
+              : isHandsFreeMode && currentMode !== 'premium' && currentTranscript 
+                ? `Listening: "${currentTranscript}"` 
+                : isHandsFreeMode 
+                  ? "Just speak naturally - I'm listening" 
+                  : currentMode === 'tap'
+                    ? (isRecording ? "Release to stop recording" : isProcessing ? "Processing your speech..." : isSpeaking || isAISpeaking ? "AI is responding..." : "Hold microphone button to speak")
+                    : "Hold microphone button to speak"
+            }
           </p>
         </div>
 
