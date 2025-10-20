@@ -37,15 +37,7 @@ const Home = () => {
     }
   };
 
-  // Get greeting based on time of day
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return "Good morning";
-    if (hour < 18) return "Good afternoon";
-    return "Good evening";
-  };
-
-  const userName = userProfile?.display_name || user?.email?.split('@')[0] || "there";
+  const userName = "Dele";
 
   const handleStartLesson = () => {
     navigate('/lessons');
@@ -56,7 +48,7 @@ const Home = () => {
       {/* Header */}
       <div className="mb-4 md:mb-6">
         <h1 className="text-xl md:text-2xl font-bold text-foreground mb-1">
-          {getGreeting()}, {userName}! 👋
+          Hello, {userName}! 👋
         </h1>
         <p className="text-sm text-muted-foreground">
           Ready to improve your English today?
