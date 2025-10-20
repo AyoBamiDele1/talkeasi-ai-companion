@@ -63,7 +63,7 @@ export class NetworkMonitor {
     };
   }
 
-  startMonitoring(onUpdate: (metrics: NetworkMetrics) => void, intervalMs = 10000) {
+  startMonitoring(onUpdate: (metrics: NetworkMetrics) => void, intervalMs = 30000) {
     if (this.monitoringInterval) {
       this.stopMonitoring();
     }
@@ -73,7 +73,7 @@ export class NetworkMonitor {
     // Initial measurement
     this.getNetworkQuality().then(onUpdate);
 
-    // Periodic measurements
+    // Periodic measurements with longer interval for mobile
     this.monitoringInterval = setInterval(async () => {
       const metrics = await this.getNetworkQuality();
       onUpdate(metrics);

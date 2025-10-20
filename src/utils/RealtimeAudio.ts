@@ -23,7 +23,9 @@ export class AudioRecorder {
       });
       
       this.source = this.audioContext.createMediaStreamSource(this.stream);
-      this.processor = this.audioContext.createScriptProcessor(4096, 1, 1);
+      // Use smaller buffer for mobile
+      const bufferSize = /mobile/i.test(navigator.userAgent) ? 2048 : 4096;
+      this.processor = this.audioContext.createScriptProcessor(bufferSize, 1, 1);
       
       this.processor.onaudioprocess = (e) => {
         const inputData = e.inputBuffer.getChannelData(0);
