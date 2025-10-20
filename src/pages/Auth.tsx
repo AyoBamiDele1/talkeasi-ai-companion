@@ -8,10 +8,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { Mic, Eye, EyeOff } from 'lucide-react';
-import { Separator } from '@/components/ui/separator';
+
 
 export default function Auth() {
-  const { user, signIn, signUp, signInWithGoogle, signInWithApple, loading } = useAuth();
+  const { user, signIn, signUp, loading } = useAuth();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const mode = searchParams.get('mode') || 'signin';
@@ -72,33 +72,6 @@ export default function Auth() {
     setIsLoading(false);
   };
 
-  const handleGoogleSignIn = async () => {
-    setIsLoading(true);
-    const { error } = await signInWithGoogle();
-    if (error) {
-      toast({
-        title: "Sign in failed",
-        description: error.message,
-        variant: "destructive"
-      });
-      setIsLoading(false);
-    }
-    // Don't set loading to false on success - redirect will happen
-  };
-
-  const handleAppleSignIn = async () => {
-    setIsLoading(true);
-    const { error } = await signInWithApple();
-    if (error) {
-      toast({
-        title: "Sign in failed",
-        description: error.message,
-        variant: "destructive"
-      });
-      setIsLoading(false);
-    }
-    // Don't set loading to false on success - redirect will happen
-  };
 
   if (loading) {
     return (
