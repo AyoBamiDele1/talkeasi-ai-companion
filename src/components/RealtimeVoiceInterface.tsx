@@ -138,8 +138,12 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     const pick = () => {
       const voices = speechSynthesis.getVoices();
       if (!voices || voices.length === 0) return;
-      const preferred = ['Samantha','Victoria','Karen','Moira','Susan','Google UK English Female']
-        .map(n => n.toLowerCase());
+      const preferred = [
+        'Google UK English Female',
+        'Samantha','Victoria','Karen','Moira','Susan',
+        'Zira','Jenny','Jessa','Ava','Emma','Olivia',
+        'Joanna','Salli','Kendra','Kimberly','Nicole','Amy'
+      ].map(n => n.toLowerCase());
       let v = voices.find(v => v.lang?.toLowerCase().startsWith('en') && preferred.some(n => v.name.toLowerCase().includes(n)))
         || voices.find(v => v.lang?.toLowerCase().startsWith('en') && /female/i.test(v.name))
         || voices.find(v => v.lang?.toLowerCase().startsWith('en'))
