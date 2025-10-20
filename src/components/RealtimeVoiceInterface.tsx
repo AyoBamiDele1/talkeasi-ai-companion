@@ -423,7 +423,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       if (isTrialMode) {
         try {
           const ttsRes = await supabase.functions.invoke('text-to-speech', {
-            body: { text: aiData.response, voice: 'aria' }
+            body: { text: aiData.response, voice: 'shimmer' }
           });
           if (ttsRes.error || !(ttsRes.data as any)?.audioContent) {
             console.warn('TTS failed, falling back to browser TTS', ttsRes.error);
