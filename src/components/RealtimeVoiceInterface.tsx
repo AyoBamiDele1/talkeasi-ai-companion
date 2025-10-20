@@ -201,6 +201,13 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   const idleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const IDLE_TIMEOUT_MS = 180000; // 3 minutes of inactivity
 
+  // Defensive effect: Prevent hands-free state in trial mode
+  useEffect(() => {
+    if (isTrialMode && isHandsFreeMode) {
+      setIsHandsFreeMode(false);
+    }
+  }, [isTrialMode, isHandsFreeMode]);
+
   // Fetch user credits on mount
   useEffect(() => {
     if (!isTrialMode && user) {
@@ -551,6 +558,16 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
 
   // Start OpenAI hands-free session
   const startHandsFreeSession = async () => {
+    // Safety guard: Trial mode should never use hands-free
+    if (isTrialMode) {
+      toast({
+        title: "Trial uses Tap to Talk",
+        description: "Sign up to unlock hands-free mode.",
+        variant: "default"
+      });
+      return;
+    }
+    
     // Check credits for non-trial users (Premium mode needs 60+ credits for 1 min)
     if (!isTrialMode && userCredits < 60) {
       toast({
@@ -601,6 +618,16 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
 
   // Start DeepSeek hands-free session
   const startDeepSeekHandsFreeSession = async () => {
+    // Safety guard: Trial mode should never use hands-free
+    if (isTrialMode) {
+      toast({
+        title: "Trial uses Tap to Talk",
+        description: "Sign up to unlock hands-free mode.",
+        variant: "default"
+      });
+      return;
+    }
+    
     // Check credits for non-trial users (Enhanced mode needs 3+ credits for 5 min)
     if (!isTrialMode && userCredits < 3) {
       toast({
@@ -865,7 +892,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
               {isConnecting ? "Connecting..." : isSessionActive ? "Session Active" : "Session Inactive"}
             </Badge>
             
-            {isHandsFreeMode && <Badge variant="outline" className={`text-xs ${isDeepSeekMode ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-green-50 text-green-700 border-green-200'}`}>
+            {!isTrialMode && isHandsFreeMode && <Badge variant="outline" className={`text-xs ${isDeepSeekMode ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-green-50 text-green-700 border-green-200'}`}>
                 <Phone className="w-3 h-3 mr-1" />
                 {isDeepSeekMode ? 'DeepSeek' : 'OpenAI'} Hands-Free
               </Badge>}

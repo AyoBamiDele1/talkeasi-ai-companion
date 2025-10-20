@@ -38,7 +38,7 @@ const TrialEndedModal = ({ open, onOpenChange }: TrialEndedModalProps) => {
             <span className="flex flex-col items-center gap-1">
               <span className="text-base font-semibold">👤 Create Free Account</span>
               <span className="text-xs opacity-90">
-                Get 2 bonus credits to continue
+                Get 2 more minutes to continue
               </span>
             </span>
           </Button>
