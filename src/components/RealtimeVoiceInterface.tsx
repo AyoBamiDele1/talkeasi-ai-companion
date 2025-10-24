@@ -301,6 +301,42 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   const startRecording = async () => {
     try {
       setIsRecorderReady(false);
+      
+      // For trial mode, use Browser STT
+      if (isTrialMode) {
+        const { BrowserSTT } = await import('@/utils/BrowserSTT');
+        
+        sttTranscriptRef.current = '';
+        
+        browserSTTRef.current = new BrowserSTT(
+          (result) => {
+            // Accumulate transcript
+            if (result.isFinal) {
+              sttTranscriptRef.current += ' ' + result.text;
+              console.log('[Trial STT] Final:', result.text);
+            }
+          },
+          (error) => {
+            console.error('[Trial STT] Error:', error);
+          },
+          () => {
+            console.log('[Trial STT] Ended');
+          },
+          {
+            language: 'en-US',
+            continuous: true,
+            interimResults: false
+          }
+        );
+        
+        browserSTTRef.current.start();
+        setIsRecording(true);
+        setIsRecorderReady(true);
+        console.log('[Trial] Browser STT started');
+        return;
+      }
+
+      // For non-trial mode, use audio recording
       await audioRecorderRef.current.start();
       setIsRecording(true);
       setIsRecorderReady(true);
@@ -318,9 +354,38 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     }
   };
 
+  // Browser STT handler for trial mode
+  const browserSTTRef = useRef<any>(null);
+  const sttTranscriptRef = useRef<string>('');
+
   // Stop recording and process
   const stopRecording = async () => {
-    // Prevent stopping if recorder isn't ready
+    // For trial mode, stop Browser STT
+    if (isTrialMode && browserSTTRef.current) {
+      browserSTTRef.current.stop();
+      
+      // Wait briefly for final transcript
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const userText = sttTranscriptRef.current.trim();
+      if (!userText || userText.length === 0) {
+        setIsRecording(false);
+        setIsProcessing(false);
+        toast({
+          title: "No Speech Detected",
+          description: "Please try speaking again.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Process the transcript
+      await processTrialTranscript(userText);
+      sttTranscriptRef.current = '';
+      return;
+    }
+
+    // For non-trial mode, use original recording flow
     if (!isRecorderReady) {
       console.log('Recorder not ready, ignoring stop request');
       setIsRecording(false);
@@ -349,7 +414,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       // Convert to base64
       const base64Audio = await blobToBase64(audioBlob);
 
-      // Step 1: Speech to text
+      // Step 1: Speech to text using paid service
       console.log('Converting speech to text...');
       const sttResponse = await supabase.functions.invoke('speech-to-text', {
         body: {
@@ -364,6 +429,24 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
         throw new Error('No speech detected. Please try again.');
       }
       console.log('Transcribed text:', userText);
+      onTranscriptUpdate?.(userText);
+
+      await processTrialTranscript(userText);
+    } catch (error) {
+      console.error('Voice processing error:', error);
+      setIsProcessing(false);
+      toast({
+        title: "Processing Error",
+        description: error instanceof Error ? error.message : "Failed to process voice input",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Process transcript for trial mode
+  const processTrialTranscript = async (userText: string) => {
+    try {
+      setIsProcessing(true);
       onTranscriptUpdate?.(userText);
 
       // Add user message
@@ -418,26 +501,9 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       setMessages(finalMessages);
       onMessageUpdate?.(finalMessages);
 
-      // Step 3: Convert AI response to speech
+      // Step 3: Convert AI response to speech using free browser TTS
       console.log('Converting text to speech...');
-      if (isTrialMode) {
-        try {
-          const ttsRes = await supabase.functions.invoke('text-to-speech', {
-            body: { text: aiData.response, voice: 'shimmer' }
-          });
-          if (ttsRes.error || !(ttsRes.data as any)?.audioContent) {
-            console.warn('TTS failed, falling back to browser TTS', ttsRes.error);
-            speakWithFemale(aiData.response);
-          } else {
-            await playAudio((ttsRes.data as any).audioContent);
-          }
-        } catch (e) {
-          console.error('TTS error, fallback to browser TTS', e);
-          speakWithFemale(aiData.response);
-        }
-      } else {
-        speakWithFemale(aiData.response);
-      }
+      speakWithFemale(aiData.response);
 
     } catch (error) {
       console.error('Voice processing error:', error);
@@ -780,6 +846,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   };
 
   // Start push-to-talk session (tap to talk mode)
+  // Trial mode uses free Browser STT + DeepSeek + Browser TTS
   const startTapToTalkSession = () => {
     console.log('[Trial Debug] Starting Tap to Talk session, isTrialMode:', isTrialMode);
     setCurrentMode('tap');
@@ -792,7 +859,9 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     const welcomeMessage: ConversationMessage = {
       id: 'welcome',
       role: 'assistant',
-      content: isTrialMode ? "Trial session started! Hold the microphone button to speak." : "Session started! Hold the microphone button to speak.",
+      content: isTrialMode 
+        ? "Free trial started! Using browser voice recognition. Hold the button to speak." 
+        : "Session started! Hold the microphone button to speak.",
       timestamp: new Date()
     };
     setMessages([welcomeMessage]);
@@ -810,6 +879,13 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   // End session
   const endSession = async () => {
     stopAudio();
+
+    // Cleanup browser STT if active
+    if (browserSTTRef.current) {
+      browserSTTRef.current.stop();
+      browserSTTRef.current = null;
+      sttTranscriptRef.current = '';
+    }
 
     // Deduct credits for non-trial users
     if (!isTrialMode && sessionStartTime && user) {
