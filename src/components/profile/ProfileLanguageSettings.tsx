@@ -3,8 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
-import { ArrowLeft, Globe, Save, Volume2 } from "lucide-react";
+import { ArrowLeft, Globe, Save } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -23,20 +22,11 @@ const ProfileLanguageSettings = ({
   const [loading, setLoading] = useState(false);
   const [settings, setSettings] = useState({
     nativeLanguage: "",
-    learningLevel: "",
-    voiceSpeed: 1,
-    voiceGender: "female",
-    accent: "american"
+    learningLevel: ""
   });
   const languages = [{
     value: "english",
     label: "English"
-  }, {
-    value: "british-english",
-    label: "British English"
-  }, {
-    value: "american-english",
-    label: "American English"
   }, {
     value: "yoruba",
     label: "Yoruba"
@@ -49,21 +39,6 @@ const ProfileLanguageSettings = ({
   }, {
     value: "pidgin",
     label: "Pidgin English"
-  }, {
-    value: "french",
-    label: "French"
-  }, {
-    value: "spanish",
-    label: "Spanish"
-  }, {
-    value: "mandarin",
-    label: "Mandarin Chinese"
-  }, {
-    value: "arabic",
-    label: "Arabic"
-  }, {
-    value: "swahili",
-    label: "Swahili"
   }];
   const levels = [{
     value: "beginner",
@@ -83,19 +58,6 @@ const ProfileLanguageSettings = ({
   }, {
     value: "proficient",
     label: "Proficient"
-  }];
-  const accents = [{
-    value: "american",
-    label: "American English"
-  }, {
-    value: "british",
-    label: "British English"
-  }, {
-    value: "australian",
-    label: "Australian English"
-  }, {
-    value: "canadian",
-    label: "Canadian English"
   }];
   useEffect(() => {
     fetchLanguageSettings();
@@ -206,75 +168,6 @@ const ProfileLanguageSettings = ({
                 </SelectContent>
               </Select>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Voice Settings */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Volume2 className="w-5 h-5 text-primary" />
-              Voice & Audio Settings
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-3">
-              <Label>Speech Speed</Label>
-              <div className="px-2">
-                <Slider value={[settings.voiceSpeed]} onValueChange={value => setSettings(prev => ({
-                ...prev,
-                voiceSpeed: value[0]
-              }))} max={2} min={0.5} step={0.1} className="w-full" />
-                <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                  <span>Slow</span>
-                  <span>Normal ({settings.voiceSpeed.toFixed(1)}x)</span>
-                  <span>Fast</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Voice Gender</Label>
-              <Select value={settings.voiceGender} onValueChange={value => setSettings(prev => ({
-              ...prev,
-              voiceGender: value
-            }))}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="female">Female</SelectItem>
-                  <SelectItem value="male">Male</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            
-          </CardContent>
-        </Card>
-
-        {/* Regional Settings */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Regional Settings</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>Time Zone</Label>
-              <Select defaultValue="africa-lagos">
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="africa-lagos">Africa/Lagos (WAT)</SelectItem>
-                  <SelectItem value="utc">UTC</SelectItem>
-                  <SelectItem value="america-new_york">America/New_York (EST)</SelectItem>
-                  <SelectItem value="europe-london">Europe/London (GMT)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            
           </CardContent>
         </Card>
 
