@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, HelpCircle, BookOpen, MessageSquare, Mail, Phone, ExternalLink, ChevronRight } from "lucide-react";
+import { ArrowLeft, HelpCircle, BookOpen, MessageSquare, Mail, Phone, ExternalLink, ChevronRight, MessageCircle } from "lucide-react";
 interface ProfileHelpSupportProps {
   onBack: () => void;
 }
@@ -81,14 +81,12 @@ const ProfileHelpSupport = ({
           </CardHeader>
           <CardContent className="space-y-4">
             {contactOptions.map((option, index) => <div key={index} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors">
-                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3">
                   <option.icon className="w-5 h-5 text-primary" />
                   <div>
                     <div className="flex items-center gap-2">
                       <h4 className="font-medium">{option.title}</h4>
-                      {option.badge && <Badge variant="default" className="bg-primary text-xs">
-                          {option.badge}
-                        </Badge>}
+                      {option.badge && <MessageCircle className="w-4 h-4 text-green-600" />}
                     </div>
                     <p className="text-sm text-muted-foreground">{option.description}</p>
                     <p className="text-xs text-muted-foreground">Available: {option.available}</p>
