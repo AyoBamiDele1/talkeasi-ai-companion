@@ -194,24 +194,24 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
         </div>
       </div>
 
-      {/* Credit Rates */}
+      {/* Credit Usage */}
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Credit Usage Rates</CardTitle>
+          <CardTitle>Credit Usage</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2">
-            <div className="flex justify-between py-2 border-b">
-              <span className="text-sm font-medium">Tap to Talk</span>
-              <span className="text-sm text-muted-foreground">0.6 credits per minute</span>
-            </div>
-            <div className="flex justify-between py-2 border-b">
-              <span className="text-sm font-medium">Hands-Free Enhanced</span>
-              <span className="text-sm text-muted-foreground">0.6 credits per minute</span>
-            </div>
+          <div className="space-y-3">
             <div className="flex justify-between py-2">
-              <span className="text-sm font-medium">Hands-Free Premium</span>
-              <span className="text-sm text-muted-foreground">60 credits per minute</span>
+              <div>
+                <p className="text-sm font-medium">Hands-Free Enhanced Mode</p>
+                <p className="text-xs text-muted-foreground">Continuous conversation with AI tutor</p>
+              </div>
+              <span className="text-sm font-semibold text-primary">0.6 credits/min</span>
+            </div>
+            <div className="mt-4 p-3 bg-muted/50 rounded-lg">
+              <p className="text-xs text-muted-foreground">
+                💡 50 credits = Over 1 hour of practice!
+              </p>
             </div>
           </div>
         </CardContent>

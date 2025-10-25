@@ -643,65 +643,6 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     }
   };
 
-  // Start OpenAI hands-free session
-  const startHandsFreeSession = async () => {
-    // Safety guard: Trial mode should never use hands-free
-    if (isTrialMode) {
-      toast({
-        title: "Trial uses Tap to Talk",
-        description: "Sign up to unlock hands-free mode.",
-        variant: "default"
-      });
-      return;
-    }
-    
-    // Check credits for non-trial users (Premium mode needs 60+ credits for 1 min)
-    if (!isTrialMode && userCredits < 60) {
-      toast({
-        title: "Insufficient Credits",
-        description: "Premium mode needs at least 60 credits to start a session.",
-        variant: "destructive",
-        action: <Button onClick={() => navigate('/profile')}>Buy Credits</Button>
-      });
-      return;
-    }
-    try {
-      setCurrentMode('premium');
-      setSessionStartTime(Date.now());
-      setIsConnecting(true);
-      setIsDeepSeekMode(false);
-      realtimeChatRef.current = new RealtimeChat(handleRealtimeMessage);
-      await realtimeChatRef.current.connect();
-      setIsSessionActive(true);
-      setIsHandsFreeMode(true);
-      setMessages([]);
-      onSessionStart?.(); // Notify parent
-
-      // Start idle timer
-      resetIdleTimer();
-      const welcomeMessage: ConversationMessage = {
-        id: 'welcome',
-        role: 'assistant',
-        content: "Connected! I can hear you now. Just start speaking naturally - no need to hold any buttons.",
-        timestamp: new Date()
-      };
-      setMessages([welcomeMessage]);
-      onMessageUpdate?.([welcomeMessage]);
-      toast({
-        title: "OpenAI Hands-Free Active",
-        description: "Premium mode with ~300ms latency"
-      });
-    } catch (error) {
-      console.error('Failed to start hands-free session:', error);
-      toast({
-        title: "Connection Failed",
-        description: error instanceof Error ? error.message : "Failed to connect to voice service",
-        variant: "destructive"
-      });
-    } finally {
-      setIsConnecting(false);
-    }
-  };
 
   // Start DeepSeek hands-free session
   const startDeepSeekHandsFreeSession = async () => {
@@ -869,10 +810,9 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     console.log('[Trial Debug] Tap to Talk session started successfully');
   };
 
-  // Start push-to-talk session - now uses Browser STT + DeepSeek for cost optimization
+  // Start session for trial mode (tap-to-talk)
   const startSession = () => {
     console.log('[Trial Debug] startSession called, isTrialMode:', isTrialMode);
-    // "Tap to Talk" now starts a tap session, not hands-free
     startTapToTalkSession();
   };
 
@@ -1017,45 +957,24 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
           
           <p className="text-sm text-muted-foreground">
             {!isSessionActive 
-              ? (isTrialMode ? "Tap to start your free Tap to Talk trial" : "💡 You spend credits while talking.") 
-              : isHandsFreeMode && currentMode !== 'premium' && currentTranscript 
+              ? (isTrialMode ? "Tap to start your free 1-minute trial" : "💡 Tap below to start practicing with Enhanced Mode") 
+              : isHandsFreeMode && currentTranscript 
                 ? `Listening: "${currentTranscript}"` 
                 : isHandsFreeMode 
                   ? "Just speak naturally - I'm listening" 
-                  : currentMode === 'tap'
-                    ? (isRecording ? "Release to stop recording" : isProcessing ? "Processing your speech..." : isSpeaking || isAISpeaking ? "AI is responding..." : "Hold microphone button to speak")
-                    : "Hold microphone button to speak"
+                  : "Hold microphone button to speak (trial mode)"
             }
           </p>
         </div>
 
         {/* Mode Selection (when not active) */}
-        {!isSessionActive && !isTrialMode && <div className="space-y-3 mb-4">
-            <Button size="lg" variant="outline" className="w-full h-auto py-2 flex-col items-start hover:bg-[#f25aa1]" onClick={startSession}>
+        {!isSessionActive && !isTrialMode && <div className="mb-4">
+            <Button size="lg" variant="outline" className="w-full h-auto py-3 flex-col items-start hover:bg-primary hover:text-primary-foreground" onClick={startDeepSeekHandsFreeSession} disabled={isConnecting}>
               <div className="flex items-center w-full">
-                <Mic className="w-4 h-4 mr-2" />
-                <span className="font-semibold">Tap to Talk</span>
-                <Badge variant="secondary" className="ml-auto bg-white text-gray-700">0.6 credits/min</Badge>
+                <Phone className="w-5 h-5 mr-2" />
+                <span className="font-semibold text-lg">Hands-Free (Enhanced)</span>
+                <Badge variant="secondary" className="ml-auto">0.6 credits/min</Badge>
               </div>
-              
-            </Button>
-            
-            <Button size="lg" variant="outline" className="w-full h-auto py-2 flex-col items-start hover:bg-[#f25aa1]" onClick={startDeepSeekHandsFreeSession} disabled={isConnecting}>
-              <div className="flex items-center w-full">
-                <Phone className="w-4 h-4 mr-2 text-white" />
-                <span className="font-semibold text-white">Hands-Free (Enhanced)</span>
-                <Badge variant="secondary" className="ml-auto bg-white text-gray-700">0.6 credits/min</Badge>
-              </div>
-              
-            </Button>
-            
-            <Button size="lg" variant="outline" className="w-full h-auto py-2 flex-col items-start hover:bg-[#f25aa1]" onClick={startHandsFreeSession} disabled={isConnecting}>
-              <div className="flex items-center w-full">
-                <Phone className="w-4 h-4 mr-2" />
-                <span className="font-semibold">{isConnecting ? "Connecting..." : "Hands-Free (Premium)"}</span>
-                <Badge variant="secondary" className="ml-auto bg-white text-gray-700">60 credits/min</Badge>
-              </div>
-              
             </Button>
           </div>}
         
