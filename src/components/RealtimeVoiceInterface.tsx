@@ -464,9 +464,8 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       console.log('Getting AI response...');
       const aiResponse = await supabase.functions.invoke('deepseek-conversation', {
         body: {
-          userText,
-          lessonContext: lessonContext || 'General English conversation practice',
-          difficulty: 'Intermediate'
+          text: userText,
+          lessonContext: lessonContext || 'General English conversation practice'
         }
       });
       if (aiResponse.error) {
