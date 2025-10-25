@@ -21,43 +21,17 @@ const ProfileLanguageSettings = ({
   } = useToast();
   const [loading, setLoading] = useState(false);
   const [settings, setSettings] = useState({
-    nativeLanguage: "",
     learningLevel: ""
   });
-  const languages = [{
-    value: "english",
-    label: "English"
-  }, {
-    value: "yoruba",
-    label: "Yoruba"
-  }, {
-    value: "igbo",
-    label: "Igbo"
-  }, {
-    value: "hausa",
-    label: "Hausa"
-  }, {
-    value: "pidgin",
-    label: "Pidgin English"
-  }];
   const levels = [{
     value: "beginner",
     label: "Beginner"
   }, {
-    value: "elementary",
-    label: "Elementary"
-  }, {
     value: "intermediate",
     label: "Intermediate"
   }, {
-    value: "upper-intermediate",
-    label: "Upper Intermediate"
-  }, {
     value: "advanced",
     label: "Advanced"
-  }, {
-    value: "proficient",
-    label: "Proficient"
   }];
   useEffect(() => {
     fetchLanguageSettings();
@@ -76,7 +50,6 @@ const ProfileLanguageSettings = ({
       if (data) {
         setSettings(prev => ({
           ...prev,
-          nativeLanguage: data.native_language || "english",
           learningLevel: data.level?.toLowerCase() || "beginner"
         }));
       }
@@ -92,7 +65,6 @@ const ProfileLanguageSettings = ({
         error
       } = await supabase.from('profiles').upsert({
         user_id: user.id,
-        native_language: languages.find(l => l.value === settings.nativeLanguage)?.label || "English",
         level: levels.find(l => l.value === settings.learningLevel)?.label || "Beginner"
       });
       if (error) {
@@ -135,23 +107,6 @@ const ProfileLanguageSettings = ({
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="nativeLanguage">Native Language</Label>
-              <Select value={settings.nativeLanguage} onValueChange={value => setSettings(prev => ({
-              ...prev,
-              nativeLanguage: value
-            }))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select your native language" />
-                </SelectTrigger>
-                <SelectContent>
-                  {languages.map(language => <SelectItem key={language.value} value={language.value}>
-                      {language.label}
-                    </SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-
             <div className="space-y-2">
               <Label htmlFor="learningLevel">Current English Level</Label>
               <Select value={settings.learningLevel} onValueChange={value => setSettings(prev => ({
