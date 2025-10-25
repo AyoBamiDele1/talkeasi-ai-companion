@@ -6,24 +6,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  User, 
-  Settings, 
-  CreditCard, 
-  Bell, 
-  HelpCircle, 
-  LogOut,
-  Crown,
-  Target,
-  Globe
-} from "lucide-react";
+import { User, Settings, CreditCard, Bell, HelpCircle, LogOut, Crown, Target, Globe } from "lucide-react";
 import ProfileSettings from "@/components/profile/ProfileSettings";
 import ProfileSubscription from "@/components/profile/ProfileSubscription";
 import ProfileNotifications from "@/components/profile/ProfileNotifications";
 import ProfileLearningGoals from "@/components/profile/ProfileLearningGoals";
 import ProfileLanguageSettings from "@/components/profile/ProfileLanguageSettings";
 import ProfileHelpSupport from "@/components/profile/ProfileHelpSupport";
-
 interface UserProfile {
   display_name: string;
   native_language: string;
@@ -31,43 +20,44 @@ interface UserProfile {
   level: string;
   avatar_url?: string;
 }
-
 interface UserStats {
   completed_lessons: number;
   current_streak: number;
   accuracy: number;
 }
-
 type ProfileView = 'main' | 'settings' | 'subscription' | 'notifications' | 'goals' | 'language' | 'help';
-
 const Profile = () => {
-  const { user, signOut } = useAuth();
-  const { toast } = useToast();
+  const {
+    user,
+    signOut
+  } = useAuth();
+  const {
+    toast
+  } = useToast();
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [stats, setStats] = useState<UserStats>({ completed_lessons: 0, current_streak: 0, accuracy: 0 });
+  const [stats, setStats] = useState<UserStats>({
+    completed_lessons: 0,
+    current_streak: 0,
+    accuracy: 0
+  });
   const [loading, setLoading] = useState(true);
   const [currentView, setCurrentView] = useState<ProfileView>('main');
-
   useEffect(() => {
     if (user) {
       fetchProfile();
       fetchStats();
     }
   }, [user]);
-
   const fetchProfile = async () => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', user?.id)
-        .single();
-
+      const {
+        data,
+        error
+      } = await supabase.from('profiles').select('*').eq('user_id', user?.id).single();
       if (error && error.code !== 'PGRST116') {
         console.error('Error fetching profile:', error);
         return;
       }
-
       setProfile(data);
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -75,81 +65,89 @@ const Profile = () => {
       setLoading(false);
     }
   };
-
   const fetchStats = async () => {
     try {
       // Fetch completed lessons count
-      const { count: completedCount, error: progressError } = await supabase
-        .from('user_progress')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user?.id)
-        .not('completed_at', 'is', null);
-
+      const {
+        count: completedCount,
+        error: progressError
+      } = await supabase.from('user_progress').select('*', {
+        count: 'exact',
+        head: true
+      }).eq('user_id', user?.id).not('completed_at', 'is', null);
       if (progressError) {
         console.error('Error fetching progress:', progressError);
       }
 
       // Calculate average accuracy from completed lessons
-      const { data: progressData, error: accuracyError } = await supabase
-        .from('user_progress')
-        .select('accuracy_score, fluency_score')
-        .eq('user_id', user?.id)
-        .not('completed_at', 'is', null);
-
+      const {
+        data: progressData,
+        error: accuracyError
+      } = await supabase.from('user_progress').select('accuracy_score, fluency_score').eq('user_id', user?.id).not('completed_at', 'is', null);
       if (accuracyError) {
         console.error('Error fetching accuracy:', accuracyError);
       }
-
       let averageAccuracy = 0;
       if (progressData && progressData.length > 0) {
-        const totalAccuracy = progressData.reduce((sum, item) => 
-          sum + ((item.accuracy_score || 0) + (item.fluency_score || 0)) / 2, 0
-        );
+        const totalAccuracy = progressData.reduce((sum, item) => sum + ((item.accuracy_score || 0) + (item.fluency_score || 0)) / 2, 0);
         averageAccuracy = Math.round(totalAccuracy / progressData.length);
       }
-
       setStats({
         completed_lessons: completedCount || 0,
-        current_streak: 7, // Mock for now - would need streak calculation logic
+        current_streak: 7,
+        // Mock for now - would need streak calculation logic
         accuracy: averageAccuracy
       });
     } catch (error) {
       console.error('Error fetching stats:', error);
     }
   };
-
   const handleSignOut = async () => {
     try {
       await signOut();
       toast({
         title: "Signed out",
-        description: "You have been successfully signed out.",
+        description: "You have been successfully signed out."
       });
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to sign out. Please try again.",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
-
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+    return <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+      </div>;
   }
-
-  const menuItems = [
-    { icon: Settings, label: "Settings", action: () => setCurrentView('settings') },
-    { icon: CreditCard, label: "Subscription", badge: "Premium", action: () => setCurrentView('subscription') },
-    { icon: Bell, label: "Notifications", action: () => setCurrentView('notifications') },
-    { icon: Target, label: "Learning Goals", action: () => setCurrentView('goals') },
-    { icon: Globe, label: "Language Settings", action: () => setCurrentView('language') },
-    { icon: HelpCircle, label: "Help & Support", action: () => setCurrentView('help') }
-  ];
+  const menuItems = [{
+    icon: Settings,
+    label: "Settings",
+    action: () => setCurrentView('settings')
+  }, {
+    icon: CreditCard,
+    label: "Subscription",
+    badge: "Premium",
+    action: () => setCurrentView('subscription')
+  }, {
+    icon: Bell,
+    label: "Notifications",
+    action: () => setCurrentView('notifications')
+  }, {
+    icon: Target,
+    label: "Learning Goals",
+    action: () => setCurrentView('goals')
+  }, {
+    icon: Globe,
+    label: "Language Settings",
+    action: () => setCurrentView('language')
+  }, {
+    icon: HelpCircle,
+    label: "Help & Support",
+    action: () => setCurrentView('help')
+  }];
 
   // Render different views based on current selection
   if (currentView !== 'main') {
@@ -170,9 +168,7 @@ const Profile = () => {
         return null;
     }
   }
-
-  return (
-    <div className="flex flex-col min-h-screen bg-background p-6 pb-20">
+  return <div className="flex flex-col min-h-screen bg-background p-6 pb-20">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-foreground mb-2">
@@ -188,14 +184,9 @@ const Profile = () => {
         <CardContent className="pt-6">
           <div className="flex items-center space-x-4 mb-4">
             <Avatar className="w-16 h-16">
-              {profile?.avatar_url && (
-                <AvatarImage src={profile.avatar_url} alt="Profile picture" />
-              )}
+              {profile?.avatar_url && <AvatarImage src={profile.avatar_url} alt="Profile picture" />}
               <AvatarFallback className="text-lg font-semibold">
-                {profile?.display_name ? 
-                  profile.display_name.split(' ').map(n => n[0]).join('').toUpperCase() :
-                  user?.email?.slice(0, 2).toUpperCase()
-                }
+                {profile?.display_name ? profile.display_name.split(' ').map(n => n[0]).join('').toUpperCase() : user?.email?.slice(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1">
@@ -241,23 +232,16 @@ const Profile = () => {
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
-            {profile?.learning_goals && profile.learning_goals.length > 0 ? (
-              profile.learning_goals.map((goal, index) => (
-                <Badge key={index} variant="outline">
+            {profile?.learning_goals && profile.learning_goals.length > 0 ? profile.learning_goals.map((goal, index) => <Badge key={index} variant="outline">
                   {goal}
-                </Badge>
-              ))
-            ) : (
-              <Badge variant="outline">Business Communication</Badge>
-            )}
+                </Badge>) : <Badge variant="outline">Business Communication</Badge>}
           </div>
         </CardContent>
       </Card>
 
       {/* Menu Items */}
       <div className="space-y-2 mb-6">
-        {menuItems.map((item, index) => (
-          <Card key={index} className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={item.action}>
+        {menuItems.map((item, index) => <Card key={index} className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={item.action}>
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -265,29 +249,18 @@ const Profile = () => {
                   <span className="font-medium">{item.label}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  {item.badge && (
-                    <Badge variant="default" className="bg-primary">
-                      {item.badge}
-                    </Badge>
-                  )}
+                  {item.badge}
                 </div>
               </div>
             </CardContent>
-          </Card>
-        ))}
+          </Card>)}
       </div>
 
       {/* Logout Button */}
-      <Button 
-        variant="outline" 
-        className="w-full text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
-        onClick={handleSignOut}
-      >
+      <Button variant="outline" className="w-full text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground" onClick={handleSignOut}>
         <LogOut className="w-4 h-4 mr-2" />
         Sign Out
       </Button>
-    </div>
-  );
+    </div>;
 };
-
 export default Profile;
