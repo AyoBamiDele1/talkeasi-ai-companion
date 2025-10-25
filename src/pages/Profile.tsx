@@ -245,9 +245,7 @@ const Profile = () => {
                   <item.icon className="w-5 h-5 text-muted-foreground" />
                   <span className="font-medium">{item.label}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  {item.badge}
-                </div>
+                
               </div>
             </CardContent>
           </Card>)}
