@@ -195,11 +195,8 @@ const Profile = () => {
               </h3>
               <p className="text-muted-foreground text-sm">{user?.email}</p>
               <div className="flex items-center gap-2 mt-2">
-                <Badge variant="secondary">{profile?.level || 'Beginner'}</Badge>
-                <Badge variant="default" className="bg-primary">
-                  <Crown className="w-3 h-3 mr-1" />
-                  Free
-                </Badge>
+                
+                
               </div>
             </div>
           </div>
