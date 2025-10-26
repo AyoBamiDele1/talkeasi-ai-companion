@@ -207,10 +207,7 @@ const Profile = () => {
               <div className="text-xl font-bold text-foreground">{stats.completed_lessons}</div>
               <div className="text-xs text-muted-foreground">Lessons</div>
             </div>
-            <div className="text-center">
-              <div className="text-xl font-bold text-foreground">{stats.current_streak}</div>
-              <div className="text-xs text-muted-foreground">Day Streak</div>
-            </div>
+            
             <div className="text-center">
               <div className="text-xl font-bold text-foreground">{stats.accuracy}%</div>
               <div className="text-xs text-muted-foreground">Accuracy</div>
