@@ -363,13 +363,14 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     // For trial mode, stop Browser STT
     if (isTrialMode && browserSTTRef.current) {
       browserSTTRef.current.stop();
+      setIsRecording(false);
+      setIsProcessing(true);
       
       // Wait briefly for final transcript
       await new Promise(resolve => setTimeout(resolve, 500));
       
       const userText = sttTranscriptRef.current.trim();
       if (!userText || userText.length === 0) {
-        setIsRecording(false);
         setIsProcessing(false);
         toast({
           title: "No Speech Detected",
