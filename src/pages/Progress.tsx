@@ -2,13 +2,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress as ProgressBar } from "@/components/ui/progress";
 import { TrendingUp, Award } from "lucide-react";
 import { useProgress } from "@/hooks/useProgress";
-import { useAchievements } from "@/hooks/useAchievements";
-import { AchievementsSection } from "@/components/achievements/AchievementsSection";
-import StreakDisplay from "@/components/StreakDisplay";
 
 const Progress = () => {
   const { stats, loading } = useProgress();
-  const { achievements, totalPoints, loading: achievementsLoading, checkAndUnlockAchievements } = useAchievements();
 
   if (loading) {
     return (
@@ -28,10 +24,6 @@ const Progress = () => {
       </div>
     );
   }
-
-  // Filter to only show core MVP achievements
-  const coreAchievementNames = ['First Steps', 'Getting Started', 'Consistency Champion', 'Dedicated Learner'];
-  const coreAchievements = achievements.filter(a => coreAchievementNames.includes(a.name));
 
   return (
     <div className="flex flex-col min-h-screen bg-background p-6 pb-20">
@@ -77,18 +69,6 @@ const Progress = () => {
           </CardContent>
         </Card>
       </div>
-
-      {/* Weekly Streak */}
-      <div className="mb-6">
-        <StreakDisplay />
-      </div>
-
-      {/* Core Achievements */}
-      <AchievementsSection 
-        achievements={coreAchievements}
-        loading={achievementsLoading}
-        simplified={true}
-      />
     </div>
   );
 };
