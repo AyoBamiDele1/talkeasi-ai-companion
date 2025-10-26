@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+
 import { ArrowLeft, Save } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,9 +18,7 @@ const ProfileSettings = ({ onBack }: ProfileSettingsProps) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [settings, setSettings] = useState({
-    displayName: "",
-    darkMode: false,
-    autoPlay: false
+    displayName: ""
   });
 
   useEffect(() => {
@@ -129,36 +127,6 @@ const ProfileSettings = ({ onBack }: ProfileSettingsProps) => {
               <p className="text-xs text-muted-foreground">
                 Email cannot be changed from this app
               </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* App Preferences */}
-        <Card>
-          <CardHeader>
-            <CardTitle>App Preferences</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <Label className="text-base">Dark Mode</Label>
-                <p className="text-sm text-muted-foreground">Switch between light and dark theme</p>
-              </div>
-              <Switch
-                checked={settings.darkMode}
-                onCheckedChange={(checked) => setSettings(prev => ({ ...prev, darkMode: checked }))}
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div>
-                <Label className="text-base">Auto-play AI Responses</Label>
-                <p className="text-sm text-muted-foreground">Automatically play AI responses</p>
-              </div>
-              <Switch
-                checked={settings.autoPlay}
-                onCheckedChange={(checked) => setSettings(prev => ({ ...prev, autoPlay: checked }))}
-              />
             </div>
           </CardContent>
         </Card>
