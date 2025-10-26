@@ -86,11 +86,6 @@ const Trial = () => {
               <p className="text-muted-foreground mb-4">
                 Try our AI English tutor for 1 minute — no signup needed!
               </p>
-              <div className="mt-4 p-3 bg-primary/10 rounded-lg border border-primary/20">
-                <p className="text-xs text-muted-foreground">
-                  💡 Like what you tried? Sign up to get 5 free credits, then unlock unlimited practice for just ₦100!
-                </p>
-              </div>
             </>
           )}
           <p className="text-muted-foreground">💡 Hold the mic button while you speak, then release to let the AI respond.</p>
