@@ -6,10 +6,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { User, Settings, CreditCard, Bell, HelpCircle, LogOut, Crown, Target, Globe } from "lucide-react";
+import { User, Settings, CreditCard, HelpCircle, LogOut, Crown, Target, Globe } from "lucide-react";
 import ProfileSettings from "@/components/profile/ProfileSettings";
 import ProfileSubscription from "@/components/profile/ProfileSubscription";
-import ProfileNotifications from "@/components/profile/ProfileNotifications";
 import ProfileLearningGoals from "@/components/profile/ProfileLearningGoals";
 import ProfileLanguageSettings from "@/components/profile/ProfileLanguageSettings";
 import ProfileHelpSupport from "@/components/profile/ProfileHelpSupport";
@@ -25,7 +24,7 @@ interface UserStats {
   current_streak: number;
   accuracy: number;
 }
-type ProfileView = 'main' | 'settings' | 'subscription' | 'notifications' | 'goals' | 'language' | 'help';
+type ProfileView = 'main' | 'settings' | 'subscription' | 'goals' | 'language' | 'help';
 const Profile = () => {
   const {
     user,
@@ -132,10 +131,6 @@ const Profile = () => {
     badge: "Premium",
     action: () => setCurrentView('subscription')
   }, {
-    icon: Bell,
-    label: "Notifications",
-    action: () => setCurrentView('notifications')
-  }, {
     icon: Target,
     label: "Learning Goals",
     action: () => setCurrentView('goals')
@@ -156,8 +151,6 @@ const Profile = () => {
         return <ProfileSettings onBack={() => setCurrentView('main')} />;
       case 'subscription':
         return <ProfileSubscription onBack={() => setCurrentView('main')} />;
-      case 'notifications':
-        return <ProfileNotifications onBack={() => setCurrentView('main')} />;
       case 'goals':
         return <ProfileLearningGoals onBack={() => setCurrentView('main')} />;
       case 'language':
