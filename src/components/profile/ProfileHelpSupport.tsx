@@ -25,15 +25,17 @@ const ProfileHelpSupport = ({
     icon: Mail,
     title: "Email Support",
     description: "Get help via email",
-    action: "support@englishtutor.com",
-    available: "24/7"
+    action: "novadelatech1@gmail.com",
+    available: "24/7",
+    onClick: () => window.location.href = "mailto:novadelatech1@gmail.com"
   }, {
     icon: MessageSquare,
     title: "Live Chat",
     description: "Chat with our support team",
     action: "Start Chat",
     available: "9 AM - 6 PM WAT",
-    badge: "Premium"
+    badge: "Premium",
+    onClick: () => window.open("https://wa.me/2349088976724", "_blank")
   }];
   const resourceLinks = [{
     title: "User Guide",
@@ -80,7 +82,11 @@ const ProfileHelpSupport = ({
             <CardTitle>Contact Support</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {contactOptions.map((option, index) => <div key={index} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors">
+            {contactOptions.map((option, index) => <div 
+                key={index} 
+                onClick={option.onClick}
+                className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+              >
                   <div className="flex items-center gap-3">
                   <option.icon className="w-5 h-5 text-primary" />
                   <div>
