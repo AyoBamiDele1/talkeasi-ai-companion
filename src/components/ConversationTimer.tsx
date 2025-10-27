@@ -4,19 +4,14 @@ import { Badge } from '@/components/ui/badge';
 
 interface ConversationTimerProps {
   isActive: boolean;
-  maxMinutes: number;
-  onTimeUp?: () => void;
   label?: string;
 }
 
 const ConversationTimer: React.FC<ConversationTimerProps> = ({ 
   isActive, 
-  maxMinutes,
-  onTimeUp,
   label
 }) => {
   const [seconds, setSeconds] = useState(0);
-  const maxSeconds = maxMinutes * 60;
 
   useEffect(() => {
     if (!isActive) {
@@ -25,18 +20,11 @@ const ConversationTimer: React.FC<ConversationTimerProps> = ({
     }
 
     const interval = setInterval(() => {
-      setSeconds((prev) => {
-        const newSeconds = prev + 1;
-        if (newSeconds >= maxSeconds && onTimeUp) {
-          onTimeUp();
-          return maxSeconds;
-        }
-        return newSeconds;
-      });
+      setSeconds((prev) => prev + 1);
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isActive, maxSeconds, onTimeUp]);
+  }, [isActive]);
 
   const formatTime = (totalSeconds: number) => {
     const mins = Math.floor(totalSeconds / 60);
@@ -44,22 +32,11 @@ const ConversationTimer: React.FC<ConversationTimerProps> = ({
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const remainingSeconds = maxSeconds - seconds;
-  const progress = (seconds / maxSeconds) * 100;
-
   return (
     <div className="flex items-center gap-2 px-4 py-2 bg-background/95 rounded-lg backdrop-blur-md border border-border">
       <Clock className="w-4 h-4 text-primary" />
-      <div className="flex flex-col gap-1">
-        <div className="text-sm font-medium text-foreground">
-          Speaking time: {formatTime(seconds)}
-        </div>
-      </div>
-      <div className="ml-2 w-32 h-2 bg-secondary rounded-full overflow-hidden">
-        <div 
-          className="h-full bg-primary transition-all duration-300"
-          style={{ width: `${progress}%` }}
-        />
+      <div className="text-sm font-medium text-foreground">
+        Speaking time: {formatTime(seconds)}
       </div>
     </div>
   );

@@ -487,14 +487,7 @@ const LessonSession = () => {
         <div className="flex flex-col items-center gap-2">
           <h1 className="font-semibold text-sm">{lesson?.title || 'Lesson Session'}</h1>
           <ConversationTimer 
-            isActive={isSessionActive} 
-            maxMinutes={lesson?.duration_minutes || 5}
-            onTimeUp={() => {
-              toast({
-                title: "Time's up!",
-                description: "Your free session time has ended. Consider upgrading for longer sessions.",
-              });
-            }}
+            isActive={isSessionActive}
           />
           {messages.filter(m => m.type === 'user').length >= 3 && (
             <Button variant="outline" size="sm" onClick={completeLesson}>

@@ -18,7 +18,7 @@ const Trial = () => {
   const [isSessionActive, setIsSessionActive] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
-  const [timeRemaining, setTimeRemaining] = useState(60);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
   useEffect(() => {
     // Check if trial already used
@@ -32,6 +32,27 @@ const Trial = () => {
       navigate('/auth?mode=signup');
     }
   }, [navigate, toast]);
+
+  // Timer for 1-minute trial limit
+  useEffect(() => {
+    if (!isSessionActive) {
+      setElapsedSeconds(0);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setElapsedSeconds(prev => {
+        const newSeconds = prev + 1;
+        if (newSeconds >= 60) {
+          handleTrialEnd();
+          return 60;
+        }
+        return newSeconds;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isSessionActive]);
 
   const handleSessionStart = () => {
     setIsSessionActive(true);
@@ -51,15 +72,15 @@ const Trial = () => {
     setMessages(newMessages);
   };
 
-  // Show toast at 15 seconds remaining
+  // Show toast at 45 seconds (15 seconds remaining)
   useEffect(() => {
-    if (isSessionActive && timeRemaining === 15) {
+    if (isSessionActive && elapsedSeconds === 45) {
       toast({
         title: "Enjoying this?",
         description: "Create your free account to continue your conversation!",
       });
     }
-  }, [timeRemaining, isSessionActive, toast]);
+  }, [elapsedSeconds, isSessionActive, toast]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/10 to-background">
@@ -67,9 +88,7 @@ const Trial = () => {
       {isSessionActive && (
         <div className="fixed top-0 left-0 right-0 z-50 p-4 bg-background/95 backdrop-blur-md border-b">
           <ConversationTimer 
-            isActive={isSessionActive} 
-            maxMinutes={1}
-            onTimeUp={handleTrialEnd}
+            isActive={isSessionActive}
             label="Free Trial"
           />
         </div>
