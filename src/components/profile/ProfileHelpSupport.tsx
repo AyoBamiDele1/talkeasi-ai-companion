@@ -35,7 +35,7 @@ const ProfileHelpSupport = ({
     action: "Start Chat",
     available: "9 AM - 6 PM WAT",
     badge: "Premium",
-    onClick: () => window.open("https://wa.me/2349088976724", "_blank")
+    onClick: () => window.open("https://web.whatsapp.com/send?phone=2349088976724", "_blank")
   }];
   const resourceLinks = [{
     title: "User Guide",
