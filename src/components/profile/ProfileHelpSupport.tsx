@@ -30,12 +30,12 @@ const ProfileHelpSupport = ({
     onClick: () => window.location.href = "mailto:novadelatech1@gmail.com"
   }, {
     icon: MessageSquare,
-    title: "Live Chat",
-    description: "Chat with our support team",
-    action: "Start Chat",
+    title: "Live Chat (WhatsApp)",
+    description: "+234 908 897 6724",
+    action: "Click to call/message",
     available: "9 AM - 6 PM WAT",
     badge: "Premium",
-    onClick: () => window.open("https://web.whatsapp.com/send?phone=2349088976724", "_blank")
+    onClick: () => window.location.href = "tel:+2349088976724"
   }];
   const resourceLinks = [{
     title: "User Guide",
