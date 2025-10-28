@@ -58,18 +58,28 @@ const ProfileLanguageSettings = ({
     }
   };
   const handleSave = async () => {
-    if (!user) return;
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to save settings.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setLoading(true);
     try {
-      const {
-        error
-      } = await supabase.from('profiles').upsert({
-        user_id: user.id,
-        level: levels.find(l => l.value === settings.learningLevel)?.label || "Beginner"
-      });
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          level: levels.find(l => l.value === settings.learningLevel)?.label || "Beginner"
+        })
+        .eq('user_id', user.id);
+
       if (error) {
         throw error;
       }
+
       toast({
         title: "Settings saved",
         description: "Your language settings have been updated successfully."

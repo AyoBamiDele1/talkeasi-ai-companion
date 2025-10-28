@@ -52,16 +52,23 @@ const ProfileSettings = ({ onBack }: ProfileSettingsProps) => {
   };
 
   const handleSave = async () => {
-    if (!user) return;
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to save settings.",
+        variant: "destructive"
+      });
+      return;
+    }
     
     setLoading(true);
     try {
       const { error } = await supabase
         .from('profiles')
-        .upsert({
-          user_id: user.id,
+        .update({
           display_name: settings.displayName
-        });
+        })
+        .eq('user_id', user.id);
 
       if (error) {
         throw error;
