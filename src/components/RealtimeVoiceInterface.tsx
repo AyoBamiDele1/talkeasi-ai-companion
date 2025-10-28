@@ -203,7 +203,10 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   const navigate = useNavigate();
   const messageIdCounter = useRef(0);
   const idleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const IDLE_TIMEOUT_MS = 180000; // 3 minutes of inactivity
+  // Longer timeout for free-form conversations, shorter for structured lessons
+  const IDLE_TIMEOUT_MS = lessonContext?.includes('Friendly Chat') || lessonContext?.includes('free_form') 
+    ? 600000 // 10 minutes for free-form chats
+    : 180000; // 3 minutes for structured lessons
 
   // Defensive effect: Prevent hands-free state in trial mode
   useEffect(() => {
