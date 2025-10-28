@@ -12,10 +12,15 @@ export class AudioRecorder {
         audio: {
           sampleRate: 24000,
           channelCount: 1,
-          echoCancellation: true,
+          echoCancellation: true, // Critical for preventing feedback
           noiseSuppression: true,
-          autoGainControl: true
-        }
+          autoGainControl: true,
+          // Additional browser-specific constraints
+          googEchoCancellation: true,
+          googNoiseSuppression: true,
+          googAutoGainControl: true,
+          googHighpassFilter: true,
+        } as any // Cast to any to allow browser-specific properties
       });
       
       this.audioContext = new AudioContext({
@@ -407,6 +412,7 @@ export class DeepSeekRealtimeChat {
   private currentNetworkQuality: NetworkQuality = 'good';
   private lessonContext: string = '';
   private conversationHistory: Array<{ role: string; content: string }> = [];
+  private isSpeaking = false; // Track if AI is currently speaking
 
   constructor(
     private onMessage: (message: any) => void,
@@ -520,20 +526,39 @@ export class DeepSeekRealtimeChat {
   pauseListening() {
     if (this.browserSTT) {
       console.log('[DeepSeek Realtime] Pausing STT to prevent feedback loop');
+      this.isSpeaking = true; // Set speaking flag to prevent auto-restart
       this.browserSTT.stop();
+      // Clear any pending text that might have been captured
+      this.textBuffer = [];
+      if (this.batchTimer) {
+        clearTimeout(this.batchTimer);
+        this.batchTimer = null;
+      }
     }
   }
 
   resumeListening() {
     if (this.browserSTT) {
-      console.log('[DeepSeek Realtime] Resuming STT');
+      console.log('[DeepSeek Realtime] Resuming STT after AI speech');
+      // Clear speaking flag before resuming
+      this.isSpeaking = false;
+      // Longer delay to ensure AI speech audio has completely finished
+      // and to avoid picking up any echo
       setTimeout(() => {
-        this.browserSTT?.start();
-      }, 500); // Small delay to avoid picking up tail end of AI speech
+        if (this.browserSTT && this.isConnected && !this.isSpeaking) {
+          this.browserSTT.start();
+        }
+      }, 1500); // Increased delay to prevent picking up AI speech echo
     }
   }
 
   private handleTranscriptResult(result: TranscriptResult) {
+    // Ignore any transcripts while AI is speaking (extra safety check)
+    if (this.isSpeaking) {
+      console.log('[DeepSeek Realtime] Ignoring transcript while AI is speaking:', result.text);
+      return;
+    }
+
     // Forward transcript to UI immediately
     this.onTranscript(result.text, result.isFinal);
 

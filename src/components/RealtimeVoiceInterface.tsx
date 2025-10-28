@@ -32,19 +32,24 @@ class AudioRecorder {
   private mediaRecorder: MediaRecorder | null = null;
   private audioChunks: Blob[] = [];
   private stream: MediaStream | null = null;
-  async start(): Promise<void> {
+  async start() {
     try {
       this.audioChunks = [];
 
-      // Request microphone access
+      // Request microphone access with aggressive echo cancellation
       this.stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           sampleRate: 44100,
           channelCount: 1,
-          echoCancellation: true,
+          echoCancellation: true, // Critical for preventing feedback
           noiseSuppression: true,
-          autoGainControl: true
-        }
+          autoGainControl: true,
+          // Additional constraints to reduce echo
+          googEchoCancellation: true,
+          googNoiseSuppression: true,
+          googAutoGainControl: true,
+          googHighpassFilter: true,
+        } as any // Cast to any to allow browser-specific properties
       });
 
       // Check if MediaRecorder is supported
@@ -157,13 +162,17 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
 
   const speakWithFemale = (text: string, onEnd?: () => void) => {
     if (!('speechSynthesis' in window)) return;
+    
+    // Set speaking flag immediately to prevent any STT from starting
+    setIsSpeaking(true);
+    
     const trySpeak = () => {
-      // Ensure no previous utterance plays with default voice
+      // Ensure no previous utterance plays
       speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.rate = 0.95;
       utterance.pitch = 1.1;
-      utterance.volume = 1.0;
+      utterance.volume = 0.8; // Slightly lower volume to reduce echo
       utterance.lang = 'en-US';
       const voices = speechSynthesis.getVoices();
       let v = femaleVoice
@@ -171,11 +180,30 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
         || voices.find(v => v.lang?.toLowerCase().startsWith('en'))
         || null;
       if (v) utterance.voice = v;
-      utterance.onstart = () => setIsSpeaking(true);
-      utterance.onend = () => { setIsSpeaking(false); onEnd?.(); };
-      utterance.onerror = () => { setIsSpeaking(false); onEnd?.(); };
+      
+      utterance.onstart = () => {
+        console.log('[TTS] Speech started');
+        setIsSpeaking(true);
+      };
+      
+      utterance.onend = () => {
+        console.log('[TTS] Speech ended, waiting before resuming STT');
+        setIsSpeaking(false);
+        // Add extra delay before calling onEnd to ensure audio has finished
+        setTimeout(() => {
+          onEnd?.();
+        }, 800); // Extra delay to prevent echo pickup
+      };
+      
+      utterance.onerror = (event) => {
+        console.error('[TTS] Speech error:', event);
+        setIsSpeaking(false);
+        onEnd?.();
+      };
+      
       speechSynthesis.speak(utterance);
     };
+    
     if (femaleVoice || speechSynthesis.getVoices().length > 0) {
       trySpeak();
       return;
