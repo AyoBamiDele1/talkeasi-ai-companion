@@ -37,7 +37,7 @@ const Home = () => {
     }
   };
 
-  const userName = "Dele";
+  const userName = userProfile?.display_name || user?.user_metadata?.display_name || "there";
 
   const handleStartLesson = () => {
     navigate('/lessons');
