@@ -774,6 +774,10 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
         // Handle transcript updates
         setCurrentTranscript(text);
         onTranscriptUpdate?.(text);
+        
+        // Reset idle timer when user is speaking
+        resetIdleTimer();
+        
         if (isFinal) {
           console.log('[DeepSeek UI] Final transcript:', text);
 

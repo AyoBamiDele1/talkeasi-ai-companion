@@ -454,11 +454,7 @@ export class DeepSeekRealtimeChat {
               // Forward streaming text to UI
               this.onMessage(data);
             } else if (data.type === 'response.text.done') {
-              // Cache the response
-              const lastUserMessage = this.conversationHistory[this.conversationHistory.length - 1];
-              if (lastUserMessage && lastUserMessage.role === 'user') {
-                this.responseCache.set(lastUserMessage.content, data.text);
-              }
+              // Caching disabled for more dynamic conversations
               
               // Add to conversation history
               this.conversationHistory.push({
@@ -612,18 +608,8 @@ export class DeepSeekRealtimeChat {
 
     console.log('[DeepSeek Realtime] Flushing buffer:', fullText);
 
-    // Check cache first
-    const cachedResponse = this.responseCache.get(fullText);
-    if (cachedResponse) {
-      console.log('[DeepSeek Realtime] Using cached response');
-      this.onMessage({
-        type: 'response.text.done',
-        text: cachedResponse,
-        cached: true
-      });
-      this.textBuffer = [];
-      return;
-    }
+    // Caching disabled for more dynamic, varied conversations
+    // This ensures the AI provides fresh, context-aware responses every time
 
     // Add to conversation history
     this.conversationHistory.push({
