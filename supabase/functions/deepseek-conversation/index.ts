@@ -14,13 +14,13 @@ serve(async (req) => {
 
   try {
     const { text, lessonContext, conversationHistory } = await req.json();
-    console.log('[DeepSeek Conversation] Processing text:', text);
+    console.log('[OpenAI Conversation] Processing text:', text);
 
-    const deepseekApiKey = Deno.env.get('DEEPSEEK_API_KEY');
-    if (!deepseekApiKey) {
-      console.error('[DeepSeek Conversation] API key not configured');
+    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
+    if (!openaiApiKey) {
+      console.error('[OpenAI Conversation] API key not configured');
       return new Response(
-        JSON.stringify({ error: 'DeepSeek API key not configured' }),
+        JSON.stringify({ error: 'OpenAI API key not configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -110,15 +110,15 @@ IMPORTANT: Keep your response short and conversational, like a real tutor would 
       { role: 'user', content: text }
     ];
 
-    // Call DeepSeek API
-    const response = await fetch('https://api.deepseek.com/chat/completions', {
+    // Call OpenAI GPT-4o-mini API
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${deepseekApiKey}`,
+        'Authorization': `Bearer ${openaiApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'deepseek-chat',
+        model: 'gpt-4o-mini',
         messages,
         temperature: 0.7,
         max_tokens: 150, // Keep responses short
@@ -127,9 +127,23 @@ IMPORTANT: Keep your response short and conversational, like a real tutor would 
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('[DeepSeek Conversation] API error:', response.status, errorText);
+      console.error('[OpenAI Conversation] API error:', response.status, errorText);
+      
+      if (response.status === 429) {
+        return new Response(
+          JSON.stringify({ error: 'Rate limits exceeded, please try again later.' }),
+          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      if (response.status === 402) {
+        return new Response(
+          JSON.stringify({ error: 'Payment required, please add funds.' }),
+          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
       return new Response(
-        JSON.stringify({ error: `DeepSeek API error: ${response.status}` }),
+        JSON.stringify({ error: `OpenAI API error: ${response.status}` }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -138,14 +152,14 @@ IMPORTANT: Keep your response short and conversational, like a real tutor would 
     const aiResponse = data.choices?.[0]?.message?.content;
 
     if (!aiResponse) {
-      console.error('[DeepSeek Conversation] No response from API');
+      console.error('[OpenAI Conversation] No response from API');
       return new Response(
-        JSON.stringify({ error: 'No response from DeepSeek API' }),
+        JSON.stringify({ error: 'No response from OpenAI API' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('[DeepSeek Conversation] Response:', aiResponse);
+    console.log('[OpenAI Conversation] Response:', aiResponse);
 
     return new Response(
       JSON.stringify({ response: aiResponse }),
@@ -153,7 +167,7 @@ IMPORTANT: Keep your response short and conversational, like a real tutor would 
     );
 
   } catch (error) {
-    console.error('[DeepSeek Conversation] Error:', error);
+    console.error('[OpenAI Conversation] Error:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

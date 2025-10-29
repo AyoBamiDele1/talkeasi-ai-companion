@@ -389,9 +389,8 @@ export class RealtimeChat {
   }
 }
 
-// ============= DeepSeek Realtime Chat with Browser STT =============
+// ============= DeepSeek Realtime Chat (Simplified - No Browser STT) =============
 
-import { BrowserSTT, TranscriptResult } from './BrowserSTT';
 import { ResponseCache } from './ResponseCache';
 import { NetworkMonitor, NetworkQuality } from './NetworkQuality';
 
@@ -403,7 +402,6 @@ interface TextBatchItem {
 
 export class DeepSeekRealtimeChat {
   private ws: WebSocket | null = null;
-  private browserSTT: BrowserSTT | null = null;
   private responseCache: ResponseCache;
   private networkMonitor: NetworkMonitor;
   private isConnected = false;
@@ -441,7 +439,7 @@ export class DeepSeekRealtimeChat {
         this.ws.onopen = () => {
           console.log('[DeepSeek Realtime] WebSocket connected');
           this.isConnected = true;
-          this.startBrowserSTT();
+          // No longer using browser STT - frontend will handle STT separately
           resolve();
         };
 
@@ -491,153 +489,44 @@ export class DeepSeekRealtimeChat {
     });
   }
 
-  private startBrowserSTT() {
-    try {
-      console.log('[DeepSeek Realtime] Starting Browser STT...');
-
-      this.browserSTT = new BrowserSTT(
-        (result: TranscriptResult) => this.handleTranscriptResult(result),
-        (error: Error) => {
-          console.error('[DeepSeek Realtime] STT error:', error);
-          this.onMessage({ type: 'error', error: error.message });
-        },
-        () => {
-          console.log('[DeepSeek Realtime] STT ended');
-        },
-        {
-          continuous: true,
-          interimResults: true,
-          language: 'en-US'
-        }
-      );
-
-      this.browserSTT.start();
-      console.log('[DeepSeek Realtime] Browser STT started');
-    } catch (error) {
-      console.error('[DeepSeek Realtime] Error starting STT:', error);
-      throw error;
-    }
-  }
-
+  // Pause listening (no-op now since we don't use browser STT)
   pauseListening() {
-    if (this.browserSTT) {
-      console.log('[DeepSeek Realtime] Pausing STT to prevent feedback loop');
-      this.isSpeaking = true; // Set speaking flag to prevent auto-restart
-      this.browserSTT.stop();
-      // Clear any pending text that might have been captured
-      this.textBuffer = [];
-      if (this.batchTimer) {
-        clearTimeout(this.batchTimer);
-        this.batchTimer = null;
-      }
-    }
+    console.log('[DeepSeek Realtime] Pause listening (no-op)');
+    this.isSpeaking = true;
   }
 
+  // Resume listening (no-op now since we don't use browser STT)
   resumeListening() {
-    if (this.browserSTT) {
-      console.log('[DeepSeek Realtime] Resuming STT after AI speech');
-      // Clear speaking flag before resuming
-      this.isSpeaking = false;
-      // Longer delay to ensure AI speech audio has completely finished
-      // and to avoid picking up any echo
-      setTimeout(() => {
-        if (this.browserSTT && this.isConnected && !this.isSpeaking) {
-          this.browserSTT.start();
-        }
-      }, 1500); // Increased delay to prevent picking up AI speech echo
-    }
+    console.log('[DeepSeek Realtime] Resume listening (no-op)');
+    this.isSpeaking = false;
   }
 
-  private handleTranscriptResult(result: TranscriptResult) {
-    // Ignore any transcripts while AI is speaking (extra safety check)
-    if (this.isSpeaking) {
-      console.log('[DeepSeek Realtime] Ignoring transcript while AI is speaking:', result.text);
+  // Send text message to backend
+  sendTextMessage(text: string) {
+    if (!this.ws || !this.isConnected) {
+      console.error('[DeepSeek Realtime] Cannot send message: not connected');
       return;
     }
 
-    // Forward transcript to UI immediately
-    this.onTranscript(result.text, result.isFinal);
-
-    // Add to buffer
-    this.textBuffer.push({
-      text: result.text,
-      timestamp: Date.now(),
-      isFinal: result.isFinal
-    });
-
-    // Get adaptive batching parameters
-    const batchSize = this.networkMonitor.getRecommendedBatchSize(this.currentNetworkQuality);
-    const silenceMs = this.networkMonitor.getRecommendedSilenceMs(this.currentNetworkQuality);
-
-    // Check if we should send immediately
-    if (result.isFinal && this.textBuffer.length >= batchSize) {
-      this.flushTextBuffer();
-    } else {
-      // Set timer to flush after silence
-      this.resetBatchTimer(silenceMs);
-    }
-  }
-
-  private resetBatchTimer(silenceMs: number) {
-    if (this.batchTimer) {
-      clearTimeout(this.batchTimer);
-    }
-
-    this.batchTimer = setTimeout(() => {
-      if (this.textBuffer.length > 0) {
-        this.flushTextBuffer();
-      }
-    }, silenceMs);
-  }
-
-  private flushTextBuffer() {
-    if (this.textBuffer.length === 0 || !this.ws || !this.isConnected) {
-      return;
-    }
-
-    // Combine text from buffer
-    const fullText = this.textBuffer
-      .map(item => item.text)
-      .join(' ')
-      .trim();
-
-    if (!fullText) {
-      this.textBuffer = [];
-      return;
-    }
-
-    console.log('[DeepSeek Realtime] Flushing buffer:', fullText);
-
-    // Caching disabled for more dynamic, varied conversations
-    // This ensures the AI provides fresh, context-aware responses every time
+    console.log('[DeepSeek Realtime] Sending text:', text);
 
     // Add to conversation history
     this.conversationHistory.push({
       role: 'user',
-      content: fullText
+      content: text
     });
 
     // Send to DeepSeek
     this.ws.send(JSON.stringify({
       type: 'text_message',
-      text: fullText,
+      text: text,
       lessonContext: this.lessonContext,
       conversationHistory: this.conversationHistory.slice(-10) // Last 10 messages
     }));
-
-    this.textBuffer = [];
-    
-    if (this.batchTimer) {
-      clearTimeout(this.batchTimer);
-      this.batchTimer = null;
-    }
   }
 
   private cleanup() {
-    if (this.browserSTT) {
-      this.browserSTT.stop();
-      this.browserSTT = null;
-    }
+    // No browser STT to clean up anymore
     if (this.batchTimer) {
       clearTimeout(this.batchTimer);
       this.batchTimer = null;

@@ -11,9 +11,10 @@ serve(async (req) => {
   }
 
   try {
-    const { text, voice } = await req.json();
-    if (!text || typeof text !== "string") {
-      return new Response(JSON.stringify({ error: "Text is required" }), {
+    const { audio } = await req.json();
+    
+    if (!audio || typeof audio !== "string") {
+      return new Response(JSON.stringify({ error: "Audio data is required" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -27,50 +28,55 @@ serve(async (req) => {
       });
     }
 
-    // Call OpenAI TTS (mp3)
-    const resp = await fetch("https://api.openai.com/v1/audio/speech", {
+    // Convert base64 to blob
+    const audioBuffer = Uint8Array.from(atob(audio), c => c.charCodeAt(0));
+    
+    // Create form data
+    const formData = new FormData();
+    formData.append("file", new Blob([audioBuffer], { type: "audio/webm" }), "audio.webm");
+    formData.append("model", "whisper-1");
+    formData.append("language", "en");
+
+    // Call OpenAI Whisper API
+    const response = await fetch("https://api.openai.com/v1/audio/transcriptions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${OPENAI_API_KEY}`,
-        "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        input: text,
-        voice: voice || "nova", // Default to nova - natural, warm female voice
-        response_format: "mp3",
-      }),
+      body: formData,
     });
 
-    if (!resp.ok) {
-      const errText = await resp.text();
-      console.error("TTS error:", resp.status, errText);
-      if (resp.status === 429) {
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Whisper API error:", response.status, errorText);
+      
+      if (response.status === 429) {
         return new Response(JSON.stringify({ error: "Rate limits exceeded, please try again later." }), {
           status: 429,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      if (resp.status === 402) {
-        return new Response(JSON.stringify({ error: "Payment required, please add funds to your Lovable AI workspace." }), {
+      if (response.status === 402) {
+        return new Response(JSON.stringify({ error: "Payment required, please add funds." }), {
           status: 402,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      return new Response(JSON.stringify({ error: "Failed to generate speech" }), {
+      
+      return new Response(JSON.stringify({ error: "Failed to transcribe audio" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const arrayBuffer = await resp.arrayBuffer();
-    const base64Audio = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+    const data = await response.json();
+    console.log("Whisper transcription:", data.text);
 
-    return new Response(JSON.stringify({ audioContent: base64Audio }), {
+    return new Response(JSON.stringify({ text: data.text }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("text-to-speech error:", error);
+    console.error("speech-to-text error:", error);
     return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

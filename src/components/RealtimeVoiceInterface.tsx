@@ -136,88 +136,6 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
   const [currentMode, setCurrentMode] = useState<'tap' | 'enhanced' | 'premium'>('tap');
   const [userCredits, setUserCredits] = useState<number>(0);
-  // Preferred female TTS voice handling
-  const [femaleVoice, setFemaleVoice] = useState<SpeechSynthesisVoice | null>(null);
-  useEffect(() => {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-    const pick = () => {
-      const voices = speechSynthesis.getVoices();
-      if (!voices || voices.length === 0) return;
-      const preferred = [
-        'Google UK English Female',
-        'Samantha','Victoria','Karen','Moira','Susan',
-        'Zira','Jenny','Jessa','Ava','Emma','Olivia',
-        'Joanna','Salli','Kendra','Kimberly','Nicole','Amy'
-      ].map(n => n.toLowerCase());
-      let v = voices.find(v => v.lang?.toLowerCase().startsWith('en') && preferred.some(n => v.name.toLowerCase().includes(n)))
-        || voices.find(v => v.lang?.toLowerCase().startsWith('en') && /female/i.test(v.name))
-        || voices.find(v => v.lang?.toLowerCase().startsWith('en'))
-        || voices[0] || null;
-      setFemaleVoice(v || null);
-    };
-    speechSynthesis.addEventListener('voiceschanged', pick);
-    pick();
-    return () => speechSynthesis.removeEventListener('voiceschanged', pick);
-  }, []);
-
-  const speakWithFemale = (text: string, onEnd?: () => void) => {
-    if (!('speechSynthesis' in window)) return;
-    
-    // Set speaking flag immediately to prevent any STT from starting
-    setIsSpeaking(true);
-    
-    const trySpeak = () => {
-      // Ensure no previous utterance plays
-      speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.95;
-      utterance.pitch = 1.1;
-      utterance.volume = 0.8; // Slightly lower volume to reduce echo
-      utterance.lang = 'en-US';
-      const voices = speechSynthesis.getVoices();
-      let v = femaleVoice
-        || voices.find(v => v.lang?.toLowerCase().startsWith('en') && /female/i.test(v.name))
-        || voices.find(v => v.lang?.toLowerCase().startsWith('en'))
-        || null;
-      if (v) utterance.voice = v;
-      
-      utterance.onstart = () => {
-        console.log('[TTS] Speech started');
-        setIsSpeaking(true);
-      };
-      
-      utterance.onend = () => {
-        console.log('[TTS] Speech ended, waiting before resuming STT');
-        setIsSpeaking(false);
-        // Add extra delay before calling onEnd to ensure audio has finished
-        setTimeout(() => {
-          onEnd?.();
-        }, 800); // Extra delay to prevent echo pickup
-      };
-      
-      utterance.onerror = (event) => {
-        console.error('[TTS] Speech error:', event);
-        setIsSpeaking(false);
-        onEnd?.();
-      };
-      
-      speechSynthesis.speak(utterance);
-    };
-    
-    if (femaleVoice || speechSynthesis.getVoices().length > 0) {
-      trySpeak();
-      return;
-    }
-    const handler = () => {
-      speechSynthesis.removeEventListener('voiceschanged', handler);
-      trySpeak();
-    };
-    speechSynthesis.addEventListener('voiceschanged', handler);
-    setTimeout(() => {
-      speechSynthesis.removeEventListener('voiceschanged', handler);
-      trySpeak();
-    }, 1000);
-  };
 
   const audioRecorderRef = useRef<AudioRecorder>(new AudioRecorder());
   const realtimeChatRef = useRef<RealtimeChat | null>(null);
@@ -294,8 +212,8 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     });
   };
 
-  // Play audio from base64
-  const playAudio = async (base64Audio: string) => {
+  // Play audio from base64 with callback
+  const playAudio = async (base64Audio: string, onEnd?: () => void) => {
     try {
       setIsSpeaking(true);
       const audioBlob = new Blob([Uint8Array.from(atob(base64Audio), c => c.charCodeAt(0))], {
@@ -308,12 +226,14 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
         setIsSpeaking(false);
         setCurrentAudio(null);
         URL.revokeObjectURL(audioUrl);
+        onEnd?.();
       };
       await audio.play();
     } catch (error) {
       console.error('Error playing audio:', error);
       setIsSpeaking(false);
       setCurrentAudio(null);
+      onEnd?.();
     }
   };
 
@@ -327,47 +247,13 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     }
   };
 
-  // Start recording
+  // Start recording - unified for all modes
   const recordingStartTimeRef = useRef<number>(0);
   const startRecording = async () => {
     try {
       setIsRecorderReady(false);
       
-      // For trial mode, use Browser STT
-      if (isTrialMode) {
-        const { BrowserSTT } = await import('@/utils/BrowserSTT');
-        
-        sttTranscriptRef.current = '';
-        
-        browserSTTRef.current = new BrowserSTT(
-          (result) => {
-            // Accumulate transcript
-            if (result.isFinal) {
-              sttTranscriptRef.current += ' ' + result.text;
-              console.log('[Trial STT] Final:', result.text);
-            }
-          },
-          (error) => {
-            console.error('[Trial STT] Error:', error);
-          },
-          () => {
-            console.log('[Trial STT] Ended');
-          },
-          {
-            language: 'en-US',
-            continuous: true,
-            interimResults: false
-          }
-        );
-        
-        browserSTTRef.current.start();
-        setIsRecording(true);
-        setIsRecorderReady(true);
-        console.log('[Trial] Browser STT started');
-        return;
-      }
-
-      // For non-trial mode, use audio recording
+      // Use AudioRecorder for all modes (trial and paid)
       await audioRecorderRef.current.start();
       setIsRecording(true);
       setIsRecorderReady(true);
@@ -385,44 +271,14 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     }
   };
 
-  // Browser STT handler for trial mode
-  const browserSTTRef = useRef<any>(null);
-  const sttTranscriptRef = useRef<string>('');
-
-  // Stop recording and process
+  // Stop recording and process - unified for all modes
   const stopRecording = async () => {
-    // For trial mode, stop Browser STT
-    if (isTrialMode && browserSTTRef.current) {
-      browserSTTRef.current.stop();
-      setIsRecording(false);
-      setIsProcessing(true);
-      
-      // Wait briefly for final transcript
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const userText = sttTranscriptRef.current.trim();
-      if (!userText || userText.length === 0) {
-        setIsProcessing(false);
-        toast({
-          title: "No Speech Detected",
-          description: "Please try speaking again.",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      // Process the transcript
-      await processTrialTranscript(userText);
-      sttTranscriptRef.current = '';
-      return;
-    }
-
-    // For non-trial mode, use original recording flow
     if (!isRecorderReady) {
       console.log('Recorder not ready, ignoring stop request');
       setIsRecording(false);
       return;
     }
+    
     try {
       setIsRecording(false);
       setIsRecorderReady(false);
@@ -446,24 +302,28 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       // Convert to base64
       const base64Audio = await blobToBase64(audioBlob);
 
-      // Step 1: Speech to text using paid service
-      console.log('Converting speech to text...');
+      // Step 1: Speech to text using OpenAI Whisper
+      console.log('Converting speech to text with Whisper...');
       const sttResponse = await supabase.functions.invoke('speech-to-text', {
         body: {
           audio: base64Audio
         }
       });
+      
       if (sttResponse.error) {
         throw new Error(sttResponse.error.message);
       }
+      
       const userText = sttResponse.data?.text;
       if (!userText || userText.trim().length === 0) {
         throw new Error('No speech detected. Please try again.');
       }
+      
       console.log('Transcribed text:', userText);
       onTranscriptUpdate?.(userText);
 
-      await processTrialTranscript(userText);
+      // Process the transcript
+      await processTranscript(userText);
     } catch (error) {
       console.error('Voice processing error:', error);
       setIsProcessing(false);
@@ -475,8 +335,8 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     }
   };
 
-  // Process transcript for trial mode
-  const processTrialTranscript = async (userText: string) => {
+  // Process transcript - unified for all modes
+  const processTranscript = async (userText: string) => {
     try {
       setIsProcessing(true);
       onTranscriptUpdate?.(userText);
@@ -492,17 +352,19 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       setMessages(newMessagesWithUser);
       onMessageUpdate?.(newMessagesWithUser);
 
-      // Step 2: Get AI response using DeepSeek (cost-optimized)
-      console.log('Getting AI response...');
+      // Step 2: Get AI response using GPT-4o-mini
+      console.log('Getting AI response with GPT-4o-mini...');
       const aiResponse = await supabase.functions.invoke('deepseek-conversation', {
         body: {
           text: userText,
           lessonContext: lessonContext || 'General English conversation practice'
         }
       });
+      
       if (aiResponse.error) {
         throw new Error(aiResponse.error.message);
       }
+      
       const aiData = aiResponse.data;
       console.log('AI response:', aiData);
 
@@ -514,13 +376,6 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
         throw new Error('No response from AI');
       }
 
-      // Update user message with corrections and feedback
-      const updatedUserMessage: ConversationMessage = {
-        ...userMessage,
-        corrections: aiData.corrections || [],
-        feedback: aiData.feedback
-      };
-
       // Add assistant message
       const assistantMessage: ConversationMessage = {
         id: `assistant-${messageIdCounter.current++}`,
@@ -528,13 +383,26 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
         content: aiData.response,
         timestamp: new Date()
       };
-      const finalMessages = [...messages, updatedUserMessage, assistantMessage];
+      const finalMessages = [...messages, userMessage, assistantMessage];
       setMessages(finalMessages);
       onMessageUpdate?.(finalMessages);
 
-      // Step 3: Convert AI response to speech using free browser TTS
-      console.log('Converting text to speech...');
-      speakWithFemale(aiData.response);
+      // Step 3: Convert AI response to speech using OpenAI TTS
+      console.log('Converting text to speech with OpenAI TTS...');
+      const ttsResponse = await supabase.functions.invoke('text-to-speech', {
+        body: {
+          text: aiData.response,
+          voice: 'nova' // Warm, natural female voice
+        }
+      });
+      
+      if (ttsResponse.error) {
+        throw new Error(ttsResponse.error.message);
+      }
+      
+      if (ttsResponse.data?.audioContent) {
+        await playAudio(ttsResponse.data.audioContent);
+      }
 
     } catch (error) {
       console.error('Voice processing error:', error);
@@ -745,23 +613,31 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
             deepSeekChatRef.current.pauseListening();
           }
 
-          // Speak the response using browser TTS
-          speakWithFemale(message.text, () => {
-            // Resume STT after AI finishes speaking
-            if (deepSeekChatRef.current) {
-              deepSeekChatRef.current.resumeListening();
+          // Speak the response using OpenAI TTS
+          (async () => {
+            try {
+              const ttsResponse = await supabase.functions.invoke('text-to-speech', {
+                body: { text: message.text, voice: 'nova' }
+              });
+              if (!ttsResponse.error && ttsResponse.data?.audioContent) {
+                await playAudio(ttsResponse.data.audioContent, () => {
+                  if (deepSeekChatRef.current) {
+                    deepSeekChatRef.current.resumeListening();
+                  }
+                  setIsProcessing(false);
+                });
+              }
+            } catch (error) {
+              console.error('TTS error:', error);
+              if (deepSeekChatRef.current) {
+                deepSeekChatRef.current.resumeListening();
+              }
+              setIsProcessing(false);
             }
-            setIsProcessing(false);
-          });
+          })();
 
           setIsProcessing(false);
           resetIdleTimer();
-          if (message.cached) {
-            toast({
-              title: "Instant Response",
-              description: "Used cached response for instant reply!"
-            });
-          }
         } else if (message.type === 'error') {
           toast({
             title: "Error",
@@ -854,13 +730,6 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   // End session
   const endSession = async () => {
     stopAudio();
-
-    // Cleanup browser STT if active
-    if (browserSTTRef.current) {
-      browserSTTRef.current.stop();
-      browserSTTRef.current = null;
-      sttTranscriptRef.current = '';
-    }
 
     // Deduct credits for non-trial users
     if (!isTrialMode && sessionStartTime && user) {
