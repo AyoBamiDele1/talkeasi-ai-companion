@@ -248,6 +248,8 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
 
   // Start recording - unified for all modes
   const recordingStartTimeRef = useRef<number>(0);
+  const autoStopTimerRef = useRef<NodeJS.Timeout | null>(null);
+  
   const startRecording = async () => {
     try {
       setIsRecorderReady(false);
@@ -258,6 +260,17 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       setIsRecorderReady(true);
       recordingStartTimeRef.current = Date.now();
       console.log('Recording started');
+      
+      // In hands-free mode, auto-stop after 5 seconds to process chunks
+      if (isHandsFreeMode && isDeepSeekMode) {
+        if (autoStopTimerRef.current) {
+          clearTimeout(autoStopTimerRef.current);
+        }
+        autoStopTimerRef.current = setTimeout(() => {
+          console.log('[Hands-Free] Auto-stopping recording after 5s');
+          stopRecording();
+        }, 5000); // Process speech every 5 seconds
+      }
     } catch (error) {
       console.error('Error starting recording:', error);
       setIsRecording(false);
@@ -272,6 +285,12 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
 
   // Stop recording and process - unified for all modes
   const stopRecording = async () => {
+    // Clear auto-stop timer if it exists
+    if (autoStopTimerRef.current) {
+      clearTimeout(autoStopTimerRef.current);
+      autoStopTimerRef.current = null;
+    }
+    
     if (!isRecorderReady) {
       console.log('Recorder not ready, ignoring stop request');
       setIsRecording(false);
@@ -289,6 +308,12 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       // Check if audio blob is valid
       if (audioBlob.size < 1000) {
         setIsProcessing(false);
+        // In hands-free mode, restart recording silently
+        if (isHandsFreeMode && isDeepSeekMode) {
+          console.log('[Hands-Free] No speech detected, restarting recording');
+          startRecording();
+          return;
+        }
         toast({
           title: "Recording Too Short",
           description: "Please speak for a bit longer and try again.",
@@ -312,6 +337,13 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       }
       const userText = sttResponse.data?.text;
       if (!userText || userText.trim().length === 0) {
+        // In hands-free mode, restart recording silently
+        if (isHandsFreeMode && isDeepSeekMode) {
+          console.log('[Hands-Free] No speech detected, restarting recording');
+          setIsProcessing(false);
+          startRecording();
+          return;
+        }
         throw new Error('No speech detected. Please try again.');
       }
       console.log('Transcribed text:', userText);
@@ -322,6 +354,14 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     } catch (error) {
       console.error('Voice processing error:', error);
       setIsProcessing(false);
+      
+      // In hands-free mode, restart recording even on error
+      if (isHandsFreeMode && isDeepSeekMode) {
+        console.log('[Hands-Free] Error occurred, restarting recording');
+        startRecording();
+        return;
+      }
+      
       toast({
         title: "Processing Error",
         description: error instanceof Error ? error.message : "Failed to process voice input",
@@ -346,6 +386,15 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       const newMessagesWithUser = [...messages, userMessage];
       setMessages(newMessagesWithUser);
       onMessageUpdate?.(newMessagesWithUser);
+
+      // In DeepSeek hands-free mode, send via WebSocket
+      if (isDeepSeekMode && isHandsFreeMode && deepSeekChatRef.current) {
+        console.log('[DeepSeek Hands-Free] Sending text to DeepSeek:', userText);
+        deepSeekChatRef.current.sendTextMessage(userText);
+        // The response will be handled by the WebSocket message handler
+        setIsProcessing(false);
+        return;
+      }
 
       // Step 2: Get AI response using GPT-4o-mini
       console.log('Getting AI response with GPT-4o-mini...');
@@ -617,6 +666,8 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
                     deepSeekChatRef.current.resumeListening();
                   }
                   setIsProcessing(false);
+                  // Restart recording after audio finishes
+                  startRecording();
                 });
               }
             } catch (error) {
@@ -625,6 +676,8 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
                 deepSeekChatRef.current.resumeListening();
               }
               setIsProcessing(false);
+              // Restart recording even on error
+              startRecording();
             }
           })();
           setIsProcessing(false);
@@ -637,7 +690,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
           });
           setIsProcessing(false);
         }
-      }, (text, isFinal) => {
+      }, async (text, isFinal) => {
         // Handle transcript updates
         setCurrentTranscript(text);
         onTranscriptUpdate?.(text);
@@ -658,6 +711,11 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
           onMessageUpdate?.(messages);
           setCurrentTranscript('');
           setIsProcessing(true);
+          
+          // Send text to DeepSeek
+          if (deepSeekChatRef.current) {
+            deepSeekChatRef.current.sendTextMessage(text);
+          }
         }
       });
       await deepSeekChatRef.current.connect(lessonContext || 'General English conversation practice');
@@ -675,6 +733,9 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       };
       setMessages([welcomeMessage]);
       onMessageUpdate?.([welcomeMessage]);
+      
+      // Start recording audio for STT
+      startRecording();
     } catch (error) {
       console.error('Failed to start DeepSeek session:', error);
       toast({
