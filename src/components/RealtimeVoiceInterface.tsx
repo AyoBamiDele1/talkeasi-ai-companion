@@ -557,11 +557,11 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       return;
     }
     
-    // Check credits for non-trial users (Enhanced mode needs 3+ credits for 5 min)
-    if (!isTrialMode && userCredits < 3) {
+    // Check credits for non-trial users (Enhanced mode needs 10+ credits for 5 min)
+    if (!isTrialMode && userCredits < 10) {
       toast({
         title: "Insufficient Credits",
-        description: "You need at least 3 credits to start a session.",
+        description: "You need at least 10 credits to start a session.",
         variant: "destructive",
         action: <Button onClick={() => navigate('/profile')}>Buy Credits</Button>
       });
@@ -736,10 +736,10 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       const durationMs = Date.now() - sessionStartTime;
       const durationMinutes = durationMs / 60000;
       const creditRates = {
-        tap: 3,
-        // 0.6 credits per minute (Browser STT + DeepSeek)
-        enhanced: 3,
-        // 0.6 credits per minute (Browser STT + DeepSeek)
+        tap: 10,
+        // 2 credits per minute (OpenAI Whisper + GPT-4o-mini + TTS)
+        enhanced: 10,
+        // 2 credits per minute (OpenAI Whisper + GPT-4o-mini + TTS)
         premium: 300 // 60 credits per minute (OpenAI Realtime API)
       };
       const creditsPerMinute = creditRates[currentMode] / 5;
@@ -877,7 +877,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
               <div className="flex items-center w-full">
                 <Phone className="w-5 h-5 mr-2" />
                 <span className="font-semibold text-lg">Hands-Free (Enhanced)</span>
-                <Badge variant="secondary" className="ml-auto">0.6 credits/min</Badge>
+                <Badge variant="secondary" className="ml-auto">2 credits/min</Badge>
               </div>
             </Button>
           </div>}

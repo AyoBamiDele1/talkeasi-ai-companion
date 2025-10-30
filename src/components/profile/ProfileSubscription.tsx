@@ -91,8 +91,8 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
   });
 
   const calculateEstimatedTime = (credits: number) => {
-    // Using new budget rate as baseline: 0.6 credits per minute
-    const minutes = Math.floor(credits / 0.6);
+    // Using new rate: 2 credits per minute
+    const minutes = Math.floor(credits / 2);
     if (minutes < 60) return `${minutes} minutes`;
     const hours = Math.floor(minutes / 60);
     const remainingMinutes = minutes % 60;
@@ -206,11 +206,11 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
                 <p className="text-sm font-medium">Hands-Free Enhanced Mode</p>
                 <p className="text-xs text-muted-foreground">Continuous conversation with AI tutor</p>
               </div>
-              <span className="text-sm font-semibold text-primary">0.6 credits/min</span>
+              <span className="text-sm font-semibold text-primary">2 credits/min</span>
             </div>
             <div className="mt-4 p-3 bg-muted/50 rounded-lg">
               <p className="text-xs text-muted-foreground">
-                💡 50 credits = Over 1 hour of practice!
+                💡 50 credits = 25 minutes of practice!
               </p>
             </div>
           </div>
