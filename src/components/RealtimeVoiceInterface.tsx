@@ -41,14 +41,15 @@ class AudioRecorder {
         audio: {
           sampleRate: 44100,
           channelCount: 1,
-          echoCancellation: true, // Critical for preventing feedback
+          echoCancellation: true,
+          // Critical for preventing feedback
           noiseSuppression: true,
           autoGainControl: true,
           // Additional constraints to reduce echo
           googEchoCancellation: true,
           googNoiseSuppression: true,
           googAutoGainControl: true,
-          googHighpassFilter: true,
+          googHighpassFilter: true
         } as any // Cast to any to allow browser-specific properties
       });
 
@@ -136,7 +137,6 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
   const [currentMode, setCurrentMode] = useState<'tap' | 'enhanced' | 'premium'>('tap');
   const [userCredits, setUserCredits] = useState<number>(0);
-
   const audioRecorderRef = useRef<AudioRecorder>(new AudioRecorder());
   const realtimeChatRef = useRef<RealtimeChat | null>(null);
   const deepSeekChatRef = useRef<DeepSeekRealtimeChat | null>(null);
@@ -150,9 +150,8 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   const messageIdCounter = useRef(0);
   const idleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   // Longer timeout for free-form conversations, shorter for structured lessons
-  const IDLE_TIMEOUT_MS = lessonContext?.includes('Friendly Chat') || lessonContext?.includes('free_form') 
-    ? 600000 // 10 minutes for free-form chats
-    : 180000; // 3 minutes for structured lessons
+  const IDLE_TIMEOUT_MS = lessonContext?.includes('Friendly Chat') || lessonContext?.includes('free_form') ? 600000 // 10 minutes for free-form chats
+  : 180000; // 3 minutes for structured lessons
 
   // Defensive effect: Prevent hands-free state in trial mode
   useEffect(() => {
@@ -252,7 +251,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   const startRecording = async () => {
     try {
       setIsRecorderReady(false);
-      
+
       // Use AudioRecorder for all modes (trial and paid)
       await audioRecorderRef.current.start();
       setIsRecording(true);
@@ -278,7 +277,6 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       setIsRecording(false);
       return;
     }
-    
     try {
       setIsRecording(false);
       setIsRecorderReady(false);
@@ -309,16 +307,13 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
           audio: base64Audio
         }
       });
-      
       if (sttResponse.error) {
         throw new Error(sttResponse.error.message);
       }
-      
       const userText = sttResponse.data?.text;
       if (!userText || userText.trim().length === 0) {
         throw new Error('No speech detected. Please try again.');
       }
-      
       console.log('Transcribed text:', userText);
       onTranscriptUpdate?.(userText);
 
@@ -360,11 +355,9 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
           lessonContext: lessonContext || 'General English conversation practice'
         }
       });
-      
       if (aiResponse.error) {
         throw new Error(aiResponse.error.message);
       }
-      
       const aiData = aiResponse.data;
       console.log('AI response:', aiData);
 
@@ -395,15 +388,12 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
           voice: 'nova' // Warm, natural female voice
         }
       });
-      
       if (ttsResponse.error) {
         throw new Error(ttsResponse.error.message);
       }
-      
       if (ttsResponse.data?.audioContent) {
         await playAudio(ttsResponse.data.audioContent);
       }
-
     } catch (error) {
       console.error('Voice processing error:', error);
       toast({
@@ -542,7 +532,6 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     }
   };
 
-
   // Start DeepSeek hands-free session
   const startDeepSeekHandsFreeSession = async () => {
     console.log('[Trial Debug] startDeepSeekHandsFreeSession called, isTrialMode:', isTrialMode);
@@ -556,7 +545,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       });
       return;
     }
-    
+
     // Check credits for non-trial users (Enhanced mode needs 10+ credits for 5 min)
     if (!isTrialMode && userCredits < 10) {
       toast({
@@ -617,7 +606,10 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
           (async () => {
             try {
               const ttsResponse = await supabase.functions.invoke('text-to-speech', {
-                body: { text: message.text, voice: 'nova' }
+                body: {
+                  text: message.text,
+                  voice: 'nova'
+                }
               });
               if (!ttsResponse.error && ttsResponse.data?.audioContent) {
                 await playAudio(ttsResponse.data.audioContent, () => {
@@ -635,7 +627,6 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
               setIsProcessing(false);
             }
           })();
-
           setIsProcessing(false);
           resetIdleTimer();
         } else if (message.type === 'error') {
@@ -650,10 +641,9 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
         // Handle transcript updates
         setCurrentTranscript(text);
         onTranscriptUpdate?.(text);
-        
+
         // Reset idle timer when user is speaking
         resetIdleTimer();
-        
         if (isFinal) {
           console.log('[DeepSeek UI] Final transcript:', text);
 
@@ -707,13 +697,10 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     setIsDeepSeekMode(false);
     setMessages([]);
     onSessionStart?.();
-    
     const welcomeMessage: ConversationMessage = {
       id: 'welcome',
       role: 'assistant',
-      content: isTrialMode 
-        ? "Free trial started! Using browser voice recognition. Hold the button to speak." 
-        : "Session started! Hold the microphone button to speak.",
+      content: isTrialMode ? "Free trial started! Using browser voice recognition. Hold the button to speak." : "Session started! Hold the microphone button to speak.",
       timestamp: new Date()
     };
     setMessages([welcomeMessage]);
@@ -838,10 +825,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
               {isConnecting ? "Connecting..." : isSessionActive ? "Session Active" : "Session Inactive"}
             </Badge>
             
-            {!isTrialMode && isHandsFreeMode && <Badge variant="outline" className={`text-xs ${isDeepSeekMode ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-green-50 text-green-700 border-green-200'}`}>
-                <Phone className="w-3 h-3 mr-1" />
-                {isDeepSeekMode ? 'DeepSeek' : 'OpenAI'} Hands-Free
-              </Badge>}
+            {!isTrialMode && isHandsFreeMode}
             
             {(isSpeaking || isAISpeaking) && <div className="flex items-center gap-1 text-success text-xs">
                 <Volume2 className="w-3 h-3" />
@@ -860,14 +844,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
           </div>
           
           <p className="text-sm text-muted-foreground">
-            {!isSessionActive 
-              ? (isTrialMode ? "Tap to start your free 1-minute trial" : "💡 Tap below to start practicing with Enhanced Mode") 
-              : isHandsFreeMode && currentTranscript 
-                ? `Listening: "${currentTranscript}"` 
-                : isHandsFreeMode 
-                  ? "Just speak naturally - I'm listening" 
-                  : "Hold microphone button to speak (trial mode)"
-            }
+            {!isSessionActive ? isTrialMode ? "Tap to start your free 1-minute trial" : "💡 Tap below to start practicing with Enhanced Mode" : isHandsFreeMode && currentTranscript ? `Listening: "${currentTranscript}"` : isHandsFreeMode ? "Just speak naturally - I'm listening" : "Hold microphone button to speak (trial mode)"}
           </p>
         </div>
 
