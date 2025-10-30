@@ -73,9 +73,7 @@ const Home = () => {
             <p className="text-sm text-muted-foreground mb-1">
               Practice your English with real-time AI feedback.
             </p>
-            <p className="text-xs text-muted-foreground mb-4">
-              Improve your fluency, pronunciation, and grammar through fun, natural conversations with your AI tutor.
-            </p>
+            
             <Button variant="outline" className="w-full" onClick={() => navigate('/lessons')}>
               Start English Lesson
             </Button>
