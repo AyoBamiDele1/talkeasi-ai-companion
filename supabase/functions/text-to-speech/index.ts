@@ -35,9 +35,9 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model: "tts-1",
         input: text,
-        voice: voice || "nova", // Default to nova - natural, warm female voice
+        voice: voice || "nova",
         response_format: "mp3",
       }),
     });
