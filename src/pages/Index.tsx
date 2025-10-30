@@ -20,18 +20,23 @@ const Index = () => {
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-primary/10 to-background p-6">
       <Card className="w-full max-w-md">
         <CardContent className="p-8 text-center">
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold text-primary mb-2">TalkEasi</h1>
-            <p className="text-muted-foreground">English made Easi.</p>
-          </div>
-          
-          <div className="mb-8">
-            <div className="w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-3xl">🗣️</span>
+          <div className="text-center mb-6 md:mb-8">
+            <div className="mb-4 md:mb-6">
+              <div className="inline-block p-3 md:p-4 bg-primary/10 rounded-full mb-3 md:mb-4">
+                <span className="text-3xl md:text-4xl">💞🎓</span>
+              </div>
+              <h1 className="text-3xl md:text-5xl font-bold text-foreground mb-2 md:mb-3">
+                TalkEasi
+              </h1>
+              <p className="text-base md:text-xl text-muted-foreground">
+                Your AI Companion + English Practice
+              </p>
             </div>
-            <h2 className="text-xl font-semibold mb-2">Speak English naturally — with your AI Coach!</h2>
-            <p className="text-muted-foreground text-sm mb-2">
-              Try it free for 1 minute. No signup needed.
+
+            <p className="text-muted-foreground mb-4 md:mb-6">
+              Chat when you're lonely, or practice English — all in one app.
+              <br className="hidden md:block" />
+              Your AI friend is always available, never judges.
             </p>
           </div>
 

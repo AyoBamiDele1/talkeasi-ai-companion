@@ -96,6 +96,9 @@ const LessonSession = () => {
     const firstScenario = scenarios[0] || 'general conversation';
     
     switch (lessonData.title) {
+      case 'AI Companion':
+        return "Hey! I'm here for you. How are you feeling today?";
+      
       case 'Friendly Chat':
         return "Hey! What's on your mind today?";
       
@@ -528,8 +531,9 @@ const LessonSession = () => {
                 </CardContent>
               </Card>
               
-              {/* Show corrections immediately after user messages - ALWAYS VISIBLE */}
-              {message.type === 'user' && message.corrections && message.corrections.length > 0 && (
+              {/* Show corrections immediately after user messages - HIDE FOR COMPANION MODE */}
+              {message.type === 'user' && message.corrections && message.corrections.length > 0 && 
+               lesson?.title !== 'AI Companion' && lesson?.content?.conversation_type !== 'companion' && (
                 <Card className="max-w-[85%] bg-amber-500/10 border-amber-500/50 shadow-sm">
                   <CardContent className="p-3">
                     <div className="flex items-start gap-2">
@@ -552,8 +556,9 @@ const LessonSession = () => {
                 </Card>
               )}
               
-              {/* Show positive feedback */}
-              {message.type === 'user' && message.feedback && (
+              {/* Show positive feedback - HIDE FOR COMPANION MODE */}
+              {message.type === 'user' && message.feedback && 
+               lesson?.title !== 'AI Companion' && lesson?.content?.conversation_type !== 'companion' && (
                 <Card className="max-w-[85%] bg-green-500/10 border-green-500/50 shadow-sm">
                   <CardContent className="p-3">
                     <div className="flex items-start gap-2">
@@ -661,27 +666,37 @@ const LessonSession = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Trophy className="w-5 h-5 text-primary" />
-              Lesson Completed!
+              {lesson?.title === 'AI Companion' || lesson?.content?.conversation_type === 'companion' 
+                ? 'Thanks for Chatting!' 
+                : 'Lesson Completed!'}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="text-center">
               <p className="text-muted-foreground mb-4">
-                Great job practicing! Your conversation skills are improving.
+                {lesson?.title === 'AI Companion' || lesson?.content?.conversation_type === 'companion'
+                  ? 'Hope you enjoyed our conversation!'
+                  : 'Great job practicing! Your conversation skills are improving.'}
               </p>
               <div className="flex justify-center gap-4 mb-4">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-primary">
                     {messages.filter(m => m.type === 'user').length}
                   </div>
-                  <div className="text-xs text-muted-foreground">Exchanges</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-primary">
-                    {Math.floor(Math.random() * 20 + 75)}%
+                  <div className="text-xs text-muted-foreground">
+                    {lesson?.title === 'AI Companion' || lesson?.content?.conversation_type === 'companion'
+                      ? 'Messages'
+                      : 'Exchanges'}
                   </div>
-                  <div className="text-xs text-muted-foreground">Accuracy</div>
                 </div>
+                {lesson?.title !== 'AI Companion' && lesson?.content?.conversation_type !== 'companion' && (
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-primary">
+                      {Math.floor(Math.random() * 20 + 75)}%
+                    </div>
+                    <div className="text-xs text-muted-foreground">Accuracy</div>
+                  </div>
+                )}
               </div>
             </div>
             <div className="flex gap-2">

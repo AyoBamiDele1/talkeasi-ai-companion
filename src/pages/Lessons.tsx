@@ -72,22 +72,21 @@ const Lessons = () => {
         };
       }) || [];
 
-      // MVP lesson list - only show these 3 core lessons
-      const mvpLessons = [
-        'Friendly Chat',
+      // Practice lesson list - exclude AI Companion
+      const practiceLessons = [
         'Discussing Healthy Habits and Lifestyle',
         'Job Interview Practice'
       ];
 
-      // Filter to only show MVP lessons
+      // Filter to only show practice lessons (exclude AI Companion)
       const filteredLessons = lessonsWithProgress.filter(lesson => 
-        mvpLessons.includes(lesson.title)
+        practiceLessons.includes(lesson.title)
       );
 
-      // Sort lessons by MVP order
+      // Sort lessons by practice order
       const sortedLessons = filteredLessons.sort((a, b) => {
-        const indexA = mvpLessons.indexOf(a.title);
-        const indexB = mvpLessons.indexOf(b.title);
+        const indexA = practiceLessons.indexOf(a.title);
+        const indexB = practiceLessons.indexOf(b.title);
         
         if (indexA !== -1 && indexB !== -1) return indexA - indexB;
         if (indexA !== -1) return -1;
@@ -123,10 +122,10 @@ const Lessons = () => {
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-foreground mb-2">
-          Practice Lessons
+          Choose Your Practice Topic
         </h1>
         <p className="text-muted-foreground">
-          Choose a conversation topic to practice your English skills
+          Practice your English with AI feedback and corrections
         </p>
       </div>
 
@@ -151,6 +150,9 @@ const Lessons = () => {
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-4 mb-4">
+                <Badge variant="secondary" className="text-xs">
+                  Practice Mode
+                </Badge>
                 <Badge variant="outline" className="text-xs">
                   {lesson.category}
                 </Badge>
