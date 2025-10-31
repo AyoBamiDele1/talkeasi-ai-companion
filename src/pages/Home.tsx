@@ -45,8 +45,10 @@ const Home = () => {
         </p>
       </div>
 
-      {/* Two Mode Cards - Stack on mobile, side-by-side on desktop */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto w-full">
+      {/* Cards Container - Centered in remaining space */}
+      <div className="flex-1 flex items-center">
+        {/* Two Mode Cards - Stack on mobile, side-by-side on desktop */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto w-full">
         
         {/* Card 1: AI Companion Mode */}
         <Card className="hover:shadow-lg transition-shadow">
@@ -79,6 +81,7 @@ const Home = () => {
             </Button>
           </CardContent>
         </Card>
+        </div>
       </div>
     </div>;
 };
