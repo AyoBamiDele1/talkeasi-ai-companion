@@ -103,6 +103,8 @@ class AudioRecorder {
         this.cleanup();
         resolve(audioBlob);
       };
+      // Request the latest data chunk before stopping to avoid empty blobs on some browsers
+      try { this.mediaRecorder.requestData?.(); } catch (_) { /* no-op */ }
       this.mediaRecorder.stop();
     });
   }
@@ -307,7 +309,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       console.log(`[DEBUG] Recording stopped. Audio blob size: ${audioBlob.size} bytes, type: ${audioBlob.type}`);
 
       // Check if audio blob is valid
-      if (audioBlob.size < 1000) {
+      if (audioBlob.size < 300) {
         console.log('[DEBUG] Audio blob too small');
         setIsProcessing(false);
         // In hands-free mode, restart recording silently
@@ -856,7 +858,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
           </div>
           
           <p className="text-sm text-muted-foreground">
-            {!isSessionActive ? isTrialMode ? "Tap to start your free 1-minute trial" : "💡 Choose a mode below to start practicing" : isHandsFreeMode && currentTranscript ? `Listening: "${currentTranscript}"` : isHandsFreeMode ? currentMode === 'premium' ? "Premium Mode: Ultra-realistic responses" : "Standard Mode: Smooth conversations" : "Hold microphone button to speak (trial mode)"}
+            {!isSessionActive ? isTrialMode ? "Tap to start your free 1-minute trial" : "💡 Choose a mode below to start practicing" : isHandsFreeMode && currentTranscript ? `Listening: "${currentTranscript}"` : isHandsFreeMode ? currentMode === 'premium' ? "Premium Mode: Ultra-realistic responses" : "Standard Mode: Speak, then tap the green button to process" : "Hold microphone button to speak (trial mode)"}
           </p>
         </div>
 
@@ -899,9 +901,9 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
             </Button>}
 
           {isSessionActive && isHandsFreeMode && <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-green-100 border-2 border-green-500 flex items-center justify-center">
+              <button onClick={stopRecording} className="w-16 h-16 rounded-full bg-green-100 border-2 border-green-500 flex items-center justify-center" aria-label="Process now">
                 <Phone className="w-6 h-6 text-green-600" />
-              </div>
+              </button>
             </div>}
 
           {isSessionActive && <Button variant="ghost" size="icon" onClick={endSession}>
