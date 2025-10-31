@@ -255,9 +255,9 @@ const LessonSession = () => {
       };
       setMessages(prev => [...prev, userMessage]);
 
-      // Step 2: Get AI response using DeepSeek (cost-optimized)
+      // Step 2: Get AI response using GPT-4o-mini (cost-optimized)
       setProcessingStage('thinking');
-      const aiResponse = await supabase.functions.invoke('deepseek-conversation', {
+      const aiResponse = await supabase.functions.invoke('openai-conversation', {
         body: { 
           userText, 
           lessonContext: lesson?.title || 'English Conversation Practice',

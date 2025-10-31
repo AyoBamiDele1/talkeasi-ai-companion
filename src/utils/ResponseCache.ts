@@ -92,7 +92,7 @@ export class ResponseCache {
 
   private loadFromStorage() {
     try {
-      const stored = localStorage.getItem('deepseek_response_cache');
+      const stored = localStorage.getItem('openai_response_cache');
       if (stored) {
         const data = JSON.parse(stored);
         this.cache = new Map(data);
@@ -106,7 +106,7 @@ export class ResponseCache {
   private saveToStorage() {
     try {
       const data = Array.from(this.cache.entries());
-      localStorage.setItem('deepseek_response_cache', JSON.stringify(data));
+      localStorage.setItem('openai_response_cache', JSON.stringify(data));
     } catch (error) {
       console.error('[ResponseCache] Error saving to storage:', error);
     }
@@ -114,7 +114,7 @@ export class ResponseCache {
 
   clear() {
     this.cache.clear();
-    localStorage.removeItem('deepseek_response_cache');
+    localStorage.removeItem('openai_response_cache');
     console.log('[ResponseCache] Cleared');
   }
 

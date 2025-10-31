@@ -8,7 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import ProcessingIndicator from './ProcessingIndicator';
-import { RealtimeChat, DeepSeekRealtimeChat } from '@/utils/RealtimeAudio';
+import { RealtimeChat } from '@/utils/RealtimeAudio';
 interface ConversationMessage {
   id: string;
   role: 'user' | 'assistant';
@@ -133,13 +133,11 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   const [isHandsFreeMode, setIsHandsFreeMode] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [isRecorderReady, setIsRecorderReady] = useState(false);
-  const [isDeepSeekMode, setIsDeepSeekMode] = useState(false);
   const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
   const [currentMode, setCurrentMode] = useState<'tap' | 'enhanced' | 'premium'>('tap');
   const [userCredits, setUserCredits] = useState<number>(0);
   const audioRecorderRef = useRef<AudioRecorder>(new AudioRecorder());
   const realtimeChatRef = useRef<RealtimeChat | null>(null);
-  const deepSeekChatRef = useRef<DeepSeekRealtimeChat | null>(null);
   const {
     toast
   } = useToast();
@@ -262,7 +260,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       console.log('Recording started');
       
       // In hands-free mode, auto-stop after 5 seconds to process chunks
-      if (isHandsFreeMode && isDeepSeekMode) {
+      if (isHandsFreeMode) {
         if (autoStopTimerRef.current) {
           clearTimeout(autoStopTimerRef.current);
         }
@@ -309,7 +307,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       if (audioBlob.size < 1000) {
         setIsProcessing(false);
         // In hands-free mode, restart recording silently
-        if (isHandsFreeMode && isDeepSeekMode) {
+        if (isHandsFreeMode) {
           console.log('[Hands-Free] No speech detected, restarting recording');
           startRecording();
           return;
@@ -338,7 +336,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       const userText = sttResponse.data?.text;
       if (!userText || userText.trim().length === 0) {
         // In hands-free mode, restart recording silently
-        if (isHandsFreeMode && isDeepSeekMode) {
+        if (isHandsFreeMode) {
           console.log('[Hands-Free] No speech detected, restarting recording');
           setIsProcessing(false);
           startRecording();
@@ -356,7 +354,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       setIsProcessing(false);
       
       // In hands-free mode, restart recording even on error
-      if (isHandsFreeMode && isDeepSeekMode) {
+      if (isHandsFreeMode) {
         console.log('[Hands-Free] Error occurred, restarting recording');
         startRecording();
         return;
@@ -387,18 +385,9 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       setMessages(newMessagesWithUser);
       onMessageUpdate?.(newMessagesWithUser);
 
-      // In DeepSeek hands-free mode, send via WebSocket
-      if (isDeepSeekMode && isHandsFreeMode && deepSeekChatRef.current) {
-        console.log('[DeepSeek Hands-Free] Sending text to DeepSeek:', userText);
-        deepSeekChatRef.current.sendTextMessage(userText);
-        // The response will be handled by the WebSocket message handler
-        setIsProcessing(false);
-        return;
-      }
-
       // Step 2: Get AI response using GPT-4o-mini
       console.log('Getting AI response with GPT-4o-mini...');
-      const aiResponse = await supabase.functions.invoke('deepseek-conversation', {
+      const aiResponse = await supabase.functions.invoke('openai-conversation', {
         body: {
           text: userText,
           lessonContext: lessonContext || 'General English conversation practice'
@@ -581,12 +570,10 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     }
   };
 
-  // Start DeepSeek hands-free session
-  const startDeepSeekHandsFreeSession = async () => {
-    console.log('[Trial Debug] startDeepSeekHandsFreeSession called, isTrialMode:', isTrialMode);
-    // Safety guard: Trial mode should never use hands-free
+  // Start hands-free session (for paid users only)
+  const startHandsFreeSession = async () => {
+    // Trial users can't use hands-free mode
     if (isTrialMode) {
-      console.log('[Trial Debug] BLOCKED: Trial mode cannot use hands-free!');
       toast({
         title: "Trial uses Tap to Talk",
         description: "Sign up to unlock hands-free mode.",
@@ -605,130 +592,27 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       });
       return;
     }
+    
     try {
       setCurrentMode('enhanced');
       setSessionStartTime(Date.now());
       setIsConnecting(true);
-      setIsDeepSeekMode(true);
-      setIsSessionActive(true); // Set session active
-      setIsHandsFreeMode(true);
-      onSessionStart?.(); // Notify parent
-
-      // Show different message for trial vs regular users
-      const initialToast = isTrialMode ? {
-        title: "Trial Started",
-        description: "Free 1-minute trial with AI voice coach"
-      } : {
-        title: "DeepSeek Hands-Free Active",
-        description: "Enhanced mode with low latency"
-      };
-      toast(initialToast);
-      deepSeekChatRef.current = new DeepSeekRealtimeChat(message => {
-        console.log('[DeepSeek UI] Message:', message.type);
-        if (message.type === 'response.text.delta') {
-          // Update assistant message with streaming text
-          setMessages(prev => {
-            const lastMsg = prev[prev.length - 1];
-            if (lastMsg && lastMsg.role === 'assistant') {
-              const updated = [...prev];
-              updated[updated.length - 1] = {
-                ...lastMsg,
-                content: message.fullText
-              };
-              return updated;
-            } else {
-              return [...prev, {
-                id: `msg-${messageIdCounter.current++}`,
-                role: 'assistant',
-                content: message.fullText,
-                timestamp: new Date()
-              }];
-            }
-          });
-        } else if (message.type === 'response.text.done') {
-          // Pause STT to prevent audio feedback loop
-          if (deepSeekChatRef.current) {
-            deepSeekChatRef.current.pauseListening();
-          }
-
-          // Speak the response using OpenAI TTS
-          (async () => {
-            try {
-              const ttsResponse = await supabase.functions.invoke('text-to-speech', {
-                body: {
-                  text: message.text,
-                  voice: 'nova'
-                }
-              });
-              if (!ttsResponse.error && ttsResponse.data?.audioContent) {
-                await playAudio(ttsResponse.data.audioContent, () => {
-                  if (deepSeekChatRef.current) {
-                    deepSeekChatRef.current.resumeListening();
-                  }
-                  setIsProcessing(false);
-                  // Restart recording after audio finishes
-                  startRecording();
-                });
-              }
-            } catch (error) {
-              console.error('TTS error:', error);
-              if (deepSeekChatRef.current) {
-                deepSeekChatRef.current.resumeListening();
-              }
-              setIsProcessing(false);
-              // Restart recording even on error
-              startRecording();
-            }
-          })();
-          setIsProcessing(false);
-          resetIdleTimer();
-        } else if (message.type === 'error') {
-          toast({
-            title: "Error",
-            description: message.error,
-            variant: "destructive"
-          });
-          setIsProcessing(false);
-        }
-      }, async (text, isFinal) => {
-        // Handle transcript updates
-        setCurrentTranscript(text);
-        onTranscriptUpdate?.(text);
-
-        // Reset idle timer when user is speaking
-        resetIdleTimer();
-        if (isFinal) {
-          console.log('[DeepSeek UI] Final transcript:', text);
-
-          // Add user message
-          const userMessage: ConversationMessage = {
-            id: `msg-${messageIdCounter.current++}`,
-            role: 'user',
-            content: text,
-            timestamp: new Date()
-          };
-          setMessages(prev => [...prev, userMessage]);
-          onMessageUpdate?.(messages);
-          setCurrentTranscript('');
-          setIsProcessing(true);
-          
-          // Send text to DeepSeek
-          if (deepSeekChatRef.current) {
-            deepSeekChatRef.current.sendTextMessage(text);
-          }
-        }
-      });
-      await deepSeekChatRef.current.connect(lessonContext || 'General English conversation practice');
       setIsSessionActive(true);
       setIsHandsFreeMode(true);
-      setMessages([]);
+      onSessionStart?.();
 
-      // Start idle timer
+      toast({
+        title: "Hands-Free Active",
+        description: "Enhanced mode with OpenAI"
+      });
+
+      setMessages([]);
       resetIdleTimer();
+      
       const welcomeMessage: ConversationMessage = {
         id: 'welcome',
         role: 'assistant',
-        content: isTrialMode ? "Welcome to your free trial! I can hear you now. Just start speaking naturally." : "Connected! I'm listening with DeepSeek. Just speak naturally - I'll respond in 600-1200ms.",
+        content: "Connected! I'm listening. Just speak naturally - I'll respond quickly.",
         timestamp: new Date()
       };
       setMessages([welcomeMessage]);
@@ -737,10 +621,10 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       // Start recording audio for STT
       startRecording();
     } catch (error) {
-      console.error('Failed to start DeepSeek session:', error);
+      console.error('Failed to start hands-free session:', error);
       toast({
         title: "Connection Failed",
-        description: error instanceof Error ? error.message : "Failed to connect to DeepSeek service",
+        description: error instanceof Error ? error.message : "Failed to start session",
         variant: "destructive"
       });
     } finally {
@@ -749,19 +633,17 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   };
 
   // Start push-to-talk session (tap to talk mode)
-  // Trial mode uses free Browser STT + DeepSeek + Browser TTS
   const startTapToTalkSession = () => {
     console.log('[Trial Debug] Starting Tap to Talk session, isTrialMode:', isTrialMode);
     setCurrentMode('tap');
     setIsSessionActive(true);
     setIsHandsFreeMode(false);
-    setIsDeepSeekMode(false);
     setMessages([]);
     onSessionStart?.();
     const welcomeMessage: ConversationMessage = {
       id: 'welcome',
       role: 'assistant',
-      content: isTrialMode ? "Free trial started! Using browser voice recognition. Hold the button to speak." : "Session started! Hold the microphone button to speak.",
+      content: isTrialMode ? "Free trial started! Hold the button to speak." : "Session started! Hold the microphone button to speak.",
       timestamp: new Date()
     };
     setMessages([welcomeMessage]);
@@ -834,16 +716,8 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       realtimeChatRef.current.disconnect();
       realtimeChatRef.current = null;
     }
-
-    // Disconnect DeepSeek chat if active
-    if (deepSeekChatRef.current) {
-      deepSeekChatRef.current.disconnect();
-      deepSeekChatRef.current = null;
-    }
-    setSessionStartTime(null);
     setIsSessionActive(false);
     setIsHandsFreeMode(false);
-    setIsDeepSeekMode(false);
     setIsRecording(false);
     setIsProcessing(false);
     setMessages([]);
@@ -911,7 +785,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
 
         {/* Mode Selection (when not active) */}
         {!isSessionActive && !isTrialMode && <div className="mb-4">
-            <Button size="lg" variant="outline" className="w-full h-auto py-3 flex-col items-start hover:bg-primary hover:text-primary-foreground" onClick={startDeepSeekHandsFreeSession} disabled={isConnecting}>
+            <Button size="lg" variant="outline" className="w-full h-auto py-3 flex-col items-start hover:bg-primary hover:text-primary-foreground" onClick={startHandsFreeSession} disabled={isConnecting}>
               <div className="flex items-center w-full">
                 <Phone className="w-5 h-5 mr-2" />
                 <span className="font-semibold text-lg">Hands-Free (Enhanced)</span>
