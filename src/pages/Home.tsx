@@ -34,7 +34,7 @@ const Home = () => {
     }
   };
   const userName = userProfile?.display_name || user?.user_metadata?.display_name || "there";
-  return <div className="flex flex-col min-h-screen bg-background p-4 md:p-6 pb-20 justify-center">
+  return <div className="flex flex-col min-h-screen bg-background p-4 md:p-6 pb-20">
       {/* Greeting Header */}
       <div className="mb-6">
         <h1 className="text-xl md:text-2xl font-bold text-foreground mb-1">
