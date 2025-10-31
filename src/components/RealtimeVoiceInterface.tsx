@@ -342,15 +342,8 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       console.log('[DEBUG] Starting recording...');
       setIsRecording(true);
       
-      // In hands-free standard mode, enable VAD
-      const onSilenceDetected = isHandsFreeMode && currentMode === 'standard'
-        ? () => {
-            console.log('[VAD] Auto-processing triggered');
-            stopRecording();
-          }
-        : undefined;
-      
-      await audioRecorderRef.current.start(onSilenceDetected);
+      // No VAD - manual control only
+      await audioRecorderRef.current.start();
       console.log('[DEBUG] Recording started successfully');
     } catch (error) {
       console.error('[DEBUG] Error starting recording:', error);
@@ -381,10 +374,6 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       if (audioBlob.size < 300) {
         console.log('[DEBUG] Audio blob too small');
         setIsProcessing(false);
-        
-        if (isHandsFreeMode && currentMode === 'standard') {
-          await startRecording();
-        }
         return;
       }
 
@@ -392,10 +381,6 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       console.log('[DEBUG] Audio converted to base64');
 
       await processTranscript(base64Audio);
-      
-      if (isHandsFreeMode && currentMode === 'standard') {
-        await startRecording();
-      }
     } catch (error) {
       console.error('[DEBUG] Error in stopRecording:', error);
       setIsProcessing(false);
@@ -522,22 +507,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     setIsSessionActive(true);
     setSessionStartTime(Date.now());
     onSessionStart?.();
-
-    try {
-      await startRecording();
-      setIsConnecting(false);
-    } catch (error) {
-      console.error('[DEBUG] Error starting Standard Mode:', error);
-      setIsConnecting(false);
-      setIsSessionActive(false);
-      setIsHandsFreeMode(false);
-      
-      toast({
-        title: "Connection Error",
-        description: "Failed to start session. Please try again.",
-        variant: "destructive"
-      });
-    }
+    setIsConnecting(false);
   };
 
   const startPremiumSession = async () => {
@@ -831,7 +801,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
                 : isHandsFreeMode 
                   ? (currentMode === 'premium' 
                     ? "Premium Mode: Ultra-realistic responses" 
-                    : "Standard Mode: Speak naturally, AI auto-detects when you're done")
+                    : "Standard Mode: Speak, then tap the green button to send")
                   : "Hold microphone button to speak (trial mode)"}
           </p>
         </div>
@@ -851,7 +821,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
                 <span className="font-semibold text-lg">Standard Mode</span>
                 <Badge variant="secondary" className="ml-auto">2 credits/min</Badge>
               </div>
-              <p className="text-xs text-muted-foreground text-left">Smooth, natural conversations with auto-detection</p>
+              <p className="text-xs text-muted-foreground text-left">Speak, then tap to send - simple and reliable</p>
             </Button>
 
             <Button
@@ -905,9 +875,25 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
 
           {isSessionActive && isHandsFreeMode && currentMode === 'standard' && (
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-green-100 border-2 border-green-500 flex items-center justify-center animate-pulse">
-                <Phone className="w-6 h-6 text-green-600" />
-              </div>
+              {!isRecording ? (
+                <Button
+                  size="lg"
+                  className="w-16 h-16 rounded-full bg-primary hover:bg-primary/90"
+                  onClick={startRecording}
+                  disabled={isProcessing || isSpeaking || isAISpeaking}
+                >
+                  <Mic className="w-6 h-6" />
+                </Button>
+              ) : (
+                <Button
+                  size="lg"
+                  className="w-16 h-16 rounded-full bg-green-500 hover:bg-green-600"
+                  onClick={stopRecording}
+                  disabled={isProcessing}
+                >
+                  <MessageSquare className="w-6 h-6" />
+                </Button>
+              )}
             </div>
           )}
 
