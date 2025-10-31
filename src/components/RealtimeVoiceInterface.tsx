@@ -738,7 +738,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
         // 2 credits per minute (OpenAI Whisper + GPT-4o-mini + TTS)
         enhanced: 10,
         // 2 credits per minute (OpenAI Whisper + GPT-4o-mini + TTS)
-        premium: 300 // 60 credits per minute (OpenAI Realtime API)
+        premium: 10 // 2 credits per minute (OpenAI Realtime API)
       };
       const creditsPerMinute = creditRates[currentMode] / 5;
       const creditsToDeduct = Math.ceil(durationMinutes * creditsPerMinute);
