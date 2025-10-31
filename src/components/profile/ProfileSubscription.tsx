@@ -74,7 +74,7 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
         if (pkg.price_ngn === 1000 && pkg.credits === 50) {
           return { ...pkg, name: 'Standard Mode Pack' };
         }
-        if (pkg.price_ngn === 2000 && pkg.credits === 50) {
+        if (pkg.price_ngn === 2500 && pkg.credits === 20) {
           return { ...pkg, name: 'Premium Mode Pack' };
         }
         return pkg;
@@ -185,7 +185,7 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
                 </CardTitle>
                 <p className="text-sm text-muted-foreground mt-2">
                   {pkg.price_ngn === 1000 && pkg.credits === 50 && "Enjoy smooth, natural conversations for everyday use."}
-                  {pkg.price_ngn === 2000 && pkg.credits === 50 && "Instant response, feels like talking to a friend."}
+                  {pkg.price_ngn === 2500 && pkg.credits === 20 && "Instant response, feels like talking to a friend."}
                 </p>
               </CardHeader>
               <CardContent>
@@ -242,13 +242,13 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
                 <Badge variant="default">2 credits/min</Badge>
               </div>
               <div className="text-xs text-muted-foreground mt-2">
-                ₦2,000 (~$1.37) = 50 credits = 25 minutes • $0.053/min
+                ₦2,500 (~$1.67) = 20 credits = 10 minutes • $0.167/min
               </div>
             </div>
 
             <div className="mt-4 p-3 bg-muted/50 rounded-lg">
               <p className="text-xs text-muted-foreground">
-                💡 Both modes: 50 credits = 25 minutes of practice time
+                💡 Standard: 50 credits = 25 mins • Premium: 20 credits = 10 mins
               </p>
             </div>
           </div>
