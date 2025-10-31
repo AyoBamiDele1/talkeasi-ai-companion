@@ -22,7 +22,6 @@ interface UserProfile {
 }
 interface UserStats {
   completed_lessons: number;
-  current_streak: number;
   accuracy: number;
 }
 type ProfileView = 'main' | 'settings' | 'subscription' | 'goals' | 'language' | 'help' | 'analytics';
@@ -37,7 +36,6 @@ const Profile = () => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [stats, setStats] = useState<UserStats>({
     completed_lessons: 0,
-    current_streak: 0,
     accuracy: 0
   });
   const [loading, setLoading] = useState(true);
@@ -94,8 +92,6 @@ const Profile = () => {
       }
       setStats({
         completed_lessons: completedCount || 0,
-        current_streak: 7,
-        // Mock for now - would need streak calculation logic
         accuracy: averageAccuracy
       });
     } catch (error) {
@@ -202,12 +198,11 @@ const Profile = () => {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-4 pt-4 border-t">
+          <div className="grid grid-cols-2 gap-4 pt-4 border-t">
             <div className="text-center">
               <div className="text-xl font-bold text-foreground">{stats.completed_lessons}</div>
               <div className="text-xs text-muted-foreground">Lessons</div>
             </div>
-            
             <div className="text-center">
               <div className="text-xl font-bold text-foreground">{stats.accuracy}%</div>
               <div className="text-xs text-muted-foreground">Accuracy</div>

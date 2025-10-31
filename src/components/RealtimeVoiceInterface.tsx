@@ -9,6 +9,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import ProcessingIndicator from './ProcessingIndicator';
 import { RealtimeChat } from '@/utils/RealtimeAudio';
+
 interface ConversationMessage {
   id: string;
   role: 'user' | 'assistant';
@@ -17,6 +18,7 @@ interface ConversationMessage {
   corrections?: string[];
   feedback?: string;
 }
+
 interface RealtimeVoiceInterfaceProps {
   lessonContext?: string;
   onTranscriptUpdate?: (transcript: string) => void;
@@ -27,12 +29,19 @@ interface RealtimeVoiceInterfaceProps {
   isTrialMode?: boolean;
 }
 
-// Audio recording class
+// Audio recording class with VAD support
 class AudioRecorder {
   private mediaRecorder: MediaRecorder | null = null;
   private audioChunks: Blob[] = [];
   private stream: MediaStream | null = null;
-  async start() {
+  private audioContext: AudioContext | null = null;
+  private analyser: AnalyserNode | null = null;
+  private silenceCheckInterval: number | null = null;
+  private onSilenceDetected?: () => void;
+
+  async start(onSilenceDetected?: () => void): Promise<MediaStream> {
+    this.onSilenceDetected = onSilenceDetected;
+    
     try {
       this.audioChunks = [];
 
@@ -42,16 +51,27 @@ class AudioRecorder {
           sampleRate: 44100,
           channelCount: 1,
           echoCancellation: true,
-          // Critical for preventing feedback
           noiseSuppression: true,
           autoGainControl: true,
-          // Additional constraints to reduce echo
           googEchoCancellation: true,
           googNoiseSuppression: true,
           googAutoGainControl: true,
           googHighpassFilter: true
-        } as any // Cast to any to allow browser-specific properties
+        } as any
       });
+
+      // Set up VAD if needed
+      if (onSilenceDetected) {
+        this.audioContext = new AudioContext();
+        this.analyser = this.audioContext.createAnalyser();
+        this.analyser.fftSize = 2048;
+        this.analyser.smoothingTimeConstant = 0.8;
+        
+        const source = this.audioContext.createMediaStreamSource(this.stream);
+        source.connect(this.analyser);
+        
+        this.startSilenceDetection();
+      }
 
       // Check if MediaRecorder is supported
       if (!window.MediaRecorder) {
@@ -65,58 +85,122 @@ class AudioRecorder {
         if (!MediaRecorder.isTypeSupported(mimeType)) {
           mimeType = 'audio/ogg;codecs=opus';
           if (!MediaRecorder.isTypeSupported(mimeType)) {
-            mimeType = ''; // Use default
+            mimeType = '';
           }
         }
       }
-      this.mediaRecorder = new MediaRecorder(this.stream, mimeType ? {
-        mimeType
-      } : undefined);
+      
+      this.mediaRecorder = new MediaRecorder(this.stream, mimeType ? { mimeType } : undefined);
+      
       this.mediaRecorder.ondataavailable = event => {
         if (event.data.size > 0) {
           this.audioChunks.push(event.data);
         }
       };
+      
       this.mediaRecorder.start();
       console.log('MediaRecorder started successfully');
+      
+      return this.stream;
     } catch (error) {
       this.cleanup();
       throw error;
     }
   }
+
+  private startSilenceDetection() {
+    if (!this.analyser || !this.onSilenceDetected) return;
+    
+    let silenceStart: number | null = null;
+    const SILENCE_THRESHOLD = 0.01;
+    const SILENCE_DURATION = 1500;
+    
+    this.silenceCheckInterval = window.setInterval(() => {
+      if (!this.analyser) return;
+      
+      const dataArray = new Uint8Array(this.analyser.frequencyBinCount);
+      this.analyser.getByteTimeDomainData(dataArray);
+      
+      let sum = 0;
+      for (let i = 0; i < dataArray.length; i++) {
+        const normalized = (dataArray[i] - 128) / 128;
+        sum += normalized * normalized;
+      }
+      const rms = Math.sqrt(sum / dataArray.length);
+      
+      const now = Date.now();
+      
+      if (rms < SILENCE_THRESHOLD) {
+        if (silenceStart === null) {
+          silenceStart = now;
+        } else if (now - silenceStart >= SILENCE_DURATION) {
+          console.log('[VAD] Silence detected, triggering processing');
+          this.onSilenceDetected?.();
+          silenceStart = null;
+        }
+      } else {
+        silenceStart = null;
+      }
+    }, 100);
+  }
+
   async stop(): Promise<Blob> {
+    // Clear silence detection
+    if (this.silenceCheckInterval !== null) {
+      clearInterval(this.silenceCheckInterval);
+      this.silenceCheckInterval = null;
+    }
+    
     return new Promise((resolve, reject) => {
       if (!this.mediaRecorder) {
         this.cleanup();
         reject(new Error('No media recorder available'));
         return;
       }
+
       if (this.mediaRecorder.state === 'inactive') {
         this.cleanup();
         reject(new Error('MediaRecorder is already stopped'));
         return;
       }
+
       this.mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(this.audioChunks, {
-          type: 'audio/webm'
-        });
+        const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
         this.cleanup();
         resolve(audioBlob);
       };
-      // Request the latest data chunk before stopping to avoid empty blobs on some browsers
-      try { this.mediaRecorder.requestData?.(); } catch (_) { /* no-op */ }
+      
+      try { 
+        this.mediaRecorder.requestData?.(); 
+      } catch (_) { /* no-op */ }
+      
       this.mediaRecorder.stop();
     });
   }
-  private cleanup() {
+
+  cleanup() {
+    if (this.silenceCheckInterval !== null) {
+      clearInterval(this.silenceCheckInterval);
+      this.silenceCheckInterval = null;
+    }
+    
+    if (this.audioContext) {
+      this.audioContext.close();
+      this.audioContext = null;
+    }
+    
     if (this.stream) {
       this.stream.getTracks().forEach(track => track.stop());
       this.stream = null;
     }
+    
     this.mediaRecorder = null;
     this.audioChunks = [];
+    this.analyser = null;
+    this.onSilenceDetected = undefined;
   }
 }
+
 const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   lessonContext,
   onTranscriptUpdate,
@@ -138,20 +222,18 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
   const [currentMode, setCurrentMode] = useState<'tap' | 'enhanced' | 'premium'>('tap');
   const [userCredits, setUserCredits] = useState<number>(0);
+  const [isAISpeaking, setIsAISpeaking] = useState(false);
+  const [currentTranscript, setCurrentTranscript] = useState('');
+  
   const audioRecorderRef = useRef<AudioRecorder>(new AudioRecorder());
   const realtimeChatRef = useRef<RealtimeChat | null>(null);
-  const {
-    toast
-  } = useToast();
-  const {
-    user
-  } = useAuth();
+  const { toast } = useToast();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const messageIdCounter = useRef(0);
   const idleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  // Longer timeout for free-form conversations, shorter for structured lessons
-  const IDLE_TIMEOUT_MS = lessonContext?.includes('Friendly Chat') || lessonContext?.includes('free_form') ? 600000 // 10 minutes for free-form chats
-  : 180000; // 3 minutes for structured lessons
+  
+  const IDLE_TIMEOUT_MS = lessonContext?.includes('Friendly Chat') || lessonContext?.includes('free_form') ? 600000 : 180000;
 
   // Defensive effect: Prevent hands-free state in trial mode
   useEffect(() => {
@@ -166,16 +248,21 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       fetchUserCredits();
     }
   }, [user, isTrialMode]);
+
   const fetchUserCredits = async () => {
     if (!user) return;
-    const {
-      data,
-      error
-    } = await supabase.from('user_credits').select('balance').eq('user_id', user.id).maybeSingle();
+    
+    const { data, error } = await supabase
+      .from('user_credits')
+      .select('balance')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    
     if (error && (error as any).code !== 'PGRST116') {
       console.error('Error fetching credits:', error);
       return;
     }
+    
     if (!data) {
       // Initialize credits so first-time users aren't blocked
       const {
@@ -197,7 +284,6 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     setUserCredits(data.balance || 0);
   };
 
-  // Convert blob to base64
   const blobToBase64 = (blob: Blob): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -211,22 +297,25 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     });
   };
 
-  // Play audio from base64 with callback
   const playAudio = async (base64Audio: string, onEnd?: () => void) => {
     try {
       setIsSpeaking(true);
-      const audioBlob = new Blob([Uint8Array.from(atob(base64Audio), c => c.charCodeAt(0))], {
-        type: 'audio/mp3'
-      });
+      const audioBlob = new Blob(
+        [Uint8Array.from(atob(base64Audio), c => c.charCodeAt(0))],
+        { type: 'audio/mp3' }
+      );
       const audioUrl = URL.createObjectURL(audioBlob);
       const audio = new Audio(audioUrl);
+      
       setCurrentAudio(audio);
+      
       audio.onended = () => {
         setIsSpeaking(false);
         setCurrentAudio(null);
         URL.revokeObjectURL(audioUrl);
         onEnd?.();
       };
+      
       await audio.play();
     } catch (error) {
       console.error('Error playing audio:', error);
@@ -236,7 +325,6 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     }
   };
 
-  // Stop current audio
   const stopAudio = () => {
     if (currentAudio) {
       currentAudio.pause();
@@ -246,35 +334,27 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     }
   };
 
-  // Start recording - unified for all modes
   const recordingStartTimeRef = useRef<number>(0);
   const autoStopTimerRef = useRef<NodeJS.Timeout | null>(null);
   
   const startRecording = async () => {
     try {
-      setIsRecorderReady(false);
-
-      // Use AudioRecorder for all modes (trial and paid)
-      await audioRecorderRef.current.start();
+      console.log('[DEBUG] Starting recording...');
       setIsRecording(true);
-      setIsRecorderReady(true);
-      recordingStartTimeRef.current = Date.now();
-      console.log('Recording started');
       
-      // In hands-free mode, auto-stop after 5 seconds to process chunks
-      if (isHandsFreeMode) {
-        if (autoStopTimerRef.current) {
-          clearTimeout(autoStopTimerRef.current);
-        }
-        autoStopTimerRef.current = setTimeout(() => {
-          console.log('[Hands-Free] Auto-stopping recording after 5s');
-          stopRecording();
-        }, 5000); // Process speech every 5 seconds
-      }
+      // In hands-free enhanced mode, enable VAD
+      const onSilenceDetected = isHandsFreeMode && currentMode === 'enhanced' 
+        ? () => {
+            console.log('[VAD] Auto-processing triggered');
+            stopRecording();
+          }
+        : undefined;
+      
+      await audioRecorderRef.current.start(onSilenceDetected);
+      console.log('[DEBUG] Recording started successfully');
     } catch (error) {
-      console.error('Error starting recording:', error);
+      console.error('[DEBUG] Error starting recording:', error);
       setIsRecording(false);
-      setIsRecorderReady(false);
       toast({
         title: "Recording Error",
         description: "Failed to start recording. Please check your microphone permissions.",
@@ -283,186 +363,298 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     }
   };
 
-  // Stop recording and process - unified for all modes
   const stopRecording = async () => {
-    console.log('[DEBUG] stopRecording called, isRecorderReady:', isRecorderReady);
+    console.log('[DEBUG] stopRecording called');
     
-    // Clear auto-stop timer if it exists
     if (autoStopTimerRef.current) {
       clearTimeout(autoStopTimerRef.current);
       autoStopTimerRef.current = null;
     }
     
-    if (!isRecorderReady) {
-      console.log('Recorder not ready, ignoring stop request');
-      setIsRecording(false);
-      return;
-    }
     try {
       setIsRecording(false);
-      setIsRecorderReady(false);
       setIsProcessing(true);
-      console.log('[DEBUG] About to stop recorder');
-
-      // Stop recording and get audio blob
+      
       const audioBlob = await audioRecorderRef.current.stop();
-      console.log(`[DEBUG] Recording stopped. Audio blob size: ${audioBlob.size} bytes, type: ${audioBlob.type}`);
+      console.log(`[DEBUG] Recording stopped. Audio blob size: ${audioBlob.size} bytes`);
 
-      // Check if audio blob is valid
       if (audioBlob.size < 300) {
         console.log('[DEBUG] Audio blob too small');
         setIsProcessing(false);
-        // In hands-free mode, restart recording silently
-        if (isHandsFreeMode) {
-          console.log('[Hands-Free] No speech detected, restarting recording');
-          startRecording();
-          return;
+        
+        if (isHandsFreeMode && currentMode === 'enhanced') {
+          await startRecording();
         }
-        toast({
-          title: "Recording Too Short",
-          description: "Please speak for a bit longer and try again.",
-          variant: "destructive"
-        });
         return;
       }
 
-      // Convert to base64
-      console.log('[DEBUG] Converting to base64...');
       const base64Audio = await blobToBase64(audioBlob);
-      console.log('[DEBUG] Base64 conversion complete, length:', base64Audio.length);
+      console.log('[DEBUG] Audio converted to base64');
 
-      // Step 1: Speech to text using OpenAI Whisper
-      console.log('[DEBUG] Calling speech-to-text edge function...');
-      const sttResponse = await supabase.functions.invoke('speech-to-text', {
-        body: {
-          audio: base64Audio
-        }
-      });
-      console.log('[DEBUG] STT response:', sttResponse);
+      await processTranscript(base64Audio);
       
-      if (sttResponse.error) {
-        console.error('[DEBUG] STT error:', sttResponse.error);
-        throw new Error(sttResponse.error.message);
+      if (isHandsFreeMode && currentMode === 'enhanced') {
+        await startRecording();
       }
-      const userText = sttResponse.data?.text;
-      if (!userText || userText.trim().length === 0) {
-        // In hands-free mode, restart recording silently
-        if (isHandsFreeMode) {
-          console.log('[Hands-Free] No speech detected, restarting recording');
-          setIsProcessing(false);
-          startRecording();
-          return;
-        }
-        throw new Error('No speech detected. Please try again.');
-      }
-      console.log('Transcribed text:', userText);
-      onTranscriptUpdate?.(userText);
-
-      // Process the transcript
-      await processTranscript(userText);
     } catch (error) {
-      console.error('Voice processing error:', error);
+      console.error('[DEBUG] Error in stopRecording:', error);
       setIsProcessing(false);
       
-      // In hands-free mode, restart recording even on error
-      if (isHandsFreeMode) {
-        console.log('[Hands-Free] Error occurred, restarting recording');
-        startRecording();
+      toast({
+        title: "Processing Error",
+        description: "Failed to process audio. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const processTranscript = async (base64Audio: string) => {
+    try {
+      console.log('[DEBUG] Processing transcript...');
+      
+      const { data: sttData, error: sttError } = await supabase.functions.invoke('speech-to-text', {
+        body: { audio: base64Audio }
+      });
+
+      if (sttError) {
+        console.error('[DEBUG] STT error:', sttError);
+        throw sttError;
+      }
+
+      const userTranscript = sttData.text || '';
+      console.log('[DEBUG] Transcript received:', userTranscript);
+
+      if (!userTranscript.trim()) {
+        console.log('[DEBUG] Empty transcript, skipping processing');
+        setIsProcessing(false);
         return;
       }
+
+      const userMessage: ConversationMessage = {
+        id: `msg-${messageIdCounter.current++}`,
+        role: 'user',
+        content: userTranscript,
+        timestamp: new Date()
+      };
+
+      setMessages(prev => {
+        const updated = [...prev, userMessage];
+        onMessageUpdate?.(updated);
+        return updated;
+      });
+      onTranscriptUpdate?.(userTranscript);
+
+      console.log('[DEBUG] Getting AI response...');
+      const { data: aiData, error: aiError } = await supabase.functions.invoke('openai-conversation', {
+        body: {
+          text: userTranscript,
+          lessonContext: lessonContext
+        }
+      });
+
+      if (aiError) {
+        console.error('[DEBUG] AI error:', aiError);
+        throw aiError;
+      }
+
+      const aiResponse = aiData.response || '';
+      console.log('[DEBUG] AI response received:', aiResponse);
+
+      const aiMessage: ConversationMessage = {
+        id: `msg-${messageIdCounter.current++}`,
+        role: 'assistant',
+        content: aiResponse,
+        timestamp: new Date()
+      };
+
+      setMessages(prev => {
+        const updated = [...prev, aiMessage];
+        onMessageUpdate?.(updated);
+        return updated;
+      });
+
+      // Use Alloy voice for Enhanced Mode
+      console.log('[DEBUG] Generating speech with Alloy voice...');
+      const { data: ttsData, error: ttsError } = await supabase.functions.invoke('text-to-speech', {
+        body: { 
+          text: aiResponse,
+          voice: 'alloy'
+        }
+      });
+
+      if (ttsError) {
+        console.error('[DEBUG] TTS error:', ttsError);
+        throw ttsError;
+      }
+
+      console.log('[DEBUG] Playing AI response audio');
+      await playAudio(ttsData.audioContent);
+
+      setIsProcessing(false);
+      console.log('[DEBUG] Processing complete');
+    } catch (error) {
+      console.error('[DEBUG] Error in processTranscript:', error);
+      setIsProcessing(false);
       
       toast({
-        title: "Processing Error",
-        description: error instanceof Error ? error.message : "Failed to process voice input",
+        title: "Error",
+        description: "Failed to process your message. Please try again.",
         variant: "destructive"
       });
     }
   };
 
-  // Process transcript - unified for all modes
-  const processTranscript = async (userText: string) => {
+  const startHandsFreeSession = async () => {
+    console.log('[DEBUG] Starting Enhanced Mode session');
+    
+    if (userCredits < 2) {
+      toast({
+        title: "Insufficient Credits",
+        description: "You need at least 2 credits to start a session.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsConnecting(true);
+    setCurrentMode('enhanced');
+    setIsHandsFreeMode(true);
+    setIsSessionActive(true);
+    setSessionStartTime(Date.now());
+    onSessionStart?.();
+
     try {
-      setIsProcessing(true);
-      onTranscriptUpdate?.(userText);
-
-      // Add user message
-      const userMessage: ConversationMessage = {
-        id: `user-${messageIdCounter.current++}`,
-        role: 'user',
-        content: userText,
-        timestamp: new Date()
-      };
-      const newMessagesWithUser = [...messages, userMessage];
-      setMessages(newMessagesWithUser);
-      onMessageUpdate?.(newMessagesWithUser);
-
-      // Step 2: Get AI response using GPT-4o-mini
-      console.log('Getting AI response with GPT-4o-mini...');
-      const aiResponse = await supabase.functions.invoke('openai-conversation', {
-        body: {
-          text: userText,
-          lessonContext: lessonContext || 'General English conversation practice'
-        }
+      await startRecording();
+      setIsConnecting(false);
+    } catch (error) {
+      console.error('[DEBUG] Error starting Enhanced Mode:', error);
+      setIsConnecting(false);
+      setIsSessionActive(false);
+      setIsHandsFreeMode(false);
+      
+      toast({
+        title: "Connection Error",
+        description: "Failed to start session. Please try again.",
+        variant: "destructive"
       });
-      if (aiResponse.error) {
-        throw new Error(aiResponse.error.message);
-      }
-      const aiData = aiResponse.data;
-      console.log('AI response:', aiData);
+    }
+  };
 
-      // Check if API returned an error
-      if (aiData?.error) {
-        throw new Error(aiData.error);
-      }
-      if (!aiData?.response) {
-        throw new Error('No response from AI');
-      }
-
-      // Add assistant message
-      const assistantMessage: ConversationMessage = {
-        id: `assistant-${messageIdCounter.current++}`,
-        role: 'assistant',
-        content: aiData.response,
-        timestamp: new Date()
-      };
-      const finalMessages = [...messages, userMessage, assistantMessage];
-      setMessages(finalMessages);
-      onMessageUpdate?.(finalMessages);
-
-      // Step 3: Convert AI response to speech using OpenAI TTS
-      console.log('Converting text to speech with OpenAI TTS...');
-      const ttsResponse = await supabase.functions.invoke('text-to-speech', {
-        body: {
-          text: aiData.response,
-          voice: 'nova' // Warm, natural female voice
-        }
+  const startPremiumSession = async () => {
+    console.log('[DEBUG] Starting Premium Mode session');
+    
+    if (userCredits < 2) {
+      toast({
+        title: "Insufficient Credits",
+        description: "You need at least 2 credits to start a session.",
+        variant: "destructive"
       });
-      if (ttsResponse.error) {
-        throw new Error(ttsResponse.error.message);
-      }
-      if (ttsResponse.data?.audioContent) {
-        await playAudio(ttsResponse.data.audioContent);
+      return;
+    }
+
+    setIsConnecting(true);
+    setCurrentMode('premium');
+    setIsHandsFreeMode(true);
+    setIsSessionActive(true);
+    setSessionStartTime(Date.now());
+    onSessionStart?.();
+
+    try {
+      const chat = new RealtimeChat((message) => {
+        console.log('[Premium] Received message:', message);
+      });
+
+      await chat.connect();
+      realtimeChatRef.current = chat;
+      setIsConnecting(false);
+      
+      toast({
+        title: "Connected",
+        description: "Premium real-time conversation started!",
+      });
+    } catch (error) {
+      console.error('[DEBUG] Error starting Premium Mode:', error);
+      setIsConnecting(false);
+      setIsSessionActive(false);
+      setIsHandsFreeMode(false);
+      
+      toast({
+        title: "Connection Error",
+        description: "Failed to start Premium Mode. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const startTapToTalkSession = async () => {
+    console.log('[DEBUG] Starting Tap-to-Talk session');
+    setCurrentMode('tap');
+    setIsHandsFreeMode(false);
+    setIsSessionActive(true);
+    setSessionStartTime(Date.now());
+    onSessionStart?.();
+  };
+
+  const startSession = async () => {
+    if (isTrialMode) {
+      await startTapToTalkSession();
+    } else {
+      await startHandsFreeSession();
+    }
+  };
+
+  const endSession = async () => {
+    console.log('[DEBUG] Ending session');
+    
+    try {
+      if (isRecording) {
+        await audioRecorderRef.current.stop();
       }
     } catch (error) {
-      console.error('Voice processing error:', error);
-      toast({
-        title: "Processing Error",
-        description: error instanceof Error ? error.message : "Failed to process voice input",
-        variant: "destructive"
-      });
-    } finally {
-      setIsProcessing(false);
-      setIsRecorderReady(false);
+      console.error('[DEBUG] Error stopping recorder:', error);
     }
+
+    if (realtimeChatRef.current) {
+      realtimeChatRef.current.disconnect();
+      realtimeChatRef.current = null;
+    }
+
+    stopAudio();
+
+    if (sessionStartTime && !isTrialMode) {
+      const durationMs = Date.now() - sessionStartTime;
+      const durationMinutes = Math.ceil(durationMs / 60000);
+      const creditsToDeduct = durationMinutes * 2;
+
+      try {
+        const { error } = await supabase.functions.invoke('deduct-credits', {
+          body: {
+            userId: user?.id,
+            creditsToDeduct,
+            sessionDuration: durationMinutes
+          }
+        });
+
+        if (error) {
+          console.error('[DEBUG] Error deducting credits:', error);
+        } else {
+          await fetchUserCredits();
+        }
+      } catch (error) {
+        console.error('[DEBUG] Error in credit deduction:', error);
+      }
+    }
+
+    setIsSessionActive(false);
+    setIsHandsFreeMode(false);
+    setIsRecording(false);
+    setIsProcessing(false);
+    setSessionStartTime(null);
+    setMessages([]);
+    onSessionEnd?.();
+    onConversationEnd?.();
   };
 
-  // Handle realtime messages
-  const [currentTranscript, setCurrentTranscript] = useState('');
-  const [currentUserTranscript, setCurrentUserTranscript] = useState('');
-  const [isAISpeaking, setIsAISpeaking] = useState(false);
-  const [pendingUserMessageId, setPendingUserMessageId] = useState<string | null>(null);
-
-  // Reset idle timer on any activity
   const resetIdleTimer = () => {
     if (idleTimeoutRef.current) {
       clearTimeout(idleTimeoutRef.current);
@@ -478,6 +670,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       }, IDLE_TIMEOUT_MS);
     }
   };
+
   const handleRealtimeMessage = async (message: any) => {
     console.log('Realtime message:', message);
 
@@ -581,236 +774,8 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     }
   };
 
-  // Start Standard Mode session (Whisper + GPT-4o-mini + TTS)
-  const startHandsFreeSession = async () => {
-    // Trial users can't use hands-free mode
-    if (isTrialMode) {
-      toast({
-        title: "Trial uses Tap to Talk",
-        description: "Sign up to unlock Standard Mode.",
-        variant: "default"
-      });
-      return;
-    }
-
-    // Check credits for non-trial users
-    if (!isTrialMode && userCredits < 10) {
-      toast({
-        title: "Insufficient Credits",
-        description: "You need at least 10 credits to start a session.",
-        variant: "destructive",
-        action: <Button onClick={() => navigate('/profile')}>Buy Credits</Button>
-      });
-      return;
-    }
-    
-    try {
-      setCurrentMode('enhanced');
-      setSessionStartTime(Date.now());
-      setIsConnecting(true);
-      setIsSessionActive(true);
-      setIsHandsFreeMode(true);
-      onSessionStart?.();
-
-      toast({
-        title: "Standard Mode Active",
-        description: "Smooth, natural conversations"
-      });
-
-      setMessages([]);
-      resetIdleTimer();
-      
-      const welcomeMessage: ConversationMessage = {
-        id: 'welcome',
-        role: 'assistant',
-        content: "Connected! I'm listening. Just speak naturally - I'll respond quickly.",
-        timestamp: new Date()
-      };
-      setMessages([welcomeMessage]);
-      onMessageUpdate?.([welcomeMessage]);
-      
-      // Start recording audio for STT
-      startRecording();
-    } catch (error) {
-      console.error('Failed to start Standard Mode:', error);
-      toast({
-        title: "Connection Failed",
-        description: error instanceof Error ? error.message : "Failed to start session",
-        variant: "destructive"
-      });
-    } finally {
-      setIsConnecting(false);
-    }
-  };
-
-  // Start Premium Mode session (GPT-4o-realtime)
-  const startPremiumSession = async () => {
-    // Trial users can't use premium mode
-    if (isTrialMode) {
-      toast({
-        title: "Trial uses Tap to Talk",
-        description: "Sign up to unlock Premium Mode.",
-        variant: "default"
-      });
-      return;
-    }
-
-    // Check credits for premium mode
-    if (!isTrialMode && userCredits < 10) {
-      toast({
-        title: "Insufficient Credits",
-        description: "You need at least 10 credits to start a session.",
-        variant: "destructive",
-        action: <Button onClick={() => navigate('/profile')}>Buy Credits</Button>
-      });
-      return;
-    }
-
-    try {
-      setCurrentMode('premium');
-      setSessionStartTime(Date.now());
-      setIsConnecting(true);
-      setIsSessionActive(true);
-      setIsHandsFreeMode(true);
-      onSessionStart?.();
-
-      toast({
-        title: "Premium Mode Active",
-        description: "Ultra-realistic voice chat"
-      });
-
-      setMessages([]);
-      resetIdleTimer();
-
-      const welcomeMessage: ConversationMessage = {
-        id: 'welcome',
-        role: 'assistant',
-        content: "Premium mode connected! Speak naturally - ultra-realistic responses.",
-        timestamp: new Date()
-      };
-      setMessages([welcomeMessage]);
-      onMessageUpdate?.([welcomeMessage]);
-
-      // Initialize GPT-4o-realtime connection
-      realtimeChatRef.current = new RealtimeChat(handleRealtimeMessage);
-      await realtimeChatRef.current.connect();
-      
-      console.log('Premium Mode (GPT-4o-realtime) connected successfully');
-    } catch (error) {
-      console.error('Failed to start Premium Mode:', error);
-      toast({
-        title: "Connection Failed",
-        description: error instanceof Error ? error.message : "Failed to start premium session",
-        variant: "destructive"
-      });
-      setIsSessionActive(false);
-      setIsHandsFreeMode(false);
-      setCurrentMode('tap');
-    } finally {
-      setIsConnecting(false);
-    }
-  };
-
-  // Start push-to-talk session (tap to talk mode)
-  const startTapToTalkSession = () => {
-    console.log('[Trial Debug] Starting Tap to Talk session, isTrialMode:', isTrialMode);
-    setCurrentMode('tap');
-    setIsSessionActive(true);
-    setIsHandsFreeMode(false);
-    setMessages([]);
-    onSessionStart?.();
-    const welcomeMessage: ConversationMessage = {
-      id: 'welcome',
-      role: 'assistant',
-      content: isTrialMode ? "Free trial started! Hold the button to speak." : "Session started! Hold the microphone button to speak.",
-      timestamp: new Date()
-    };
-    setMessages([welcomeMessage]);
-    onMessageUpdate?.([welcomeMessage]);
-    console.log('[Trial Debug] Tap to Talk session started successfully');
-  };
-
-  // Start session for trial mode (tap-to-talk)
-  const startSession = () => {
-    console.log('[Trial Debug] startSession called, isTrialMode:', isTrialMode);
-    startTapToTalkSession();
-  };
-
-  // End session
-  const endSession = async () => {
-    stopAudio();
-
-    // Deduct credits for non-trial users
-    if (!isTrialMode && sessionStartTime && user) {
-      const durationMs = Date.now() - sessionStartTime;
-      const durationMinutes = durationMs / 60000;
-      const creditRates = {
-        tap: 10,
-        // 2 credits per minute (OpenAI Whisper + GPT-4o-mini + TTS)
-        enhanced: 10,
-        // 2 credits per minute (OpenAI Whisper + GPT-4o-mini + TTS)
-        premium: 10 // 2 credits per minute (OpenAI Realtime API)
-      };
-      const creditsPerMinute = creditRates[currentMode] / 5;
-      const creditsToDeduct = Math.ceil(durationMinutes * creditsPerMinute);
-      try {
-        const {
-          data,
-          error
-        } = await supabase.functions.invoke('deduct-credits', {
-          body: {
-            amount: creditsToDeduct,
-            description: `${durationMinutes.toFixed(1)} min ${currentMode} session`,
-            metadata: {
-              mode: currentMode,
-              duration_minutes: durationMinutes,
-              lesson_id: lessonContext
-            }
-          }
-        });
-        if (error) throw error;
-        await fetchUserCredits();
-        toast({
-          title: "Session Ended",
-          description: `${creditsToDeduct} credits used. Balance: ${data.new_balance}`
-        });
-      } catch (error) {
-        console.error('Credit deduction failed:', error);
-        toast({
-          title: "Error",
-          description: "Failed to process credits. Contact support.",
-          variant: "destructive"
-        });
-      }
-    }
-
-    // Clear idle timer
-    if (idleTimeoutRef.current) {
-      clearTimeout(idleTimeoutRef.current);
-      idleTimeoutRef.current = null;
-    }
-
-    // Disconnect realtime chat if active
-    if (realtimeChatRef.current) {
-      realtimeChatRef.current.disconnect();
-      realtimeChatRef.current = null;
-    }
-    setIsSessionActive(false);
-    setIsHandsFreeMode(false);
-    setIsRecording(false);
-    setIsProcessing(false);
-    setMessages([]);
-    setCurrentTranscript('');
-    onSessionEnd?.(); // Notify parent
-    onConversationEnd?.();
-    if (isTrialMode) {
-      toast({
-        title: "Trial Session Ended",
-        description: "Thanks for trying TalkEasi!"
-      });
-    }
-  };
-  return <div className="fixed bottom-0 left-0 right-0 bg-card border-t p-4 z-50">
+  return (
+    <div className="fixed bottom-0 left-0 right-0 bg-card border-t p-4 z-50">
       <div className="max-w-md mx-auto">
         {/* Credit Balance Badge (only for authenticated users) */}
         {!isTrialMode && <div className="fixed top-4 right-4 z-50">
@@ -858,24 +823,43 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
           </div>
           
           <p className="text-sm text-muted-foreground">
-            {!isSessionActive ? isTrialMode ? "Tap to start your free 1-minute trial" : "💡 Choose a mode below to start practicing" : isHandsFreeMode && currentTranscript ? `Listening: "${currentTranscript}"` : isHandsFreeMode ? currentMode === 'premium' ? "Premium Mode: Ultra-realistic responses" : "Standard Mode: Speak, then tap the green button to process" : "Hold microphone button to speak (trial mode)"}
+            {!isSessionActive 
+              ? (isTrialMode ? "Tap to start your free 1-minute trial" : "💡 Choose a mode below to start practicing")
+              : isHandsFreeMode && currentTranscript 
+                ? `Listening: "${currentTranscript}"`
+                : isHandsFreeMode 
+                  ? (currentMode === 'premium' 
+                    ? "Premium Mode: Ultra-realistic responses" 
+                    : "Enhanced Mode: Speak naturally, AI auto-detects when you're done")
+                  : "Hold microphone button to speak (trial mode)"}
           </p>
         </div>
 
-        {/* Mode Selection (when not active) */}
-        {!isSessionActive && !isTrialMode && <div className="mb-4 space-y-3">
-            {/* Standard Mode */}
-            <Button size="lg" variant="outline" className="w-full h-auto py-3 flex-col items-start hover:bg-primary hover:text-primary-foreground" onClick={startHandsFreeSession} disabled={isConnecting}>
+        {/* Mode Selection */}
+        {!isSessionActive && !isTrialMode && (
+          <div className="mb-4 space-y-3">
+            <Button
+              size="lg"
+              variant="outline"
+              className="w-full h-auto py-3 flex-col items-start hover:bg-primary hover:text-primary-foreground"
+              onClick={startHandsFreeSession}
+              disabled={isConnecting}
+            >
               <div className="flex items-center w-full mb-1">
                 <Phone className="w-5 h-5 mr-2" />
-                <span className="font-semibold text-lg">Standard Mode</span>
+                <span className="font-semibold text-lg">Enhanced Mode</span>
                 <Badge variant="secondary" className="ml-auto">2 credits/min</Badge>
               </div>
-              <p className="text-xs text-muted-foreground text-left">Smooth, natural conversations</p>
+              <p className="text-xs text-muted-foreground text-left">Smooth, natural conversations with auto-detection</p>
             </Button>
 
-            {/* Premium Mode */}
-            <Button size="lg" variant="default" className="w-full h-auto py-3 flex-col items-start" onClick={startPremiumSession} disabled={isConnecting}>
+            <Button
+              size="lg"
+              variant="default"
+              className="w-full h-auto py-3 flex-col items-start"
+              onClick={startPremiumSession}
+              disabled={isConnecting}
+            >
               <div className="flex items-center w-full mb-1">
                 <Phone className="w-5 h-5 mr-2" />
                 <span className="font-semibold text-lg">Premium Mode</span>
@@ -883,42 +867,69 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
               </div>
               <p className="text-xs opacity-90 text-left">Ultra-realistic instant voice chat</p>
             </Button>
-          </div>}
+          </div>
+        )}
         
         {/* Controls */}
         <div className="flex items-center justify-center space-x-4">
-          {!isTrialMode && <Button variant="ghost" size="icon" onClick={() => navigate('/lessons')}>
+          {!isTrialMode && (
+            <Button variant="ghost" size="icon" onClick={() => navigate('/lessons')}>
               <ArrowLeft className="w-5 h-5" />
-            </Button>}
+            </Button>
+          )}
 
-          {/* Trial Mode: Show microphone button to start session */}
-          {isTrialMode && !isSessionActive && <Button size="lg" className="w-20 h-20 rounded-full bg-primary hover:bg-primary/90" onClick={startSession}>
+          {isTrialMode && !isSessionActive && (
+            <Button
+              size="lg"
+              className="w-20 h-20 rounded-full bg-primary hover:bg-primary/90"
+              onClick={startSession}
+            >
               <Mic className="w-8 h-8" />
-            </Button>}
+            </Button>
+          )}
 
-          {isSessionActive && !isHandsFreeMode && <Button size="lg" className={`w-16 h-16 rounded-full ${isRecording ? 'bg-destructive hover:bg-destructive/90' : 'bg-primary hover:bg-primary/90'}`} onMouseDown={startRecording} onMouseUp={stopRecording} onTouchStart={startRecording} onTouchEnd={stopRecording} disabled={isProcessing || isSpeaking || isAISpeaking}>
+          {isSessionActive && !isHandsFreeMode && (
+            <Button
+              size="lg"
+              className={`w-16 h-16 rounded-full ${isRecording ? 'bg-destructive hover:bg-destructive/90' : 'bg-primary hover:bg-primary/90'}`}
+              onMouseDown={startRecording}
+              onMouseUp={stopRecording}
+              onTouchStart={startRecording}
+              onTouchEnd={stopRecording}
+              disabled={isProcessing || isSpeaking || isAISpeaking}
+            >
               {isRecording ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
-            </Button>}
+            </Button>
+          )}
 
-          {isSessionActive && isHandsFreeMode && <div className="flex items-center gap-4">
-              <button onClick={stopRecording} className="w-16 h-16 rounded-full bg-green-100 border-2 border-green-500 flex items-center justify-center" aria-label="Process now">
+          {isSessionActive && isHandsFreeMode && currentMode === 'enhanced' && (
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-full bg-green-100 border-2 border-green-500 flex items-center justify-center animate-pulse">
                 <Phone className="w-6 h-6 text-green-600" />
-              </button>
-            </div>}
+              </div>
+            </div>
+          )}
 
-          {isSessionActive && <Button variant="ghost" size="icon" onClick={endSession}>
+          {isSessionActive && (
+            <Button variant="ghost" size="icon" onClick={endSession}>
               {isHandsFreeMode ? <PhoneOff className="w-5 h-5" /> : <MessageSquare className="w-5 h-5" />}
-            </Button>}
+            </Button>
+          )}
         </div>
         
         {/* Quick Actions */}
-        {(isSpeaking || isAISpeaking) && <div className="flex justify-center mt-2">
+        {(isSpeaking || isAISpeaking) && (
+          <div className="flex justify-center mt-2">
             <Button variant="outline" size="sm" onClick={stopAudio}>
               <VolumeX className="w-4 h-4 mr-1" />
               Stop Audio
             </Button>
-          </div>}
+          </div>
+        )}
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default RealtimeVoiceInterface;
+

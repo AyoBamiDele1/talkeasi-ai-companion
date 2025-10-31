@@ -118,7 +118,7 @@ serve(async (req) => {
               type: 'session.update',
               session: {
                 type: 'realtime',
-                instructions: 'You are a warm, friendly English conversation partner helping someone practice English. Keep responses natural and conversational (2-3 sentences max). Ask engaging follow-up questions. Gently correct major mistakes only. Be encouraging and supportive. Make the conversation feel realistic and natural.',
+                instructions: 'You are a warm, friendly conversation partner. Keep responses natural and conversational (2-3 sentences max). Ask engaging follow-up questions. Be encouraging and supportive. Make the conversation feel realistic and natural.',
                 audio: {
                   input: {
                     format: { type: 'audio/pcm', rate: 24000 },
