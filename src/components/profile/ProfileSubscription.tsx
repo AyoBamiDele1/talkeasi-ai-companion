@@ -197,20 +197,44 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
       {/* Credit Usage */}
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Credit Usage</CardTitle>
+          <CardTitle>Voice Mode Pricing</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            <div className="flex justify-between py-2">
-              <div>
-                <p className="text-sm font-medium">Hands-Free Enhanced Mode</p>
-                <p className="text-xs text-muted-foreground">Continuous conversation with AI tutor</p>
+          <div className="space-y-4">
+            {/* Standard Mode */}
+            <div className="p-4 border rounded-lg">
+              <div className="flex justify-between items-start mb-2">
+                <div>
+                  <p className="text-sm font-semibold">Standard Mode</p>
+                  <p className="text-xs text-muted-foreground mt-1">Smooth, natural conversations. Smooth friendly voice.</p>
+                </div>
+                <Badge variant="secondary">2 credits/min</Badge>
               </div>
-              <span className="text-sm font-semibold text-primary">2 credits/min</span>
+              <div className="text-xs text-muted-foreground mt-2">
+                ₦1,000 (~$0.69) = 50 credits = 25 minutes • $0.026/min
+              </div>
             </div>
+
+            {/* Premium Mode */}
+            <div className="p-4 border-2 border-primary rounded-lg bg-primary/5">
+              <div className="flex justify-between items-start mb-2">
+                <div>
+                  <p className="text-sm font-semibold flex items-center gap-2">
+                    Premium Mode
+                    <Badge variant="default" className="text-xs">Best</Badge>
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">Ultra-realistic instant voice chat. Feels like talking to a real person.</p>
+                </div>
+                <Badge variant="default">2 credits/min</Badge>
+              </div>
+              <div className="text-xs text-muted-foreground mt-2">
+                ₦2,000 (~$1.37) = 50 credits = 25 minutes • $0.053/min
+              </div>
+            </div>
+
             <div className="mt-4 p-3 bg-muted/50 rounded-lg">
               <p className="text-xs text-muted-foreground">
-                💡 50 credits = 25 minutes of practice!
+                💡 Both modes: 50 credits = 25 minutes of practice time
               </p>
             </div>
           </div>

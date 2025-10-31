@@ -570,19 +570,19 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     }
   };
 
-  // Start hands-free session (for paid users only)
+  // Start Standard Mode session (Whisper + GPT-4o-mini + TTS)
   const startHandsFreeSession = async () => {
     // Trial users can't use hands-free mode
     if (isTrialMode) {
       toast({
         title: "Trial uses Tap to Talk",
-        description: "Sign up to unlock hands-free mode.",
+        description: "Sign up to unlock Standard Mode.",
         variant: "default"
       });
       return;
     }
 
-    // Check credits for non-trial users (Enhanced mode needs 10+ credits for 5 min)
+    // Check credits for non-trial users
     if (!isTrialMode && userCredits < 10) {
       toast({
         title: "Insufficient Credits",
@@ -602,8 +602,8 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       onSessionStart?.();
 
       toast({
-        title: "Hands-Free Active",
-        description: "Enhanced mode with OpenAI"
+        title: "Standard Mode Active",
+        description: "Smooth, natural conversations"
       });
 
       setMessages([]);
@@ -621,12 +621,80 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       // Start recording audio for STT
       startRecording();
     } catch (error) {
-      console.error('Failed to start hands-free session:', error);
+      console.error('Failed to start Standard Mode:', error);
       toast({
         title: "Connection Failed",
         description: error instanceof Error ? error.message : "Failed to start session",
         variant: "destructive"
       });
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
+  // Start Premium Mode session (GPT-4o-realtime)
+  const startPremiumSession = async () => {
+    // Trial users can't use premium mode
+    if (isTrialMode) {
+      toast({
+        title: "Trial uses Tap to Talk",
+        description: "Sign up to unlock Premium Mode.",
+        variant: "default"
+      });
+      return;
+    }
+
+    // Check credits for premium mode
+    if (!isTrialMode && userCredits < 10) {
+      toast({
+        title: "Insufficient Credits",
+        description: "You need at least 10 credits to start a session.",
+        variant: "destructive",
+        action: <Button onClick={() => navigate('/profile')}>Buy Credits</Button>
+      });
+      return;
+    }
+
+    try {
+      setCurrentMode('premium');
+      setSessionStartTime(Date.now());
+      setIsConnecting(true);
+      setIsSessionActive(true);
+      setIsHandsFreeMode(true);
+      onSessionStart?.();
+
+      toast({
+        title: "Premium Mode Active",
+        description: "Ultra-realistic voice chat"
+      });
+
+      setMessages([]);
+      resetIdleTimer();
+
+      const welcomeMessage: ConversationMessage = {
+        id: 'welcome',
+        role: 'assistant',
+        content: "Premium mode connected! Speak naturally - ultra-realistic responses.",
+        timestamp: new Date()
+      };
+      setMessages([welcomeMessage]);
+      onMessageUpdate?.([welcomeMessage]);
+
+      // Initialize GPT-4o-realtime connection
+      realtimeChatRef.current = new RealtimeChat(handleRealtimeMessage);
+      await realtimeChatRef.current.connect();
+      
+      console.log('Premium Mode (GPT-4o-realtime) connected successfully');
+    } catch (error) {
+      console.error('Failed to start Premium Mode:', error);
+      toast({
+        title: "Connection Failed",
+        description: error instanceof Error ? error.message : "Failed to start premium session",
+        variant: "destructive"
+      });
+      setIsSessionActive(false);
+      setIsHandsFreeMode(false);
+      setCurrentMode('tap');
     } finally {
       setIsConnecting(false);
     }
@@ -779,18 +847,30 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
           </div>
           
           <p className="text-sm text-muted-foreground">
-            {!isSessionActive ? isTrialMode ? "Tap to start your free 1-minute trial" : "💡 Tap below to start practicing with Enhanced Mode" : isHandsFreeMode && currentTranscript ? `Listening: "${currentTranscript}"` : isHandsFreeMode ? "Just speak naturally - I'm listening" : "Hold microphone button to speak (trial mode)"}
+            {!isSessionActive ? isTrialMode ? "Tap to start your free 1-minute trial" : "💡 Choose a mode below to start practicing" : isHandsFreeMode && currentTranscript ? `Listening: "${currentTranscript}"` : isHandsFreeMode ? currentMode === 'premium' ? "Premium Mode: Ultra-realistic responses" : "Standard Mode: Smooth conversations" : "Hold microphone button to speak (trial mode)"}
           </p>
         </div>
 
         {/* Mode Selection (when not active) */}
-        {!isSessionActive && !isTrialMode && <div className="mb-4">
+        {!isSessionActive && !isTrialMode && <div className="mb-4 space-y-3">
+            {/* Standard Mode */}
             <Button size="lg" variant="outline" className="w-full h-auto py-3 flex-col items-start hover:bg-primary hover:text-primary-foreground" onClick={startHandsFreeSession} disabled={isConnecting}>
-              <div className="flex items-center w-full">
+              <div className="flex items-center w-full mb-1">
                 <Phone className="w-5 h-5 mr-2" />
-                <span className="font-semibold text-lg">Hands-Free (Enhanced)</span>
+                <span className="font-semibold text-lg">Standard Mode</span>
                 <Badge variant="secondary" className="ml-auto">2 credits/min</Badge>
               </div>
+              <p className="text-xs text-muted-foreground text-left">Smooth, natural conversations</p>
+            </Button>
+
+            {/* Premium Mode */}
+            <Button size="lg" variant="default" className="w-full h-auto py-3 flex-col items-start" onClick={startPremiumSession} disabled={isConnecting}>
+              <div className="flex items-center w-full mb-1">
+                <Phone className="w-5 h-5 mr-2" />
+                <span className="font-semibold text-lg">Premium Mode</span>
+                <Badge variant="secondary" className="ml-auto bg-background/20">2 credits/min</Badge>
+              </div>
+              <p className="text-xs opacity-90 text-left">Ultra-realistic instant voice chat</p>
             </Button>
           </div>}
         
