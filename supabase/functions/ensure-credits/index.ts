@@ -28,6 +28,14 @@ serve(async (req) => {
       });
     }
 
+    // Check if email is verified - required to prevent abuse
+    if (!user.email_confirmed_at) {
+      return new Response(JSON.stringify({ error: 'Email verification required', email_not_verified: true }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
     // Optional initial balance (defaults to 2 welcome credits)
     const body = await req.json().catch(() => ({}));
     const startBalance = typeof body?.initial_balance === 'number' && body.initial_balance >= 0

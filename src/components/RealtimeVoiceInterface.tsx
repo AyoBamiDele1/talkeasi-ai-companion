@@ -21,6 +21,7 @@ interface ConversationMessage {
 
 interface RealtimeVoiceInterfaceProps {
   lessonContext?: string;
+  voice?: string;
   onTranscriptUpdate?: (transcript: string) => void;
   onConversationEnd?: () => void;
   onMessageUpdate?: (messages: ConversationMessage[]) => void;
@@ -203,6 +204,7 @@ class AudioRecorder {
 
 const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   lessonContext,
+  voice = 'alloy',
   onTranscriptUpdate,
   onConversationEnd,
   onMessageUpdate,
@@ -275,6 +277,14 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       });
       if (ensureError) {
         console.error('Failed to initialize credits:', ensureError);
+        // Check if it's an email verification error
+        if ((ensureError as any).email_not_verified) {
+          toast({
+            title: "Email Verification Required",
+            description: "Please verify your email to receive your 2 free minutes. Check your inbox for the verification link.",
+            variant: "destructive",
+          });
+        }
         setUserCredits(0);
         return;
       }
@@ -458,12 +468,12 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
         return updated;
       });
 
-      // Use Alloy voice for Standard Mode
-      console.log('[DEBUG] Generating speech with Alloy voice...');
+      // Use configured voice for Standard Mode
+      console.log(`[DEBUG] Generating speech with ${voice} voice...`);
       const { data: ttsData, error: ttsError } = await supabase.functions.invoke('text-to-speech', {
         body: { 
           text: aiResponse,
-          voice: 'alloy'
+          voice: voice
         }
       });
 

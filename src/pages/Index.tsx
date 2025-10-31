@@ -34,9 +34,13 @@ const Index = () => {
             </div>
 
             <p className="text-muted-foreground mb-4 md:mb-6">
-              Chat when you're lonely, or practice English — all in one app.
+              Chat when you're lonely, or practice English.
               <br className="hidden md:block" />
               Your AI friend is always available, never judges.
+            </p>
+            
+            <p className="text-sm text-muted-foreground/80 mb-4 md:mb-6">
+              Powered by AI | Designed for users worldwide
             </p>
           </div>
 

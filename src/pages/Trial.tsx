@@ -112,6 +112,8 @@ const Trial = () => {
         
         <RealtimeVoiceInterface 
           isTrialMode={true}
+          lessonContext="AI Companion"
+          voice="shimmer"
           onMessageUpdate={handleMessageUpdate}
           onSessionStart={handleSessionStart}
           onSessionEnd={handleConversationEnd}
