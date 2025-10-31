@@ -59,7 +59,7 @@ const Home = () => {
             <h2 className="text-xl font-bold mb-2">AI Companion Mode</h2>
             <p className="text-sm text-muted-foreground mb-1">Chat with your AI friend. Share your thoughts and feelings.</p>
             
-            <Button className="w-full" onClick={() => navigate('/lesson/9b25e5bb-3702-448f-aae7-39c0b44fb558')}>
+            <Button className="w-full mt-4" onClick={() => navigate('/lesson/9b25e5bb-3702-448f-aae7-39c0b44fb558')}>
               Start Companion Chat
             </Button>
           </CardContent>
@@ -76,7 +76,7 @@ const Home = () => {
               Practice your English with real-time AI feedback.
             </p>
             
-            <Button className="w-full" onClick={() => navigate('/lessons')}>
+            <Button className="w-full mt-4" onClick={() => navigate('/lessons')}>
               Start English Lesson
             </Button>
           </CardContent>

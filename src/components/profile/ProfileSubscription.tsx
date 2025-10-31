@@ -68,7 +68,17 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
         .order('display_order');
       
       if (error) throw error;
-      return data as CreditPackage[];
+      
+      // Map package names to correct display names
+      return (data as CreditPackage[]).map(pkg => {
+        if (pkg.price_ngn === 1000 && pkg.credits === 50) {
+          return { ...pkg, name: 'Standard Mode Pack' };
+        }
+        if (pkg.price_ngn === 2000 && pkg.credits === 50) {
+          return { ...pkg, name: 'Premium Mode Pack' };
+        }
+        return pkg;
+      });
     }
   });
 
