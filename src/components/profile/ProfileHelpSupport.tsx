@@ -121,7 +121,7 @@ const ProfileHelpSupport = ({
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Last Updated</span>
-              <span>Sept 22, 2025</span>
+              <span>October 31, 2025</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Platform</span>
