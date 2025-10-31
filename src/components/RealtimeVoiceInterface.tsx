@@ -629,9 +629,12 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       try {
         const { error } = await supabase.functions.invoke('deduct-credits', {
           body: {
-            userId: user?.id,
-            creditsToDeduct,
-            sessionDuration: durationMinutes
+            amount: creditsToDeduct,
+            description: `Session duration: ${durationMinutes} minutes`,
+            metadata: {
+              sessionDuration: durationMinutes,
+              mode: currentMode
+            }
           }
         });
 
