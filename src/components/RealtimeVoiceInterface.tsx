@@ -801,7 +801,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
                 : isHandsFreeMode 
                   ? (currentMode === 'premium' 
                     ? "Premium Mode: Ultra-realistic responses" 
-                    : "Standard Mode: Speak, then tap the green button to send")
+                    : "Standard Mode: Tap mic to record, speak, then tap send")
                   : "Hold microphone button to speak (trial mode)"}
           </p>
         </div>
