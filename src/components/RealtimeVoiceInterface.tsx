@@ -283,6 +283,8 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
 
   // Stop recording and process - unified for all modes
   const stopRecording = async () => {
+    console.log('[DEBUG] stopRecording called, isRecorderReady:', isRecorderReady);
+    
     // Clear auto-stop timer if it exists
     if (autoStopTimerRef.current) {
       clearTimeout(autoStopTimerRef.current);
@@ -298,13 +300,15 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       setIsRecording(false);
       setIsRecorderReady(false);
       setIsProcessing(true);
+      console.log('[DEBUG] About to stop recorder');
 
       // Stop recording and get audio blob
       const audioBlob = await audioRecorderRef.current.stop();
-      console.log(`Recording stopped. Audio blob size: ${audioBlob.size} bytes`);
+      console.log(`[DEBUG] Recording stopped. Audio blob size: ${audioBlob.size} bytes, type: ${audioBlob.type}`);
 
       // Check if audio blob is valid
       if (audioBlob.size < 1000) {
+        console.log('[DEBUG] Audio blob too small');
         setIsProcessing(false);
         // In hands-free mode, restart recording silently
         if (isHandsFreeMode) {
@@ -321,16 +325,21 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       }
 
       // Convert to base64
+      console.log('[DEBUG] Converting to base64...');
       const base64Audio = await blobToBase64(audioBlob);
+      console.log('[DEBUG] Base64 conversion complete, length:', base64Audio.length);
 
       // Step 1: Speech to text using OpenAI Whisper
-      console.log('Converting speech to text with Whisper...');
+      console.log('[DEBUG] Calling speech-to-text edge function...');
       const sttResponse = await supabase.functions.invoke('speech-to-text', {
         body: {
           audio: base64Audio
         }
       });
+      console.log('[DEBUG] STT response:', sttResponse);
+      
       if (sttResponse.error) {
+        console.error('[DEBUG] STT error:', sttResponse.error);
         throw new Error(sttResponse.error.message);
       }
       const userText = sttResponse.data?.text;
