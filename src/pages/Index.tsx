@@ -38,10 +38,6 @@ const Index = () => {
               <br className="hidden md:block" />
               Your AI friend is always available, never judges.
             </p>
-            
-            <p className="text-sm text-muted-foreground/80 mb-4 md:mb-6">
-              Powered by AI | Designed for users worldwide
-            </p>
           </div>
 
           <div className="space-y-3">
@@ -56,10 +52,6 @@ const Index = () => {
               Sign In
             </Button>
           </div>
-          
-          <p className="text-xs text-center text-muted-foreground mt-6">
-            Powered by AI | Designed for learners worldwide 🌍
-          </p>
         </CardContent>
       </Card>
     </div>
