@@ -183,6 +183,10 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
                     </Badge>
                   )}
                 </CardTitle>
+                <p className="text-sm text-muted-foreground mt-2">
+                  {pkg.price_ngn === 1000 && pkg.credits === 50 && "Enjoy smooth, natural conversations"}
+                  {pkg.price_ngn === 2000 && pkg.credits === 50 && "Instant response, feels like talking to a friend."}
+                </p>
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold mb-2">
