@@ -67,7 +67,12 @@ const Lessons = () => {
       }) || [];
 
       // Practice lesson list - exclude AI Companion
-      const practiceLessons = ['Discussing Healthy Habits and Lifestyle', 'Job Interview Practice'];
+      const practiceLessons = [
+        'Hobbies and Interests',
+        'Travel & Dream Destinations', 
+        'Job, Career & Interview Conversations',
+        'Health, Wellness & Lifestyle'
+      ];
 
       // Filter to only show practice lessons (exclude AI Companion)
       const filteredLessons = lessonsWithProgress.filter(lesson => practiceLessons.includes(lesson.title));
