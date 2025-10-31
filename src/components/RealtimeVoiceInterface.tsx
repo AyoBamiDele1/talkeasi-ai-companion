@@ -220,7 +220,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   const [isConnecting, setIsConnecting] = useState(false);
   const [isRecorderReady, setIsRecorderReady] = useState(false);
   const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
-  const [currentMode, setCurrentMode] = useState<'tap' | 'enhanced' | 'premium'>('tap');
+  const [currentMode, setCurrentMode] = useState<'tap' | 'standard' | 'premium'>('tap');
   const [userCredits, setUserCredits] = useState<number>(0);
   const [isAISpeaking, setIsAISpeaking] = useState(false);
   const [currentTranscript, setCurrentTranscript] = useState('');
@@ -342,8 +342,8 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       console.log('[DEBUG] Starting recording...');
       setIsRecording(true);
       
-      // In hands-free enhanced mode, enable VAD
-      const onSilenceDetected = isHandsFreeMode && currentMode === 'enhanced' 
+      // In hands-free standard mode, enable VAD
+      const onSilenceDetected = isHandsFreeMode && currentMode === 'standard'
         ? () => {
             console.log('[VAD] Auto-processing triggered');
             stopRecording();
@@ -382,7 +382,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
         console.log('[DEBUG] Audio blob too small');
         setIsProcessing(false);
         
-        if (isHandsFreeMode && currentMode === 'enhanced') {
+        if (isHandsFreeMode && currentMode === 'standard') {
           await startRecording();
         }
         return;
@@ -393,7 +393,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
 
       await processTranscript(base64Audio);
       
-      if (isHandsFreeMode && currentMode === 'enhanced') {
+      if (isHandsFreeMode && currentMode === 'standard') {
         await startRecording();
       }
     } catch (error) {
@@ -473,7 +473,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
         return updated;
       });
 
-      // Use Alloy voice for Enhanced Mode
+      // Use Alloy voice for Standard Mode
       console.log('[DEBUG] Generating speech with Alloy voice...');
       const { data: ttsData, error: ttsError } = await supabase.functions.invoke('text-to-speech', {
         body: { 
@@ -505,7 +505,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   };
 
   const startHandsFreeSession = async () => {
-    console.log('[DEBUG] Starting Enhanced Mode session');
+    console.log('[DEBUG] Starting Standard Mode session');
     
     if (userCredits < 2) {
       toast({
@@ -517,7 +517,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     }
 
     setIsConnecting(true);
-    setCurrentMode('enhanced');
+    setCurrentMode('standard');
     setIsHandsFreeMode(true);
     setIsSessionActive(true);
     setSessionStartTime(Date.now());
@@ -527,7 +527,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       await startRecording();
       setIsConnecting(false);
     } catch (error) {
-      console.error('[DEBUG] Error starting Enhanced Mode:', error);
+      console.error('[DEBUG] Error starting Standard Mode:', error);
       setIsConnecting(false);
       setIsSessionActive(false);
       setIsHandsFreeMode(false);
@@ -831,7 +831,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
                 : isHandsFreeMode 
                   ? (currentMode === 'premium' 
                     ? "Premium Mode: Ultra-realistic responses" 
-                    : "Enhanced Mode: Speak naturally, AI auto-detects when you're done")
+                    : "Standard Mode: Speak naturally, AI auto-detects when you're done")
                   : "Hold microphone button to speak (trial mode)"}
           </p>
         </div>
@@ -848,7 +848,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
             >
               <div className="flex items-center w-full mb-1">
                 <Phone className="w-5 h-5 mr-2" />
-                <span className="font-semibold text-lg">Enhanced Mode</span>
+                <span className="font-semibold text-lg">Standard Mode</span>
                 <Badge variant="secondary" className="ml-auto">2 credits/min</Badge>
               </div>
               <p className="text-xs text-muted-foreground text-left">Smooth, natural conversations with auto-detection</p>
@@ -903,7 +903,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
             </Button>
           )}
 
-          {isSessionActive && isHandsFreeMode && currentMode === 'enhanced' && (
+          {isSessionActive && isHandsFreeMode && currentMode === 'standard' && (
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 rounded-full bg-green-100 border-2 border-green-500 flex items-center justify-center animate-pulse">
                 <Phone className="w-6 h-6 text-green-600" />
