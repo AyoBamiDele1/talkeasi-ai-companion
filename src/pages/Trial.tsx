@@ -103,7 +103,7 @@ const Trial = () => {
                 Try TalkEasi Free!
               </h1>
               <p className="text-muted-foreground mb-4">
-                Try our AI English tutor for 1 minute — no signup needed!
+                Chat with your AI companion and English tutor — try it free for 1 minute!
               </p>
             </>
           )}
