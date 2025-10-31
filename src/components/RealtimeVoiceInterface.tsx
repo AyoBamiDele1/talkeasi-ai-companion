@@ -697,11 +697,10 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     // Handle user speech transcript
     if (message.type === 'conversation.item.input_audio_transcription.completed') {
       const userText = message.transcript || '';
-      setCurrentUserTranscript(userText);
+      setCurrentTranscript(userText);
 
       // Add user message immediately
       const userMsgId = `user-${Date.now()}`;
-      setPendingUserMessageId(userMsgId);
       setMessages(prev => [...prev, {
         id: userMsgId,
         role: 'user',
@@ -744,7 +743,6 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
         }]);
         setCurrentTranscript('');
       }
-      setPendingUserMessageId(null);
     } else if (message.type === 'response.output_audio.done') {
       // AI finished speaking audio - reset to listening state
       setIsAISpeaking(false);
