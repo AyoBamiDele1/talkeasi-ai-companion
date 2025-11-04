@@ -35,7 +35,7 @@ const ProfileHelpSupport = ({
     action: "Click to call/message",
     available: "9 AM - 6 PM WAT",
     badge: "Premium",
-    onClick: () => window.location.href = "tel:+2349088976724"
+    onClick: () => window.open("https://wa.me/2349088976724", "_blank")
   }];
   const resourceLinks = [{
     title: "User Guide",
