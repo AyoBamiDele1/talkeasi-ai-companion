@@ -31,8 +31,8 @@ const ProfileHelpSupport = ({
   }, {
     icon: MessageSquare,
     title: "Live Chat (WhatsApp)",
-    description: "+234 908 897 6724",
-    action: "Click to call/message",
+    description: "Chat with us instantly",
+    action: "Start conversation",
     available: "9 AM - 6 PM WAT",
     badge: "Premium",
     onClick: () => window.open("https://wa.me/2349088976724", "_blank")
