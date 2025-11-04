@@ -26,9 +26,17 @@ serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
-    const { amount, description, metadata } = await req.json();
+    const { amount, description, metadata, mode, duration_minutes } = await req.json();
 
-    if (!amount || amount <= 0) {
+    // Calculate credits based on mode and duration if provided
+    let creditsToDeduct = amount;
+    if (mode && duration_minutes) {
+      const creditsPerMinute = mode === 'premium' ? 6 : 4;
+      creditsToDeduct = Math.ceil(duration_minutes * creditsPerMinute);
+      console.log(`Deducting credits: ${duration_minutes} min × ${creditsPerMinute} credits/min = ${creditsToDeduct} credits (${mode} mode)`);
+    }
+
+    if (!creditsToDeduct || creditsToDeduct <= 0) {
       throw new Error('Invalid amount');
     }
 
@@ -44,7 +52,7 @@ serve(async (req) => {
     }
 
     const currentBalance = creditData.balance;
-    const newBalance = currentBalance - amount;
+    const newBalance = currentBalance - creditsToDeduct;
 
     if (newBalance < 0) {
       return new Response(
@@ -66,16 +74,24 @@ serve(async (req) => {
       throw new Error('Failed to update balance');
     }
 
-    // Log transaction
+    // Log transaction with enhanced metadata
+    const enrichedMetadata = {
+      ...metadata,
+      mode: mode || 'unknown',
+      duration_minutes: duration_minutes || 0,
+      credits_per_minute: mode === 'premium' ? 6 : 4,
+      calculated_at: new Date().toISOString()
+    };
+
     const { error: txnError } = await supabase
       .from('credit_transactions')
       .insert({
         user_id: user.id,
         type: 'usage',
-        amount: -amount,
+        amount: -creditsToDeduct,
         balance_after: newBalance,
         description,
-        metadata
+        metadata: enrichedMetadata
       });
 
     if (txnError) {

@@ -126,6 +126,7 @@ export type Database = {
       }
       credit_packages: {
         Row: {
+          billing_interval: string | null
           bonus_percentage: number | null
           created_at: string | null
           credits: number
@@ -133,9 +134,13 @@ export type Database = {
           id: string
           is_active: boolean | null
           name: string
+          package_type: string
+          price_gbp: number | null
           price_ngn: number
+          price_usd: number | null
         }
         Insert: {
+          billing_interval?: string | null
           bonus_percentage?: number | null
           created_at?: string | null
           credits: number
@@ -143,9 +148,13 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           name: string
+          package_type?: string
+          price_gbp?: number | null
           price_ngn: number
+          price_usd?: number | null
         }
         Update: {
+          billing_interval?: string | null
           bonus_percentage?: number | null
           created_at?: string | null
           credits?: number
@@ -153,7 +162,10 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           name?: string
+          package_type?: string
+          price_gbp?: number | null
           price_ngn?: number
+          price_usd?: number | null
         }
         Relationships: []
       }

@@ -281,7 +281,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
         if ((ensureError as any).email_not_verified) {
           toast({
             title: "Email Verification Required",
-            description: "Please verify your email to receive your 2 free minutes. Check your inbox for the verification link.",
+            description: "Please verify your email to receive your 8 free credits. Check your inbox for the verification link.",
             variant: "destructive",
           });
         }
@@ -502,10 +502,10 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   const startHandsFreeSession = async () => {
     console.log('[DEBUG] Starting Standard Mode session');
     
-    if (userCredits < 2) {
+    if (userCredits < 4) {
       toast({
         title: "Insufficient Credits",
-        description: "You need at least 2 credits to start a session.",
+        description: "You need at least 4 credits to start a Standard Mode session (1 min).",
         variant: "destructive"
       });
       return;
@@ -523,10 +523,10 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   const startPremiumSession = async () => {
     console.log('[DEBUG] Starting Premium Mode session');
     
-    if (userCredits < 2) {
+    if (userCredits < 6) {
       toast({
         title: "Insufficient Credits",
-        description: "You need at least 2 credits to start a session.",
+        description: "You need at least 6 credits to start a Premium Mode session (1 min).",
         variant: "destructive"
       });
       return;
@@ -603,17 +603,18 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
 
     if (sessionStartTime && !isTrialMode) {
       const durationMs = Date.now() - sessionStartTime;
-      const durationMinutes = Math.ceil(durationMs / 60000);
-      const creditsToDeduct = durationMinutes * 2;
+      const durationMinutes = durationMs / 60000; // Keep decimals for accurate calculation
 
       try {
         const { error } = await supabase.functions.invoke('deduct-credits', {
           body: {
-            amount: creditsToDeduct,
-            description: `Session duration: ${durationMinutes} minutes`,
+            mode: currentMode === 'premium' ? 'premium' : 'standard',
+            duration_minutes: durationMinutes,
+            description: `${currentMode === 'premium' ? 'Premium' : 'Standard'} Mode session - ${Math.ceil(durationMinutes)} min`,
             metadata: {
               sessionDuration: durationMinutes,
-              mode: currentMode
+              mode: currentMode,
+              sessionId: sessionStartTime.toString()
             }
           }
         });
@@ -829,7 +830,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
               <div className="flex items-center w-full mb-1">
                 <Phone className="w-5 h-5 mr-2" />
                 <span className="font-semibold text-lg">Standard Mode</span>
-                <Badge variant="secondary" className="ml-auto">2 credits/min</Badge>
+                <Badge variant="secondary" className="ml-auto">4 credits/min</Badge>
               </div>
               <p className="text-xs text-muted-foreground text-left">Speak, then tap to send - simple and reliable</p>
             </Button>
@@ -844,7 +845,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
               <div className="flex items-center w-full mb-1">
                 <Phone className="w-5 h-5 mr-2" />
                 <span className="font-semibold text-lg">Premium Mode</span>
-                <Badge variant="secondary" className="ml-auto bg-background/20">2 credits/min</Badge>
+                <Badge variant="secondary" className="ml-auto bg-background/20">6 credits/min</Badge>
               </div>
               <p className="text-xs opacity-90 text-left">Ultra-realistic instant voice chat</p>
             </Button>

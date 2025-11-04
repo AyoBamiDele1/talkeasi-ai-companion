@@ -17,3 +17,6 @@ verify_jwt = true
 
 [functions.ensure-credits]
 verify_jwt = true
+
+[functions.get-user-location]
+verify_jwt = false
