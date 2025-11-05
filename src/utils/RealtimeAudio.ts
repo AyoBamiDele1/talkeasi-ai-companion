@@ -28,9 +28,8 @@ export class AudioRecorder {
       });
       
       this.source = this.audioContext.createMediaStreamSource(this.stream);
-      // Use smaller buffer for mobile
-      const bufferSize = /mobile/i.test(navigator.userAgent) ? 2048 : 4096;
-      this.processor = this.audioContext.createScriptProcessor(bufferSize, 1, 1);
+      // Use larger buffer for smoother audio capture
+      this.processor = this.audioContext.createScriptProcessor(8192, 1, 1);
       
       this.processor.onaudioprocess = (e) => {
         const inputData = e.inputBuffer.getChannelData(0);
@@ -90,11 +89,13 @@ class AudioQueue {
   private audioContext: AudioContext;
   private currentSource: AudioBufferSourceNode | null = null;
   private gainNode: GainNode;
+  private nextStartTime: number = 0;
 
   constructor(audioContext: AudioContext) {
     this.audioContext = audioContext;
-    // Create gain node for smooth transitions
+    // Create gain node for consistent volume
     this.gainNode = audioContext.createGain();
+    this.gainNode.gain.value = 1.0;
     this.gainNode.connect(audioContext.destination);
   }
 
@@ -108,6 +109,7 @@ class AudioQueue {
   private async playNext() {
     if (this.queue.length === 0) {
       this.isPlaying = false;
+      this.nextStartTime = 0;
       return;
     }
 
@@ -115,13 +117,12 @@ class AudioQueue {
     const audioData = this.queue.shift()!;
 
     try {
-      // Ensure audio context is running
+      // Ensure audio context is running once
       if (this.audioContext.state === 'suspended') {
         await this.audioContext.resume();
       }
 
       const wavData = this.createWavFromPCM(audioData);
-      // Create a proper copy to avoid SharedArrayBuffer issues
       const arrayCopy = new ArrayBuffer(wavData.byteLength);
       new Uint8Array(arrayCopy).set(new Uint8Array(wavData.buffer));
       
@@ -129,27 +130,25 @@ class AudioQueue {
       
       const source = this.audioContext.createBufferSource();
       source.buffer = audioBuffer;
-      
-      // Use gain node for smoother playback
       source.connect(this.gainNode);
       
-      // Add small fade in/out to prevent clicks
-      const now = this.audioContext.currentTime;
-      this.gainNode.gain.setValueAtTime(0.01, now);
-      this.gainNode.gain.exponentialRampToValueAtTime(1, now + 0.01);
-      
       this.currentSource = source;
+      
+      // Schedule playback for seamless streaming
+      const currentTime = this.audioContext.currentTime;
+      const startTime = Math.max(currentTime, this.nextStartTime);
+      this.nextStartTime = startTime + audioBuffer.duration;
       
       source.onended = () => {
         this.currentSource = null;
         this.playNext();
       };
       
-      source.start(0);
+      source.start(startTime);
     } catch (error) {
       console.error('Error playing audio:', error);
       this.currentSource = null;
-      this.playNext(); // Continue with next segment even if current fails
+      this.playNext();
     }
   }
 
@@ -212,6 +211,7 @@ class AudioQueue {
     }
     this.queue = [];
     this.isPlaying = false;
+    this.nextStartTime = 0;
   }
 }
 
