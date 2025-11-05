@@ -117,8 +117,9 @@ class AudioQueue {
     const audioData = this.queue.shift()!;
 
     try {
-      // Ensure audio context is running once
+      // Ensure audio context is running
       if (this.audioContext.state === 'suspended') {
+        console.log('Resuming suspended audio context');
         await this.audioContext.resume();
       }
 
@@ -139,12 +140,16 @@ class AudioQueue {
       const startTime = Math.max(currentTime, this.nextStartTime);
       this.nextStartTime = startTime + audioBuffer.duration;
       
+      console.log(`Scheduling audio playback at ${startTime}, duration: ${audioBuffer.duration}`);
+      
       source.onended = () => {
+        console.log('Audio chunk finished playing');
         this.currentSource = null;
         this.playNext();
       };
       
       source.start(startTime);
+      console.log('Audio playback started');
     } catch (error) {
       console.error('Error playing audio:', error);
       this.currentSource = null;
@@ -301,6 +306,14 @@ export class RealtimeChat {
   private async startAudioRecording() {
     try {
       this.audioContext = new AudioContext({ sampleRate: 24000 });
+      
+      // CRITICAL: Resume audio context for browser autoplay policy
+      if (this.audioContext.state === 'suspended') {
+        await this.audioContext.resume();
+        console.log('Audio context resumed');
+      }
+      
+      console.log('Audio context state:', this.audioContext.state);
       console.log('Audio context created with sample rate:', this.audioContext.sampleRate);
       
       this.recorder = new AudioRecorder((audioData) => {
