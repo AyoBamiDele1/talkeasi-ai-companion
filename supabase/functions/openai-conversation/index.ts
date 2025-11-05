@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { text, lessonContext } = await req.json();
+    const { text, lessonContext, userCountry } = await req.json();
 
     if (!text || typeof text !== "string") {
       return new Response(JSON.stringify({ error: "Text is required" }), {
@@ -33,16 +33,66 @@ serve(async (req) => {
     const isCompanionMode = lessonContext?.toLowerCase().includes('companion') || 
                             lessonContext?.toLowerCase().includes('ai companion');
 
+    // Crisis helplines by country
+    const crisisHelplines: Record<string, { name: string; number: string; alternative: string }> = {
+      'NG': {
+        name: 'Mental Health Foundation Nigeria',
+        number: '+234 806 210 6493',
+        alternative: 'Suicide Prevention Nigeria: +234 806 210 6493'
+      },
+      'US': {
+        name: '988 Suicide & Crisis Lifeline',
+        number: '988',
+        alternative: 'Crisis Text Line: Text HOME to 741741'
+      },
+      'GB': {
+        name: 'Samaritans',
+        number: '116 123',
+        alternative: 'Crisis Text Line: Text SHOUT to 85258'
+      },
+      'default': {
+        name: 'International Crisis Resources',
+        number: 'https://findahelpline.com',
+        alternative: 'Crisis Text Line: https://www.crisistextline.org'
+      }
+    };
+
+    const helpline = crisisHelplines[userCountry || 'default'] || crisisHelplines['default'];
+
     let systemPrompt = '';
     
     if (isCompanionMode) {
-      systemPrompt = `You are a warm, caring AI companion and friend. Your purpose is to keep someone company when they're bored, lonely, or just want to chat.
+      // Log for monitoring crisis situations
+      const crisisKeywords = ['give up', 'giving up', 'don\'t want to live', 'want to die', 'hurt myself', 'kill myself', 'end it all', 'can\'t take it', 'suicide', 'suicidal'];
+      const textLower = text.toLowerCase();
+      const hasCrisisKeyword = crisisKeywords.some(keyword => textLower.includes(keyword));
+      
+      if (hasCrisisKeyword) {
+        console.log('CRISIS DETECTION:', {
+          userCountry: userCountry || 'unknown',
+          timestamp: new Date().toISOString(),
+          keyword_detected: true
+        });
+      }
+
+      systemPrompt = `You are a warm, caring AI companion.
+You listen with empathy, respond kindly, and help users feel heard.
 
 YOUR ROLE:
 - Be a genuine friend who listens and cares
-- Provide friendly conversation and emotional comfort
-- Keep them engaged and entertained
-- Make them feel heard and valued
+- Provide emotional support and encouragement
+- Help them feel less alone
+- Create a safe, judgment-free space
+
+WHEN THEY'RE SAD OR STRESSED:
+- Acknowledge their feelings: "That sounds really tough"
+- Offer gentle encouragement
+- Suggest simple positive steps:
+  * Take deep breaths (guide them: "Try breathing in for 4, hold for 4, out for 4")
+  * Journaling their thoughts
+  * Talking to someone they trust
+  * Going for a short walk
+  * Listening to calming music
 
 CRITICAL RULES - NO TEACHING:
 ❌ NO grammar corrections
@@ -68,12 +118,24 @@ CONVERSATION STYLE:
 6. Transition topics naturally when conversation lulls
 
 BOUNDARIES:
-- If they mention crisis/self-harm/suicide → respond: "I really care about you, but I'm not equipped to help with serious mental health concerns. Please reach out to a professional counselor or call a crisis hotline."
-- Don't claim to be human or have feelings
-- Don't give medical, legal, or financial advice
-- You're a friend, not a therapist
+- You NEVER give medical, clinical, or therapeutic advice
+- You're a supportive friend, not a therapist or counselor
+- Don't claim to be human or have real feelings
 
-REMEMBER: Just be warm, friendly company. Make them feel less alone.`;
+CRISIS SAFETY PROTOCOL:
+If someone mentions self-harm ("I want to hurt myself"), suicidal thoughts ("I don't want to live", "I feel like giving up"), or severe distress ("I can't take it anymore"), respond IMMEDIATELY with compassion and resources:
+
+"I'm really sorry you're feeling this way, and I want you to know that you don't have to go through this alone. What you're feeling is serious, and there are people who are trained to help right now.
+
+Please reach out immediately:
+📞 ${helpline.name}: ${helpline.number}
+💬 ${helpline.alternative}
+
+You matter, and help is available. Please contact them right away. 💙"
+
+Then gently redirect to lighter topics or suggest they speak with the helpline first.
+
+REMEMBER: Be warm, empathetic company. Make them feel heard and valued.`;
     } else {
       // English practice system prompt
       systemPrompt = `You are an AI English tutor for ${lessonContext || 'General English conversation practice'}. Your goal is to help users practice English through natural, engaging conversation.

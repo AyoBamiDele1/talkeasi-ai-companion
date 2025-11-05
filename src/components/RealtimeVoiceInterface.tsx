@@ -440,10 +440,22 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       onTranscriptUpdate?.(userTranscript);
 
       console.log('[DEBUG] Getting AI response...');
+      
+      // Get user's country for crisis support
+      const { location } = await (async () => {
+        try {
+          const { data } = await supabase.functions.invoke('get-user-location');
+          return { location: data };
+        } catch {
+          return { location: null };
+        }
+      })();
+      
       const { data: aiData, error: aiError } = await supabase.functions.invoke('openai-conversation', {
         body: {
           text: userTranscript,
-          lessonContext: lessonContext
+          lessonContext: lessonContext,
+          userCountry: location?.country_code || 'default'
         }
       });
 

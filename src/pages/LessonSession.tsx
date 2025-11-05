@@ -257,11 +257,22 @@ const LessonSession = () => {
 
       // Step 2: Get AI response using GPT-4o-mini (cost-optimized)
       setProcessingStage('thinking');
+      
+      // Get user's country for crisis support
+      const { location } = await (async () => {
+        try {
+          const { data } = await supabase.functions.invoke('get-user-location');
+          return { location: data };
+        } catch {
+          return { location: null };
+        }
+      })();
+      
       const aiResponse = await supabase.functions.invoke('openai-conversation', {
         body: { 
-          userText, 
+          text: userText,
           lessonContext: lesson?.title || 'English Conversation Practice',
-          difficulty: 'Intermediate'
+          userCountry: location?.country_code || 'default'
         }
       });
 
