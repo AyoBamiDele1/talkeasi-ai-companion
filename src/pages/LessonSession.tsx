@@ -92,8 +92,16 @@ const LessonSession = () => {
   };
 
   const generateInitialMessage = (lessonData: any) => {
-    const scenarios = lessonData.content?.scenarios || [];
-    const firstScenario = scenarios[0] || 'general conversation';
+    const content = lessonData.content as { scenarios?: string[], key_phrases?: string[] } | undefined;
+    
+    // Build context with scenarios and key phrases if available
+    let contextInfo = '';
+    if (content?.scenarios && content.scenarios.length > 0) {
+      contextInfo += `\n\nIn this lesson, we'll practice: ${content.scenarios.join(', ')}.`;
+    }
+    if (content?.key_phrases && content.key_phrases.length > 0) {
+      contextInfo += `\n\nUseful phrases you can try: ${content.key_phrases.slice(0, 3).join(', ')}.`;
+    }
     
     switch (lessonData.title) {
       case 'AI Companion':
@@ -103,28 +111,36 @@ const LessonSession = () => {
         return "Hey! What's on your mind today?";
       
       case 'Business Introduction':
-        return "Hello! I'm your AI English tutor. Let's practice professional introductions in business settings. I'll be your colleague. How would you introduce yourself?";
+        return `Hello! I'm your AI English tutor. Let's practice professional introductions in business settings. I'll be your colleague. How would you introduce yourself?${contextInfo}`;
       
       case 'Phone Conversation':
-        return "Ring ring! Hello, this is Sarah calling from Tech Solutions. How can I help you today?";
+        return `Ring ring! Hello, this is Sarah calling from Tech Solutions. How can I help you today?${contextInfo}`;
       
       case 'Job Interview Practice':
-        return "Hello! I'm your AI English tutor. Let's practice job interview scenarios. I'll be the interviewer. Tell me, why are you interested in this position?";
+      case 'Job, Career & Interview Conversations':
+        return `Hello! I'm your AI English tutor. Let's practice job interview scenarios. I'll be the interviewer. Tell me, why are you interested in this position?${contextInfo}`;
       
       case 'Small Talk & Networking':
-        return "Hello! I'm your AI English tutor. Let's practice networking and small talk. I'll be someone you just met at a professional event. How are you enjoying the event?";
+        return `Hello! I'm your AI English tutor. Let's practice networking and small talk. I'll be someone you just met at a professional event. How are you enjoying the event?${contextInfo}`;
       
       case 'Travel & Tourism':
-        return "Hello! I'm your AI English tutor. Let's practice travel conversations. I'll be a hotel receptionist. How can I assist you today?";
+      case 'Travel & Dream Destinations':
+        return `Hello! I'm your AI English tutor. Let's practice travel conversations. Imagine we're discussing your travel plans. What's a place you've always wanted to visit?${contextInfo}`;
       
       case 'Casual Conversations':
-        return "Hello! I'm your AI English tutor. Let's practice casual conversations. I'll be your friend. What are your plans for the weekend?";
+        return `Hello! I'm your AI English tutor. Let's practice casual conversations. I'll be your friend. What are your plans for the weekend?${contextInfo}`;
       
       case 'Presentation Skills':
-        return "Hello! I'm your AI English tutor. Let's practice presentation skills. Imagine you're giving a presentation to your team. Please begin by introducing your topic.";
+        return `Hello! I'm your AI English tutor. Let's practice presentation skills. Imagine you're giving a presentation to your team. Please begin by introducing your topic.${contextInfo}`;
+      
+      case 'Hobbies and Interests':
+        return `Hello! I'm your AI English tutor. Let's talk about hobbies and interests. What do you like to do in your free time?${contextInfo}`;
+      
+      case 'Health, Wellness & Lifestyle':
+        return `Hello! I'm your AI English tutor. Let's practice conversations about health and wellness. How do you stay healthy and active?${contextInfo}`;
       
       default:
-        return `Hello! I'm your AI English tutor. Let's practice ${lessonData.title.toLowerCase()}. ${lessonData.description} Are you ready to begin?`;
+        return `Hello! I'm your AI English tutor. Let's practice ${lessonData.title.toLowerCase()}. ${lessonData.description || 'Are you ready to begin?'}${contextInfo}`;
     }
   };
 
@@ -272,7 +288,8 @@ const LessonSession = () => {
         body: { 
           text: userText,
           lessonContext: lesson?.title || 'English Conversation Practice',
-          userCountry: location?.country_code || 'default'
+          userCountry: location?.country_code || 'default',
+          lessonContent: lesson?.content || {}
         }
       });
 

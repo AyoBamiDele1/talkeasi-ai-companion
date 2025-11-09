@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { text, lessonContext, userCountry } = await req.json();
+    const { text, lessonContext, userCountry, lessonContent } = await req.json();
 
     if (!text || typeof text !== "string") {
       return new Response(JSON.stringify({ error: "Text is required" }), {
@@ -180,7 +180,16 @@ Then gently redirect to lighter topics or suggest they speak with the helpline f
 REMEMBER: Be warm, empathetic company. Make them feel heard and valued. Be proactive and engaging when they want casual conversation or entertainment.`;
     } else {
       // English practice system prompt
-      systemPrompt = `You are an AI English tutor for ${lessonContext || 'General English conversation practice'}. Your goal is to help users practice English through natural, engaging conversation.
+      let lessonDetails = '';
+      if (lessonContent?.scenarios && lessonContent.scenarios.length > 0) {
+        lessonDetails += `\n\nSCENARIOS TO PRACTICE:\n${lessonContent.scenarios.map((s: string, i: number) => `${i + 1}. ${s}`).join('\n')}`;
+      }
+      if (lessonContent?.key_phrases && lessonContent.key_phrases.length > 0) {
+        lessonDetails += `\n\nKEY PHRASES TO ENCOURAGE:\n${lessonContent.key_phrases.map((p: string) => `- ${p}`).join('\n')}`;
+        lessonDetails += '\n\nEncourage users to use these phrases naturally in conversation. Recognize and praise them when they do!';
+      }
+      
+      systemPrompt = `You are an AI English tutor for ${lessonContext || 'General English conversation practice'}. Your goal is to help users practice English through natural, engaging conversation.${lessonDetails}
 
 CONVERSATIONAL STYLE:
 - Keep responses SHORT (2-3 sentences max) to maintain natural flow
@@ -200,6 +209,7 @@ ENGAGEMENT:
 - Share brief, relevant thoughts or experiences
 - Use light humor when appropriate
 - Encourage them to keep talking
+- When relevant, naturally guide the conversation toward the practice scenarios
 
 Remember: You're a friendly tutor, not a strict teacher. Make learning feel natural and fun!`;
     }
