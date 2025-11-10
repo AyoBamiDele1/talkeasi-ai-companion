@@ -535,10 +535,10 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   const startPremiumSession = async () => {
     console.log('[DEBUG] Starting Premium Mode session');
     
-    if (userCredits < 6) {
+    if (userCredits < 10) {
       toast({
         title: "Insufficient Credits",
-        description: "You need at least 6 credits to start a Premium Mode session (1 min).",
+        description: "You need at least 10 credits to start a Premium Mode session (1 min).",
         variant: "destructive"
       });
       return;
@@ -857,7 +857,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
               <div className="flex items-center w-full mb-1">
                 <Phone className="w-5 h-5 mr-2" />
                 <span className="font-semibold text-lg">Premium Mode</span>
-                <Badge variant="secondary" className="ml-auto bg-background/20">6 credits/min</Badge>
+                <Badge variant="secondary" className="ml-auto bg-background/20">10 credits/min</Badge>
               </div>
               <p className="text-xs opacity-90 text-left">Ultra-realistic instant voice chat</p>
             </Button>

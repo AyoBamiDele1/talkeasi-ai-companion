@@ -90,7 +90,7 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
   });
 
   const calculateEstimatedTime = (credits: number, mode: 'standard' | 'premium' = 'standard') => {
-    const creditsPerMinute = mode === 'premium' ? 6 : 4;
+    const creditsPerMinute = mode === 'premium' ? 10 : 4;
     const minutes = Math.floor(credits / creditsPerMinute);
     if (minutes < 60) return `${minutes} min`;
     const hours = Math.floor(minutes / 60);
@@ -236,10 +236,10 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">Ultra-realistic instant response, feels like a real person</p>
                 </div>
-                <Badge variant="default">6 credits/min</Badge>
+                <Badge variant="default">10 credits/min</Badge>
               </div>
               <div className="text-xs text-muted-foreground mt-2">
-                Example: 90 credits = 15 minutes
+                Example: 90 credits = 9 minutes
               </div>
             </div>
 

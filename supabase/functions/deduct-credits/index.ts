@@ -31,7 +31,7 @@ serve(async (req) => {
     // Calculate credits based on mode and duration if provided
     let creditsToDeduct = amount;
     if (mode && duration_minutes) {
-      const creditsPerMinute = mode === 'premium' ? 6 : 4;
+      const creditsPerMinute = mode === 'premium' ? 10 : 4;
       creditsToDeduct = Math.ceil(duration_minutes * creditsPerMinute);
       console.log(`Deducting credits: ${duration_minutes} min × ${creditsPerMinute} credits/min = ${creditsToDeduct} credits (${mode} mode)`);
     }
@@ -79,7 +79,7 @@ serve(async (req) => {
       ...metadata,
       mode: mode || 'unknown',
       duration_minutes: duration_minutes || 0,
-      credits_per_minute: mode === 'premium' ? 6 : 4,
+      credits_per_minute: mode === 'premium' ? 10 : 4,
       calculated_at: new Date().toISOString()
     };
 
