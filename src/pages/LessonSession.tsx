@@ -137,7 +137,7 @@ const LessonSession = () => {
         return `Hello! I'm your AI English tutor. Let's talk about hobbies and interests. What do you like to do in your free time?${contextInfo}`;
       
       case 'Health, Wellness & Lifestyle':
-        return `Hello! I'm your AI English tutor. Let's practice conversations about health and wellness. How do you stay healthy and active?${contextInfo}`;
+        return `Hello! I'm your AI English tutor. Let's practice conversations about health and wellness.`;
       
       default:
         return `Hello! I'm your AI English tutor. Let's practice ${lessonData.title.toLowerCase()}. ${lessonData.description || 'Are you ready to begin?'}${contextInfo}`;
