@@ -134,7 +134,7 @@ const LessonSession = () => {
         return `Hello! I'm your AI English tutor. Let's practice presentation skills. Imagine you're giving a presentation to your team. Please begin by introducing your topic.${contextInfo}`;
       
       case 'Hobbies and Interests':
-        return `Hello! I'm your AI English tutor. Let's talk about hobbies and interests. What do you like to do in your free time?${contextInfo}`;
+        return `Hello! I'm your AI English tutor. Let's talk about hobbies and interests.`;
       
       case 'Health, Wellness & Lifestyle':
         return `Hello! I'm your AI English tutor. Let's practice conversations about health and wellness.`;
