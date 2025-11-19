@@ -118,7 +118,7 @@ const LessonSession = () => {
       
       case 'Job Interview Practice':
       case 'Job, Career & Interview Conversations':
-        return `Hello! I'm your AI English tutor. Let's practice job interview scenarios. I'll be the interviewer. Tell me, why are you interested in this position?${contextInfo}`;
+        return `Hello! I'm your AI English tutor. Let's practice job interview scenarios.`;
       
       case 'Small Talk & Networking':
         return `Hello! I'm your AI English tutor. Let's practice networking and small talk. I'll be someone you just met at a professional event. How are you enjoying the event?${contextInfo}`;
