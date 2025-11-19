@@ -125,7 +125,7 @@ const LessonSession = () => {
       
       case 'Travel & Tourism':
       case 'Travel & Dream Destinations':
-        return `Hello! I'm your AI English tutor. Let's practice travel conversations. Imagine we're discussing your travel plans. What's a place you've always wanted to visit?${contextInfo}`;
+        return `Hello! I'm your AI English tutor. Let's practice travel conversations.`;
       
       case 'Casual Conversations':
         return `Hello! I'm your AI English tutor. Let's practice casual conversations. I'll be your friend. What are your plans for the weekend?${contextInfo}`;
