@@ -36,7 +36,7 @@ const Index = () => {
             <p className="text-muted-foreground mb-4 md:mb-6">
               Chat when you're lonely, or practice English.
               <br className="hidden md:block" />
-              Your AI friend is always available, never judges.
+              Your AI friend is always available.
             </p>
           </div>
 
