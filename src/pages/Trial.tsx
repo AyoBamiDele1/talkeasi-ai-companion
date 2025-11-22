@@ -33,7 +33,7 @@ const Trial = () => {
     }
   }, [navigate, toast]);
 
-  // Timer for 1-minute trial limit
+  // Timer for 2-minute trial limit
   useEffect(() => {
     if (!isSessionActive) {
       setElapsedSeconds(0);
@@ -43,9 +43,9 @@ const Trial = () => {
     const interval = setInterval(() => {
       setElapsedSeconds(prev => {
         const newSeconds = prev + 1;
-        if (newSeconds >= 60) {
+        if (newSeconds >= 120) {
           handleTrialEnd();
-          return 60;
+          return 120;
         }
         return newSeconds;
       });
@@ -72,9 +72,9 @@ const Trial = () => {
     setMessages(newMessages);
   };
 
-  // Show toast at 45 seconds (15 seconds remaining)
+  // Show toast at 90 seconds (30 seconds remaining)
   useEffect(() => {
-    if (isSessionActive && elapsedSeconds === 45) {
+    if (isSessionActive && elapsedSeconds === 90) {
       toast({
         title: "Enjoying this?",
         description: "Create your free account to continue your conversation!",
@@ -103,7 +103,7 @@ const Trial = () => {
                 Try TalkEasi Free!
               </h1>
               <p className="text-muted-foreground mb-4">
-                Chat with your AI companion and English tutor — try it free for 1 minute!
+                Chat with your AI companion and English tutor — try it free for 2 minutes!
               </p>
             </>
           )}
