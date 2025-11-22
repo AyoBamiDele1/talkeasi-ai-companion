@@ -36,11 +36,11 @@ serve(async (req) => {
       });
     }
 
-    // Optional initial balance (defaults to 2 welcome credits)
+    // Optional initial balance (defaults to 8 welcome credits)
     const body = await req.json().catch(() => ({}));
     const startBalance = typeof body?.initial_balance === 'number' && body.initial_balance >= 0
       ? Math.floor(body.initial_balance)
-      : 2;
+      : 8;
 
     // Check if user already has a credits row
     const { data, error } = await supabase
