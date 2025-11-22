@@ -12,6 +12,7 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   signInWithGoogle: () => Promise<{ error: any }>;
   signInWithApple: () => Promise<{ error: any }>;
+  refreshSubscription: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -20,6 +21,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [subscriptionRefreshTrigger, setSubscriptionRefreshTrigger] = useState(0);
+
+  const refreshSubscription = () => {
+    setSubscriptionRefreshTrigger(prev => prev + 1);
+  };
 
   useEffect(() => {
     // Set up auth state listener
@@ -28,6 +34,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+        
+        // Trigger subscription refresh on auth state change
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          refreshSubscription();
+        }
       }
     );
 
@@ -101,7 +112,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signIn,
       signOut,
       signInWithGoogle,
-      signInWithApple
+      signInWithApple,
+      refreshSubscription
     }}>
       {children}
     </AuthContext.Provider>

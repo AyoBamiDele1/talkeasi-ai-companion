@@ -1,257 +1,507 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Coins, AlertCircle, Loader2 } from "lucide-react";
+import { ArrowLeft, CreditCard, Zap, Clock, Check, Crown, Loader2 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { useQuery } from "@tanstack/react-query";
-import { useUserLocation } from "@/hooks/useUserLocation";
+import { useSubscription } from "@/hooks/useSubscription";
+import { Separator } from "@/components/ui/separator";
+import { useState, useEffect } from "react";
 
 interface ProfileSubscriptionProps {
   onBack: () => void;
 }
 
-interface CreditPackage {
-  id: string;
-  name: string;
-  credits: number;
-  price_ngn: number;
-  price_usd: number;
-  price_gbp: number;
-  package_type: string;
-  billing_interval?: string;
-  bonus_percentage: number;
-  display_order: number;
-}
+// Map price IDs to packages
+const CREDIT_PACKAGES: Record<string, { credits: number; priceId: string; price: number }> = {
+  "40_credits": {
+    credits: 40,
+    priceId: "price_1SWMK92dz9WA913sD8RjAHqP",
+    price: 1.99
+  },
+  "90_credits": {
+    credits: 90,
+    priceId: "price_1SWMKP2dz9WA913sbt0ftTUf",
+    price: 2.99
+  },
+  "170_credits": {
+    credits: 170,
+    priceId: "price_1SWMKe2dz9WA913sV9VkYNyE",
+    price: 4.99
+  }
+};
 
-interface CreditTransaction {
-  id: string;
-  type: string;
-  amount: number;
-  balance_after: number;
-  description: string;
-  created_at: string;
-}
+const PRO_PLAN = {
+  priceId: "price_1SWMKu2dz9WA913sJSKAHETl",
+  productId: "prod_TTIwjh5O9HkYuf",
+  credits: 500,
+  price: 9.99
+};
 
 const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
-  const { user } = useAuth();
+  const { user, refreshSubscription } = useAuth();
   const { toast } = useToast();
-  const { location, loading: locationLoading, formatPrice, getSecondaryPrices } = useUserLocation();
+  const { isSubscribed, productId, subscriptionEnd, refetch: refetchSubscription } = useSubscription();
+  const [processingPayment, setProcessingPayment] = useState(false);
+  const [processingSubscription, setProcessingSubscription] = useState(false);
 
-  // Fetch user credits
-  const { data: userCredits, refetch: refetchCredits } = useQuery({
+  // Check for payment/subscription status in URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const paymentStatus = params.get('payment');
+    const subscriptionStatus = params.get('subscription');
+
+    if (paymentStatus === 'success') {
+      toast({
+        title: "Payment successful!",
+        description: "Your credits will be added to your account shortly.",
+      });
+      // Clean up URL
+      window.history.replaceState({}, '', window.location.pathname);
+      // Refresh data
+      setTimeout(() => {
+        refetchCredits();
+      }, 2000);
+    } else if (paymentStatus === 'canceled') {
+      toast({
+        title: "Payment canceled",
+        description: "Your payment was canceled.",
+        variant: "destructive"
+      });
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+
+    if (subscriptionStatus === 'success') {
+      toast({
+        title: "Subscription activated!",
+        description: "Welcome to Pro! Your monthly credits will be available shortly.",
+      });
+      window.history.replaceState({}, '', window.location.pathname);
+      setTimeout(() => {
+        refetchSubscription();
+        refetchCredits();
+      }, 2000);
+    } else if (subscriptionStatus === 'canceled') {
+      toast({
+        title: "Subscription canceled",
+        description: "Your subscription was not completed.",
+        variant: "destructive"
+      });
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
+
+  const { data: creditBalance, refetch: refetchCredits } = useQuery({
     queryKey: ['user-credits', user?.id],
     queryFn: async () => {
-      if (!user?.id) return null;
+      if (!user) return null;
       const { data, error } = await supabase
         .from('user_credits')
         .select('balance')
         .eq('user_id', user.id)
-        .maybeSingle();
-      
-      if (error && (error as any).code !== 'PGRST116') throw error;
-      return data ?? { balance: 0 } as any;
+        .single();
+
+      if (error) throw error;
+      return data?.balance || 0;
     },
-    enabled: !!user?.id
+    enabled: !!user
   });
 
-  // Fetch credit packages
-  const { data: packages } = useQuery({
-    queryKey: ['credit-packages'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('credit_packages')
-        .select('*')
-        .eq('is_active', true)
-        .order('display_order');
-      
-      if (error) throw error;
-      return data as CreditPackage[];
+  const calculateEstimatedTime = (credits: number, mode: 'standard' | 'premium') => {
+    const creditsPerMinute = mode === 'standard' ? 1 : 2;
+    const minutes = credits / creditsPerMinute;
+    
+    if (minutes < 60) {
+      return `${Math.floor(minutes)} mins`;
     }
-  });
-
-  // Fetch transaction history
-  const { data: transactions } = useQuery({
-    queryKey: ['credit-transactions', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return [];
-      const { data, error } = await supabase
-        .from('credit_transactions')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(10);
-      
-      if (error) throw error;
-      return data as CreditTransaction[];
-    },
-    enabled: !!user?.id
-  });
-
-  const calculateEstimatedTime = (credits: number, mode: 'standard' | 'premium' = 'standard') => {
-    const creditsPerMinute = mode === 'premium' ? 10 : 4;
-    const minutes = Math.floor(credits / creditsPerMinute);
-    if (minutes < 60) return `${minutes} min`;
+    
     const hours = Math.floor(minutes / 60);
-    const remainingMinutes = minutes % 60;
-    if (remainingMinutes === 0) {
-      return `${hours}h`;
-    }
-    return `${hours}h ${remainingMinutes}m`;
+    const remainingMinutes = Math.floor(minutes % 60);
+    return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
   };
 
-  const handlePurchase = (packageId: string) => {
+  const handlePurchaseCredits = async (packageKey: string) => {
+    if (!user || processingPayment) return;
+
+    const pkg = CREDIT_PACKAGES[packageKey];
+    if (!pkg) {
+      toast({
+        title: "Error",
+        description: "Invalid package selected",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setProcessingPayment(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('create-payment', {
+        body: { priceId: pkg.priceId }
+      });
+
+      if (error) throw error;
+
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      }
+    } catch (error) {
+      console.error('Error creating payment:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create payment session. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setProcessingPayment(false);
+    }
+  };
+
+  const handleSubscribe = async () => {
+    if (!user || processingSubscription) return;
+
+    setProcessingSubscription(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { priceId: PRO_PLAN.priceId }
+      });
+
+      if (error) throw error;
+
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      }
+    } catch (error) {
+      console.error('Error creating checkout:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create checkout session. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setProcessingSubscription(false);
+    }
+  };
+
+  const handleManageSubscription = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('customer-portal');
+
+      if (error) throw error;
+
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      }
+    } catch (error) {
+      console.error('Error opening customer portal:', error);
+      toast({
+        title: "Error",
+        description: "Failed to open customer portal. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleRefreshStatus = async () => {
+    await Promise.all([
+      refetchSubscription(),
+      refetchCredits()
+    ]);
+    refreshSubscription();
     toast({
-      title: "Manual Top-Up Required",
-      description: "Please contact support@talkeasi.com with your payment proof to top up your account.",
-      duration: 8000
+      title: "Status refreshed",
+      description: "Your subscription and credit balance have been updated."
     });
   };
 
   return (
     <div className="min-h-screen bg-background p-6 pb-20">
-      {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onBack}
-          className="shrink-0"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Credits</h1>
-          <p className="text-muted-foreground text-sm">Manage your practice credits</p>
+      <div className="max-w-4xl mx-auto">
+        <div className="flex items-center gap-4 mb-6">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onBack}
+            className="rounded-full"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Credits & Subscription</h1>
+            <p className="text-sm text-muted-foreground">Manage your credits and subscription</p>
+          </div>
         </div>
-      </div>
 
-      {/* Credit Balance Card */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Coins className="w-5 h-5 text-primary" />
-            Your Credit Balance
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-5xl font-bold text-primary mb-2">
-            {userCredits?.balance || 0} credits
-          </div>
-          <div className="text-sm text-muted-foreground space-y-1">
-            <p>≈ {calculateEstimatedTime(userCredits?.balance || 0, 'standard')} Standard Mode</p>
-            <p>≈ {calculateEstimatedTime(userCredits?.balance || 0, 'premium')} Premium Mode</p>
-          </div>
-          
-          {userCredits && userCredits.balance < 10 && userCredits.balance > 0 && (
-            <div className="mt-4 p-3 bg-warning/10 border border-warning/20 rounded-lg flex items-start gap-2">
-              <AlertCircle className="w-4 h-4 text-warning mt-0.5" />
+        {/* Subscription Status */}
+        {isSubscribed && (
+          <Card className="mb-6 border-primary/50 bg-gradient-to-br from-primary/5 to-primary/10">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Crown className="w-5 h-5 text-primary" />
+                  <CardTitle className="text-lg">Pro Subscriber</CardTitle>
+                </div>
+                <Badge variant="default" className="bg-primary">Active</Badge>
+              </div>
+              <CardDescription>
+                {subscriptionEnd && `Renews on ${new Date(subscriptionEnd).toLocaleDateString()}`}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-4">
+                You get {PRO_PLAN.credits} credits every month as part of your Pro plan
+              </p>
+              <Button onClick={handleManageSubscription} variant="outline" size="sm">
+                Manage Subscription
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Current Balance */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CreditCard className="w-5 h-5 text-primary" />
+              Credit Balance
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
               <div>
-                <p className="text-sm font-medium text-warning">Low Credits</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  You have {userCredits.balance} credits remaining. Top up to continue practicing!
+                <p className="text-4xl font-bold text-foreground">{creditBalance || 0}</p>
+                <p className="text-sm text-muted-foreground">Available Credits</p>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1.5">
+                    <Zap className="w-4 h-4 text-primary" />
+                    <p className="text-xs font-medium">Standard Mode</p>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    ~{calculateEstimatedTime(creditBalance || 0, 'standard')}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1.5">
+                    <Crown className="w-4 h-4 text-primary" />
+                    <p className="text-xs font-medium">Premium Mode</p>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    ~{calculateEstimatedTime(creditBalance || 0, 'premium')}
+                  </p>
+                </div>
+              </div>
+
+              <Button onClick={handleRefreshStatus} variant="outline" size="sm" className="w-full">
+                Refresh Status
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Pro Subscription */}
+        {!isSubscribed && (
+          <>
+            <h2 className="text-xl font-semibold text-foreground mb-4">Pro Subscription</h2>
+            <Card className="mb-6 border-primary/50">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Crown className="w-5 h-5 text-primary" />
+                    <CardTitle>Pro Plan</CardTitle>
+                  </div>
+                  <Badge variant="secondary">Most Popular</Badge>
+                </div>
+                <CardDescription>Best value for regular learners</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <p className="text-3xl font-bold text-foreground">
+                    ${PRO_PLAN.price}
+                    <span className="text-lg font-normal text-muted-foreground">/month</span>
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-start gap-2">
+                    <Check className="w-5 h-5 text-primary mt-0.5" />
+                    <div>
+                      <p className="font-medium">{PRO_PLAN.credits} Credits per Month</p>
+                      <p className="text-sm text-muted-foreground">
+                        ~{calculateEstimatedTime(PRO_PLAN.credits, 'standard')} standard or ~{calculateEstimatedTime(PRO_PLAN.credits, 'premium')} premium
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Check className="w-5 h-5 text-primary" />
+                    <p className="text-sm">Priority support</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Check className="w-5 h-5 text-primary" />
+                    <p className="text-sm">Cancel anytime</p>
+                  </div>
+                </div>
+
+                <Button 
+                  onClick={handleSubscribe} 
+                  className="w-full" 
+                  size="lg"
+                  disabled={processingSubscription}
+                >
+                  {processingSubscription ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      Processing...
+                    </>
+                  ) : (
+                    "Subscribe Now"
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
+          </>
+        )}
+
+        <Separator className="my-6" />
+
+        {/* Buy Credits */}
+        <h2 className="text-xl font-semibold text-foreground mb-4">Buy Credits</h2>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">40 Credits</CardTitle>
+              <CardDescription>$1.99</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="space-y-1 text-sm">
+                <p className="text-muted-foreground">
+                  ~{calculateEstimatedTime(40, 'standard')} standard
+                </p>
+                <p className="text-muted-foreground">
+                  ~{calculateEstimatedTime(40, 'premium')} premium
                 </p>
               </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              <Button 
+                onClick={() => handlePurchaseCredits('40_credits')} 
+                className="w-full"
+                disabled={processingPayment}
+              >
+                {processingPayment ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    Processing...
+                  </>
+                ) : (
+                  "Buy Now"
+                )}
+              </Button>
+            </CardContent>
+          </Card>
 
-      {/* Credit Packages */}
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold mb-4">Buy Credits</h2>
-        {locationLoading ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="w-6 h-6 animate-spin text-primary" />
-          </div>
-        ) : (
-          <div className="grid md:grid-cols-2 gap-4">
-            {packages?.map(pkg => (
-              <Card key={pkg.id} className={pkg.package_type === 'monthly' ? 'ring-2 ring-primary' : ''}>
-                <CardHeader>
-                  <div className="flex items-start justify-between mb-2">
-                    <CardTitle className="text-lg">{pkg.name}</CardTitle>
-                    <Badge variant={pkg.package_type === 'monthly' ? 'default' : 'secondary'}>
-                      {pkg.package_type === 'monthly' ? 'Monthly' : 'One-Time'}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="mb-4">
-                    <div className="text-3xl font-bold mb-1">
-                      {formatPrice(pkg.price_ngn, pkg.price_usd, pkg.price_gbp)}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {getSecondaryPrices(pkg.price_ngn, pkg.price_usd, pkg.price_gbp)}
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2 mb-4">
-                    <p className="text-lg font-semibold">{pkg.credits} credits</p>
-                    <div className="text-xs text-muted-foreground space-y-1">
-                      <p>🎯 Standard: {calculateEstimatedTime(pkg.credits, 'standard')}</p>
-                      <p>⚡ Premium: {calculateEstimatedTime(pkg.credits, 'premium')}</p>
-                    </div>
-                  </div>
-                  
-                  <Button onClick={() => handlePurchase(pkg.id)} className="w-full">
-                    {pkg.package_type === 'monthly' ? 'Subscribe' : 'Buy Credits'}
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+          <Card className="border-primary/50">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg">90 Credits</CardTitle>
+                <Badge variant="secondary" className="text-xs">Popular</Badge>
+              </div>
+              <CardDescription>$2.99</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="space-y-1 text-sm">
+                <p className="text-muted-foreground">
+                  ~{calculateEstimatedTime(90, 'standard')} standard
+                </p>
+                <p className="text-muted-foreground">
+                  ~{calculateEstimatedTime(90, 'premium')} premium
+                </p>
+              </div>
+              <Button 
+                onClick={() => handlePurchaseCredits('90_credits')} 
+                className="w-full"
+                disabled={processingPayment}
+              >
+                {processingPayment ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    Processing...
+                  </>
+                ) : (
+                  "Buy Now"
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">170 Credits</CardTitle>
+              <CardDescription>$4.99</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="space-y-1 text-sm">
+                <p className="text-muted-foreground">
+                  ~{calculateEstimatedTime(170, 'standard')} standard
+                </p>
+                <p className="text-muted-foreground">
+                  ~{calculateEstimatedTime(170, 'premium')} premium
+                </p>
+              </div>
+              <Button 
+                onClick={() => handlePurchaseCredits('170_credits')} 
+                className="w-full"
+                disabled={processingPayment}
+              >
+                {processingPayment ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    Processing...
+                  </>
+                ) : (
+                  "Buy Now"
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Separator className="my-6" />
+
+        {/* Voice Mode Pricing */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="w-5 h-5 text-primary" />
+              Voice Mode Pricing
+            </CardTitle>
+            <CardDescription>
+              Credits are deducted based on your conversation time
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-primary" />
+                  <span className="font-medium">Standard Mode</span>
+                </div>
+                <span className="text-sm text-muted-foreground">1 credit/minute</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <Crown className="w-4 h-4 text-primary" />
+                  <span className="font-medium">Premium Mode</span>
+                </div>
+                <span className="text-sm text-muted-foreground">2 credits/minute</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
-
-      {/* Voice Mode Pricing */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Voice Mode Pricing</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {/* Standard Mode */}
-            <div className="p-4 border rounded-lg">
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <p className="text-sm font-semibold">🎯 Standard Mode</p>
-                  <p className="text-xs text-muted-foreground mt-1">Smooth, natural conversations with friendly voice</p>
-                </div>
-                <Badge variant="secondary">4 credits/min</Badge>
-              </div>
-              <div className="text-xs text-muted-foreground mt-2">
-                Example: 90 credits = 22.5 minutes
-              </div>
-            </div>
-
-            {/* Premium Mode */}
-            <div className="p-4 border-2 border-primary rounded-lg bg-primary/5">
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <p className="text-sm font-semibold flex items-center gap-2">
-                    ⚡ Premium Mode
-                    <Badge variant="default" className="text-xs">Fastest</Badge>
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">Ultra-realistic instant response, feels like a real person</p>
-                </div>
-                <Badge variant="default">10 credits/min</Badge>
-              </div>
-              <div className="text-xs text-muted-foreground mt-2">
-                Example: 90 credits = 9 minutes
-              </div>
-            </div>
-
-            <div className="mt-4 p-3 bg-muted/50 rounded-lg">
-              <p className="text-xs text-muted-foreground">
-                💡 Choose Standard for longer practice sessions, Premium for natural instant conversations
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
     </div>
   );
 };
