@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Mic, MicOff, Volume2, VolumeX, ArrowLeft, MessageSquare, Phone, PhoneOff, Coins, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserLocation } from '@/hooks/useUserLocation';
 import ProcessingIndicator from './ProcessingIndicator';
 import { RealtimeChat } from '@/utils/RealtimeAudio';
 
@@ -226,12 +228,14 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   const [userCredits, setUserCredits] = useState<number>(0);
   const [isAISpeaking, setIsAISpeaking] = useState(false);
   const [currentTranscript, setCurrentTranscript] = useState('');
+  const [showPremiumCurrencyDialog, setShowPremiumCurrencyDialog] = useState(false);
   
   const audioRecorderRef = useRef<AudioRecorder>(new AudioRecorder());
   const realtimeChatRef = useRef<RealtimeChat | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { currency } = useUserLocation();
   const messageIdCounter = useRef(0);
   const idleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
@@ -871,7 +875,13 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
               size="lg"
               variant="default"
               className="w-full h-auto py-3 flex-col items-start"
-              onClick={startPremiumSession}
+              onClick={() => {
+                if (currency === 'NGN') {
+                  setShowPremiumCurrencyDialog(true);
+                } else {
+                  startPremiumSession();
+                }
+              }}
               disabled={isConnecting}
             >
               <div className="flex items-center w-full mb-1">
@@ -957,6 +967,43 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
           </div>
         )}
       </div>
+
+      {/* Premium Currency Switch Dialog */}
+      <Dialog open={showPremiumCurrencyDialog} onOpenChange={setShowPremiumCurrencyDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Premium Mode Available in USD</DialogTitle>
+            <DialogDescription>
+              Premium mode with ultra-realistic instant voice chat is available with international pricing (USD/GBP).
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-muted-foreground mb-4">
+              To access Premium mode, you'll need to purchase credits using USD or GBP pricing. This ensures the best quality experience for our premium features.
+            </p>
+            <div className="bg-muted p-4 rounded-lg">
+              <p className="text-sm font-medium mb-2">Premium Mode Pricing (USD):</p>
+              <ul className="text-sm text-muted-foreground space-y-1">
+                <li>• 40 credits: $1.99 (4 min Premium)</li>
+                <li>• 90 credits: $2.99 (9 min Premium)</li>
+                <li>• 170 credits: $4.99 (17 min Premium)</li>
+                <li>• Pro Plan: $9.99/month (50 min Premium)</li>
+              </ul>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowPremiumCurrencyDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={() => {
+              setShowPremiumCurrencyDialog(false);
+              navigate('/profile');
+            }}>
+              View USD Pricing
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
