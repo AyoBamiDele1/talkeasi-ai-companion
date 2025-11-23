@@ -65,17 +65,10 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
   const { 
     formatPrice, 
     loading: locationLoading,
-    currency,
-    detectedCurrency,
-    activeCurrency,
-    hasOverride,
-    setCurrencyOverride,
-    clearCurrencyOverride 
+    currency
   } = useUserLocation();
   const [processingPayment, setProcessingPayment] = useState(false);
   const [processingSubscription, setProcessingSubscription] = useState(false);
-  const [showCurrencySwitchDialog, setShowCurrencySwitchDialog] = useState(false);
-  const [targetCurrency, setTargetCurrency] = useState<'NGN' | 'USD'>('USD');
 
   // Check for payment/subscription status in URL
   useEffect(() => {
@@ -152,34 +145,6 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
     return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
   };
 
-  const handleCurrencySwitch = (newCurrency: 'NGN' | 'USD') => {
-    if (detectedCurrency === 'NGN' && newCurrency === 'USD' && !hasOverride) {
-      setTargetCurrency(newCurrency);
-      setShowCurrencySwitchDialog(true);
-    } else if (newCurrency === 'NGN' && hasOverride) {
-      clearCurrencyOverride();
-      toast({
-        title: "Switched back to NGN",
-        description: "Now showing local pricing",
-      });
-    } else {
-      setCurrencyOverride(newCurrency);
-      toast({
-        title: "Currency updated",
-        description: `Now showing prices in ${newCurrency}`,
-      });
-    }
-  };
-
-  const confirmCurrencySwitch = () => {
-    setCurrencyOverride(targetCurrency);
-    setShowCurrencySwitchDialog(false);
-    toast({
-      title: "Switched to USD pricing",
-      description: "Premium mode will be unlocked after your first USD purchase!",
-    });
-  };
-
   const handlePurchaseCredits = async (packageKey: string) => {
     if (!user || processingPayment) return;
 
@@ -199,7 +164,7 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
       const { data, error } = await supabase.functions.invoke('create-payment', {
         body: { 
           priceId: pkg.priceId,
-          currency: activeCurrency
+          currency: currency
         }
       });
 
@@ -295,73 +260,6 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
             <p className="text-sm text-muted-foreground">Manage your credits and subscription</p>
           </div>
         </div>
-
-        {/* Currency Switcher - Only for Nigerian Users */}
-        {detectedCurrency === 'NGN' && (
-          <Card className="mb-6">
-            <CardContent className="pt-6">
-              <div className="flex flex-col gap-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium mb-1">Currency</p>
-                    <p className="text-xs text-muted-foreground">
-                      {hasOverride ? 'Viewing international pricing' : 'Showing local pricing'}
-                    </p>
-                  </div>
-                  {hasOverride && (
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={clearCurrencyOverride}
-                    >
-                      Reset to {detectedCurrency}
-                    </Button>
-                  )}
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant={activeCurrency === 'NGN' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => handleCurrencySwitch('NGN')}
-                    className="flex-1"
-                  >
-                    ₦ NGN
-                  </Button>
-                  <Button
-                    variant={activeCurrency === 'USD' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => handleCurrencySwitch('USD')}
-                    className="flex-1"
-                  >
-                    $ USD
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Premium Mode Alert for Nigerian Users */}
-        {detectedCurrency === 'NGN' && activeCurrency === 'NGN' && (
-          <Alert className="mb-6 border-primary/50 bg-primary/5">
-            <Lightbulb className="h-4 w-4" />
-            <AlertDescription>
-              <span className="font-medium">Want Premium Mode?</span> Switch to USD pricing above to unlock 
-              ultra-realistic instant voice chat. Premium mode is available with international pricing.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {/* Premium Access Unlocked Badge - Only for Nigerian users */}
-        {detectedCurrency === 'NGN' && activeCurrency === 'USD' && (
-          <Alert className="mb-6 border-primary/50 bg-primary/5">
-            <Crown className="h-4 w-4" />
-            <AlertDescription>
-              <span className="font-medium">Premium Mode Available!</span> Purchase credits below to unlock 
-              ultra-realistic instant voice conversations.
-            </AlertDescription>
-          </Alert>
-        )}
 
         {/* Subscription Status */}
         {isSubscribed && (
@@ -647,84 +545,7 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
             </div>
           </CardContent>
         </Card>
-
-        <Separator className="my-6" />
-
-        {/* FAQ Section - Only for Nigerian users */}
-        {detectedCurrency === 'NGN' && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Info className="w-5 h-5 text-primary" />
-                Frequently Asked Questions
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Accordion type="single" collapsible className="w-full">
-                <AccordionItem value="item-1">
-                  <AccordionTrigger>Why can't I access Premium mode with Naira pricing?</AccordionTrigger>
-                  <AccordionContent>
-                    Premium mode uses advanced real-time AI technology that costs significantly more to operate. 
-                    To maintain profitable Standard mode pricing in Nigeria (₦), we offer Premium mode 
-                    only with international USD pricing. This allows us to serve both price-sensitive 
-                    and premium users effectively.
-                  </AccordionContent>
-                </AccordionItem>
-                <AccordionItem value="item-2">
-                  <AccordionTrigger>Can I mix NGN and USD purchases?</AccordionTrigger>
-                  <AccordionContent>
-                    Yes! All credits work for Standard mode. Once you make a USD purchase, you'll permanently 
-                    unlock Premium mode access. Your NGN credits and USD credits are combined into one balance.
-                  </AccordionContent>
-                </AccordionItem>
-                <AccordionItem value="item-3">
-                  <AccordionTrigger>What happens to my Standard mode credits?</AccordionTrigger>
-                  <AccordionContent>
-                    All your credits remain available. You can use any credits for Standard mode (4 credits/min) 
-                    or Premium mode (10 credits/min) once unlocked. Credits don't expire and carry over month to month.
-                  </AccordionContent>
-                </AccordionItem>
-                <AccordionItem value="item-4">
-                  <AccordionTrigger>How do I switch back to local pricing?</AccordionTrigger>
-                  <AccordionContent>
-                    Click the "Reset to {detectedCurrency}" button at the top of this page. This will show you 
-                    local pricing again. You can switch between currencies anytime for price comparison.
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </CardContent>
-          </Card>
-        )}
       </div>
-
-      {/* Currency Switch Confirmation Dialog */}
-      <Dialog open={showCurrencySwitchDialog} onOpenChange={setShowCurrencySwitchDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Switch to International Pricing?</DialogTitle>
-            <DialogDescription>
-              This will show prices in USD and unlock Premium mode access after your first purchase.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <Alert>
-              <Crown className="h-4 w-4" />
-              <AlertDescription>
-                <span className="font-medium">Premium Mode Unlocks:</span> Make a USD purchase to permanently 
-                unlock ultra-realistic instant voice chat with premium AI models.
-              </AlertDescription>
-            </Alert>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCurrencySwitchDialog(false)}>
-              Cancel
-            </Button>
-            <Button onClick={confirmCurrencySwitch}>
-              Switch to USD
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

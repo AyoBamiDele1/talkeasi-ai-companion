@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useCurrencyOverride, Currency } from './useCurrencyOverride';
 
-export type { Currency };
+export type Currency = 'NGN' | 'USD' | 'GBP';
 
 interface LocationData {
   country_code: string;
@@ -18,7 +17,6 @@ const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 export const useUserLocation = () => {
   const [location, setLocation] = useState<LocationData | null>(null);
   const [loading, setLoading] = useState(true);
-  const { override, hasOverride, setCurrencyOverride, clearCurrencyOverride } = useCurrencyOverride();
 
   useEffect(() => {
     const fetchLocation = async () => {
@@ -89,7 +87,7 @@ export const useUserLocation = () => {
   const formatPrice = (priceNGN: number, priceUSD: number, priceGBP: number) => {
     if (!location) return '';
     
-    const currency = override || location.currency;
+    const currency = location.currency;
     const symbol = getCurrencySymbol(currency);
     
     switch (currency) {
@@ -106,7 +104,7 @@ export const useUserLocation = () => {
   const getSecondaryPrices = (priceNGN: number, priceUSD: number, priceGBP: number) => {
     if (!location) return '';
     
-    const currency = override || location.currency;
+    const currency = location.currency;
     const prices: string[] = [];
     
     if (currency !== 'NGN') prices.push(`₦${priceNGN.toLocaleString()}`);
@@ -116,20 +114,12 @@ export const useUserLocation = () => {
     return prices.join(' • ');
   };
 
-  const activeCurrency = override || location?.currency || 'USD';
-  const detectedCurrency = location?.currency || 'USD';
-
   return {
     location,
     loading,
-    currency: activeCurrency,
-    detectedCurrency,
-    activeCurrency,
-    hasOverride,
-    currencySymbol: getCurrencySymbol(activeCurrency),
+    currency: location?.currency || 'USD',
+    currencySymbol: getCurrencySymbol(location?.currency || 'USD'),
     formatPrice,
     getSecondaryPrices,
-    setCurrencyOverride,
-    clearCurrencyOverride,
   };
 };
