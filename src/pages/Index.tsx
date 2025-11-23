@@ -42,7 +42,7 @@ const Index = () => {
 
           <div className="space-y-3">
             <Button onClick={() => navigate("/trial")} className="w-full" size="lg">
-              🎤 Start 1-Minute Free Talk
+              🎤 Start 2-Minute Free Talk
             </Button>
             <Button 
               variant="outline" 
