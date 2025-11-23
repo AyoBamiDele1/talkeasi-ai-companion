@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useUserLocation } from "@/hooks/useUserLocation";
 import { Separator } from "@/components/ui/separator";
 import { useState, useEffect } from "react";
 
@@ -15,21 +16,33 @@ interface ProfileSubscriptionProps {
 }
 
 // Map price IDs to packages
-const CREDIT_PACKAGES: Record<string, { credits: number; priceId: string; price: number }> = {
+const CREDIT_PACKAGES: Record<string, { 
+  credits: number; 
+  priceId: string; 
+  priceNGN: number;
+  priceUSD: number;
+  priceGBP: number;
+}> = {
   "40_credits": {
     credits: 40,
     priceId: "price_1SWMK92dz9WA913sD8RjAHqP",
-    price: 1.99
+    priceNGN: 1000,
+    priceUSD: 1.99,
+    priceGBP: 1.60
   },
   "90_credits": {
     credits: 90,
     priceId: "price_1SWMKP2dz9WA913sbt0ftTUf",
-    price: 2.99
+    priceNGN: 1800,
+    priceUSD: 2.99,
+    priceGBP: 2.40
   },
   "170_credits": {
     credits: 170,
     priceId: "price_1SWMKe2dz9WA913sV9VkYNyE",
-    price: 4.99
+    priceNGN: 3000,
+    priceUSD: 4.99,
+    priceGBP: 4.00
   }
 };
 
@@ -37,13 +50,16 @@ const PRO_PLAN = {
   priceId: "price_1SWMKu2dz9WA913sJSKAHETl",
   productId: "prod_TTIwjh5O9HkYuf",
   credits: 500,
-  price: 9.99
+  priceNGN: 6000,
+  priceUSD: 9.99,
+  priceGBP: 8.00
 };
 
 const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
   const { user, refreshSubscription } = useAuth();
   const { toast } = useToast();
   const { isSubscribed, productId, subscriptionEnd, refetch: refetchSubscription } = useSubscription();
+  const { formatPrice, loading: locationLoading } = useUserLocation();
   const [processingPayment, setProcessingPayment] = useState(false);
   const [processingSubscription, setProcessingSubscription] = useState(false);
 
@@ -110,7 +126,7 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
   });
 
   const calculateEstimatedTime = (credits: number, mode: 'standard' | 'premium') => {
-    const creditsPerMinute = mode === 'standard' ? 1 : 2;
+    const creditsPerMinute = mode === 'standard' ? 4 : 10;
     const minutes = credits / creditsPerMinute;
     
     if (minutes < 60) {
@@ -322,7 +338,7 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
               <CardContent className="space-y-4">
                 <div>
                   <p className="text-3xl font-bold text-foreground">
-                    ${PRO_PLAN.price}
+                    {formatPrice(PRO_PLAN.priceNGN, PRO_PLAN.priceUSD, PRO_PLAN.priceGBP)}
                     <span className="text-lg font-normal text-muted-foreground">/month</span>
                   </p>
                 </div>
@@ -375,7 +391,13 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">40 Credits</CardTitle>
-              <CardDescription>$1.99</CardDescription>
+              <CardDescription>
+                {formatPrice(
+                  CREDIT_PACKAGES["40_credits"].priceNGN,
+                  CREDIT_PACKAGES["40_credits"].priceUSD,
+                  CREDIT_PACKAGES["40_credits"].priceGBP
+                )}
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="space-y-1 text-sm">
@@ -409,7 +431,13 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
                 <CardTitle className="text-lg">90 Credits</CardTitle>
                 <Badge variant="secondary" className="text-xs">Popular</Badge>
               </div>
-              <CardDescription>$2.99</CardDescription>
+              <CardDescription>
+                {formatPrice(
+                  CREDIT_PACKAGES["90_credits"].priceNGN,
+                  CREDIT_PACKAGES["90_credits"].priceUSD,
+                  CREDIT_PACKAGES["90_credits"].priceGBP
+                )}
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="space-y-1 text-sm">
@@ -440,7 +468,13 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">170 Credits</CardTitle>
-              <CardDescription>$4.99</CardDescription>
+              <CardDescription>
+                {formatPrice(
+                  CREDIT_PACKAGES["170_credits"].priceNGN,
+                  CREDIT_PACKAGES["170_credits"].priceUSD,
+                  CREDIT_PACKAGES["170_credits"].priceGBP
+                )}
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="space-y-1 text-sm">
@@ -489,14 +523,14 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
                   <Zap className="w-4 h-4 text-primary" />
                   <span className="font-medium">Standard Mode</span>
                 </div>
-                <span className="text-sm text-muted-foreground">1 credit/minute</span>
+                <span className="text-sm text-muted-foreground">4 credits/minute</span>
               </div>
               <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                 <div className="flex items-center gap-2">
                   <Crown className="w-4 h-4 text-primary" />
                   <span className="font-medium">Premium Mode</span>
                 </div>
-                <span className="text-sm text-muted-foreground">2 credits/minute</span>
+                <span className="text-sm text-muted-foreground">10 credits/minute</span>
               </div>
             </div>
           </CardContent>
