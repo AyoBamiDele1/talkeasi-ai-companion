@@ -18,12 +18,12 @@ const TrialEndedModal = ({ open, onOpenChange }: TrialEndedModalProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[90vw] md:max-w-md">
+      <DialogContent className="max-w-[90vw] md:max-w-md mx-4">
         <DialogHeader className="text-center space-y-2">
-          <DialogTitle className="text-2xl">
+          <DialogTitle className="text-2xl text-center">
             ✨ Your free 2 minutes are up!
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-center">
             Want to keep improving your English?
           </DialogDescription>
         </DialogHeader>
@@ -32,12 +32,12 @@ const TrialEndedModal = ({ open, onOpenChange }: TrialEndedModalProps) => {
           {/* Primary CTA */}
           <Button 
             size="lg" 
-            className="w-full h-auto py-3" 
+            className="w-full h-auto py-3 text-center" 
             onClick={() => navigate('/auth?mode=signup')}
           >
-            <span className="flex flex-col items-center gap-1">
-              <span className="text-base font-semibold">👤 Create Free Account</span>
-              <span className="text-xs opacity-90">
+            <span className="flex flex-col items-center gap-1 w-full">
+              <span className="text-base font-semibold text-center">👤 Create Free Account</span>
+              <span className="text-xs opacity-90 text-center px-2">
                 Start with 5 free credits • No credit card required
               </span>
             </span>
@@ -47,20 +47,20 @@ const TrialEndedModal = ({ open, onOpenChange }: TrialEndedModalProps) => {
           <Button 
             size="lg" 
             variant="outline" 
-            className="w-full"
+            className="w-full text-center"
             onClick={() => navigate('/auth?mode=login')}
           >
             🔑 Already have an account? Login.
           </Button>
         </div>
 
-        <p className="text-xs text-center text-muted-foreground">
+        <p className="text-xs text-center text-muted-foreground px-4">
           Create an account to save progress, access full lessons, and continue learning.
         </p>
 
         {/* Optional: Social proof */}
-        <div className="text-center text-xs text-muted-foreground pt-2 border-t">
-          Join 1,000+ learners improving their English daily
+        <div className="text-center text-xs text-muted-foreground pt-2 border-t px-4">
+          Join 1,000+ people expressing themselves freely with TalkEasi.
         </div>
       </DialogContent>
     </Dialog>
