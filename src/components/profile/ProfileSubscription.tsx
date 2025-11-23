@@ -352,8 +352,8 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
           </Alert>
         )}
 
-        {/* Premium Access Unlocked Badge */}
-        {activeCurrency !== 'NGN' && (
+        {/* Premium Access Unlocked Badge - Only for Nigerian users */}
+        {detectedCurrency === 'NGN' && activeCurrency === 'USD' && (
           <Alert className="mb-6 border-primary/50 bg-primary/5">
             <Crown className="h-4 w-4" />
             <AlertDescription>
