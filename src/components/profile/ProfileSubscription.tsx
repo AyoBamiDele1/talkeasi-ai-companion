@@ -515,36 +515,107 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
 
         <Separator className="my-6" />
 
-        {/* Voice Mode Pricing */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+        {/* Voice Modes & Features */}
+        <div>
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
               <Clock className="w-5 h-5 text-primary" />
-              Voice Mode Pricing
-            </CardTitle>
-            <CardDescription>
-              Credits are deducted based on your conversation time
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+              Voice Modes & Features
+            </h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              Credits are deducted based on your conversation time. Choose the mode that best fits your needs.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Standard Mode Card */}
+            <Card className="border-2">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-primary" />
+                  Standard Mode
+                </CardTitle>
                 <div className="flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-primary" />
-                  <span className="font-medium">Standard Mode</span>
+                  <Badge variant="secondary">4 credits/min</Badge>
                 </div>
-                <span className="text-sm text-muted-foreground">4 credits/minute</span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <Crown className="w-4 h-4 text-primary" />
-                  <span className="font-medium">Premium Mode</span>
-                </div>
-                <span className="text-sm text-muted-foreground">10 credits/minute</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+              </CardHeader>
+              <CardContent>
+                <CardDescription className="mb-4">
+                  Simple and reliable tap-to-talk conversations
+                </CardDescription>
+                <ul className="space-y-2">
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                    <span className="text-sm">Tap-to-talk interface</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                    <span className="text-sm">Great voice quality</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                    <span className="text-sm">Reliable performance</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                    <span className="text-sm">Perfect for practice conversations</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                    <span className="text-sm">More affordable option</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                    <span className="text-sm">Available worldwide</span>
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            {/* Premium Mode Card - Hidden for Nigerian users */}
+            {currency !== 'NGN' && (
+              <Card className="border-2 border-primary/50 bg-gradient-to-br from-background to-muted/30">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Crown className="w-5 h-5 text-primary" />
+                    Premium Mode
+                  </CardTitle>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="default">10 credits/min</Badge>
+                    <Badge variant="secondary">Premium</Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <CardDescription className="mb-4">
+                    Ultra-realistic instant voice chat experience
+                  </CardDescription>
+                  <ul className="space-y-2">
+                    <li className="flex items-start gap-2">
+                      <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                      <span className="text-sm">Ultra-realistic AI voice</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                      <span className="text-sm">Instant real-time responses</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                      <span className="text-sm">Natural conversation flow</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                      <span className="text-sm">Professional-grade voice quality</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                      <span className="text-sm">Best for immersive practice</span>
+                    </li>
+                  </ul>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
