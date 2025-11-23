@@ -345,7 +345,7 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
                   </div>
                   <Badge variant="secondary">Most Popular</Badge>
                 </div>
-                <CardDescription>Best value for regular learners</CardDescription>
+                <CardDescription>Best value for regular users</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
