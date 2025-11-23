@@ -9,7 +9,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserLocation } from '@/hooks/useUserLocation';
-import { usePremiumAccess } from '@/hooks/usePremiumAccess';
 import ProcessingIndicator from './ProcessingIndicator';
 import { RealtimeChat } from '@/utils/RealtimeAudio';
 
@@ -229,15 +228,13 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   const [userCredits, setUserCredits] = useState<number>(0);
   const [isAISpeaking, setIsAISpeaking] = useState(false);
   const [currentTranscript, setCurrentTranscript] = useState('');
-  const [showPremiumCurrencyDialog, setShowPremiumCurrencyDialog] = useState(false);
   
   const audioRecorderRef = useRef<AudioRecorder>(new AudioRecorder());
   const realtimeChatRef = useRef<RealtimeChat | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { currency, detectedCurrency } = useUserLocation();
-  const { hasPremiumAccess, isLoading: loadingPremiumAccess } = usePremiumAccess();
+  const { currency } = useUserLocation();
   const messageIdCounter = useRef(0);
   const idleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
@@ -873,41 +870,32 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
               <p className="text-xs text-muted-foreground text-left">Speak, then tap to send - simple and reliable</p>
             </Button>
 
-            <div className="relative">
-              <Button
-                size="lg"
-                variant="default"
-                className="w-full h-auto py-3 flex-col items-start"
-                onClick={() => {
-                  if (!hasPremiumAccess && detectedCurrency === 'NGN') {
-                    setShowPremiumCurrencyDialog(true);
-                  } else if (!hasPremiumAccess) {
-                    toast({
-                      title: "Premium Mode Locked",
-                      description: "Purchase USD or GBP credits to unlock Premium mode",
-                      variant: "destructive"
-                    });
-                  } else {
-                    startPremiumSession();
-                  }
-                }}
-                disabled={isConnecting || loadingPremiumAccess}
-              >
-                <div className="flex items-center w-full mb-1">
-                  <Phone className="w-5 h-5 mr-2" />
-                  <span className="font-semibold text-lg">Premium Mode</span>
-                  <Badge variant="secondary" className="ml-auto bg-background/20">10 credits/min</Badge>
-                </div>
-                <p className="text-xs opacity-90 text-left">
-                  {hasPremiumAccess ? 'Ultra-realistic instant voice chat' : 'Unlocked with USD/GBP purchase'}
-                </p>
-              </Button>
-              {hasPremiumAccess && (
-                <Badge variant="default" className="absolute -top-2 -right-2 bg-primary text-xs">
-                  Unlocked
-                </Badge>
-              )}
-            </div>
+            <Button
+              size="lg"
+              variant="default"
+              className="w-full h-auto py-3 flex-col items-start"
+              onClick={() => {
+                if (currency === 'NGN') {
+                  toast({
+                    title: "Not Available",
+                    description: "Premium mode is not available in Nigeria. Standard mode offers great quality conversations.",
+                    variant: "destructive"
+                  });
+                } else {
+                  startPremiumSession();
+                }
+              }}
+              disabled={isConnecting || currency === 'NGN'}
+            >
+              <div className="flex items-center w-full mb-1">
+                <Phone className="w-5 h-5 mr-2" />
+                <span className="font-semibold text-lg">Premium Mode</span>
+                <Badge variant="secondary" className="ml-auto bg-background/20">10 credits/min</Badge>
+              </div>
+              <p className="text-xs opacity-90 text-left">
+                {currency === 'NGN' ? 'Not available in Nigeria' : 'Ultra-realistic instant voice chat'}
+              </p>
+            </Button>
           </div>
         )}
         
@@ -984,43 +972,6 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
           </div>
         )}
       </div>
-
-      {/* Premium Currency Switch Dialog */}
-      <Dialog open={showPremiumCurrencyDialog} onOpenChange={setShowPremiumCurrencyDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Premium Mode Available in USD</DialogTitle>
-            <DialogDescription>
-              Premium mode with ultra-realistic instant voice chat is available with international pricing (USD/GBP).
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <p className="text-sm text-muted-foreground mb-4">
-              To access Premium mode, you'll need to purchase credits using USD or GBP pricing. This ensures the best quality experience for our premium features.
-            </p>
-            <div className="bg-muted p-4 rounded-lg">
-              <p className="text-sm font-medium mb-2">Premium Mode Pricing (USD):</p>
-              <ul className="text-sm text-muted-foreground space-y-1">
-                <li>• 40 credits: $1.99 (4 min Premium)</li>
-                <li>• 90 credits: $2.99 (9 min Premium)</li>
-                <li>• 170 credits: $4.99 (17 min Premium)</li>
-                <li>• Pro Plan: $9.99/month (50 min Premium)</li>
-              </ul>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowPremiumCurrencyDialog(false)}>
-              Cancel
-            </Button>
-            <Button onClick={() => {
-              setShowPremiumCurrencyDialog(false);
-              navigate('/profile');
-            }}>
-              View USD Pricing
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
