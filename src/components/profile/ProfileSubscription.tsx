@@ -575,10 +575,6 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
                     <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
                     <span className="text-sm">More affordable option</span>
                   </li>
-                  <li className="flex items-start gap-2">
-                    <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                    <span className="text-sm">Available worldwide</span>
-                  </li>
                 </ul>
               </CardContent>
             </Card>
