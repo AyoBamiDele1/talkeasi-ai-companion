@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserLocation } from '@/hooks/useUserLocation';
+import { usePremiumAccess } from '@/hooks/usePremiumAccess';
 import ProcessingIndicator from './ProcessingIndicator';
 import { RealtimeChat } from '@/utils/RealtimeAudio';
 
@@ -235,7 +236,8 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { currency } = useUserLocation();
+  const { currency, detectedCurrency } = useUserLocation();
+  const { hasPremiumAccess, isLoading: loadingPremiumAccess } = usePremiumAccess();
   const messageIdCounter = useRef(0);
   const idleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
@@ -871,26 +873,41 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
               <p className="text-xs text-muted-foreground text-left">Speak, then tap to send - simple and reliable</p>
             </Button>
 
-            <Button
-              size="lg"
-              variant="default"
-              className="w-full h-auto py-3 flex-col items-start"
-              onClick={() => {
-                if (currency === 'NGN') {
-                  setShowPremiumCurrencyDialog(true);
-                } else {
-                  startPremiumSession();
-                }
-              }}
-              disabled={isConnecting}
-            >
-              <div className="flex items-center w-full mb-1">
-                <Phone className="w-5 h-5 mr-2" />
-                <span className="font-semibold text-lg">Premium Mode</span>
-                <Badge variant="secondary" className="ml-auto bg-background/20">10 credits/min</Badge>
-              </div>
-              <p className="text-xs opacity-90 text-left">Ultra-realistic instant voice chat</p>
-            </Button>
+            <div className="relative">
+              <Button
+                size="lg"
+                variant="default"
+                className="w-full h-auto py-3 flex-col items-start"
+                onClick={() => {
+                  if (!hasPremiumAccess && detectedCurrency === 'NGN') {
+                    setShowPremiumCurrencyDialog(true);
+                  } else if (!hasPremiumAccess) {
+                    toast({
+                      title: "Premium Mode Locked",
+                      description: "Purchase USD or GBP credits to unlock Premium mode",
+                      variant: "destructive"
+                    });
+                  } else {
+                    startPremiumSession();
+                  }
+                }}
+                disabled={isConnecting || loadingPremiumAccess}
+              >
+                <div className="flex items-center w-full mb-1">
+                  <Phone className="w-5 h-5 mr-2" />
+                  <span className="font-semibold text-lg">Premium Mode</span>
+                  <Badge variant="secondary" className="ml-auto bg-background/20">10 credits/min</Badge>
+                </div>
+                <p className="text-xs opacity-90 text-left">
+                  {hasPremiumAccess ? 'Ultra-realistic instant voice chat' : 'Unlocked with USD/GBP purchase'}
+                </p>
+              </Button>
+              {hasPremiumAccess && (
+                <Badge variant="default" className="absolute -top-2 -right-2 bg-primary text-xs">
+                  Unlocked
+                </Badge>
+              )}
+            </div>
           </div>
         )}
         
