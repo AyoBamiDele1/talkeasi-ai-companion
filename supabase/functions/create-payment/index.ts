@@ -24,8 +24,9 @@ serve(async (req) => {
     const user = data.user;
     if (!user?.email) throw new Error("User not authenticated or email not available");
 
-    const { priceId } = await req.json();
+    const { priceId, currency } = await req.json();
     if (!priceId) throw new Error("Price ID is required");
+    if (!currency) throw new Error("Currency is required");
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2025-08-27.basil",
@@ -51,8 +52,11 @@ serve(async (req) => {
       cancel_url: `${req.headers.get("origin")}/profile?payment=canceled`,
       metadata: {
         user_id: user.id,
+        currency: currency,
       },
     });
+
+    console.log(`Payment session created for user ${user.id} with currency ${currency}`);
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
