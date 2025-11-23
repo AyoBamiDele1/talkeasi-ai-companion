@@ -870,32 +870,22 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
               <p className="text-xs text-muted-foreground text-left">Speak, then tap to send - simple and reliable</p>
             </Button>
 
-            <Button
-              size="lg"
-              variant="default"
-              className="w-full h-auto py-3 flex-col items-start"
-              onClick={() => {
-                if (currency === 'NGN') {
-                  toast({
-                    title: "Not Available",
-                    description: "Premium mode is not available in Nigeria. Standard mode offers great quality conversations.",
-                    variant: "destructive"
-                  });
-                } else {
-                  startPremiumSession();
-                }
-              }}
-              disabled={isConnecting || currency === 'NGN'}
-            >
-              <div className="flex items-center w-full mb-1">
-                <Phone className="w-5 h-5 mr-2" />
-                <span className="font-semibold text-lg">Premium Mode</span>
-                <Badge variant="secondary" className="ml-auto bg-background/20">10 credits/min</Badge>
-              </div>
-              <p className="text-xs opacity-90 text-left">
-                {currency === 'NGN' ? 'Not available in Nigeria' : 'Ultra-realistic instant voice chat'}
-              </p>
-            </Button>
+            {currency !== 'NGN' && (
+              <Button
+                size="lg"
+                variant="default"
+                className="w-full h-auto py-3 flex-col items-start"
+                onClick={startPremiumSession}
+                disabled={isConnecting}
+              >
+                <div className="flex items-center w-full mb-1">
+                  <Phone className="w-5 h-5 mr-2" />
+                  <span className="font-semibold text-lg">Premium Mode</span>
+                  <Badge variant="secondary" className="ml-auto bg-background/20">10 credits/min</Badge>
+                </div>
+                <p className="text-xs opacity-90 text-left">Ultra-realistic instant voice chat</p>
+              </Button>
+            )}
           </div>
         )}
         
