@@ -358,11 +358,19 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     } catch (error) {
       console.error('[DEBUG] Error starting recording:', error);
       setIsRecording(false);
-      toast({
-        title: "Recording Error",
-        description: "Failed to start recording. Please check your microphone permissions.",
-        variant: "destructive"
-      });
+      
+      // Check if it's a permission error
+      const errorMessage = error instanceof Error ? error.message : '';
+      if (errorMessage.includes('Permission denied') || errorMessage.includes('NotAllowedError')) {
+        // Don't show error toast for permission denial - user will see browser prompt
+        console.log('[DEBUG] Microphone permission not granted yet');
+      } else {
+        toast({
+          title: "Recording Error",
+          description: "Failed to start recording. Please check your microphone permissions.",
+          variant: "destructive"
+        });
+      }
     }
   };
 
@@ -372,6 +380,14 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     if (autoStopTimerRef.current) {
       clearTimeout(autoStopTimerRef.current);
       autoStopTimerRef.current = null;
+    }
+    
+    // If recording state is already false, it means recording never started
+    // (likely due to permission denial), so just return without showing error
+    if (!isRecording) {
+      console.log('[DEBUG] Recording was never started, skipping stop');
+      setIsProcessing(false);
+      return;
     }
     
     try {
@@ -395,11 +411,15 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       console.error('[DEBUG] Error in stopRecording:', error);
       setIsProcessing(false);
       
-      toast({
-        title: "Processing Error",
-        description: "Failed to process audio. Please try again.",
-        variant: "destructive"
-      });
+      // Only show error if it's not a "no media recorder" error (which happens after permission denial)
+      const errorMessage = error instanceof Error ? error.message : '';
+      if (!errorMessage.includes('No media recorder available')) {
+        toast({
+          title: "Processing Error",
+          description: "Failed to process audio. Please try again.",
+          variant: "destructive"
+        });
+      }
     }
   };
 
