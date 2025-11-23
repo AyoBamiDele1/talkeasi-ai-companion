@@ -75,7 +75,7 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
   const [processingPayment, setProcessingPayment] = useState(false);
   const [processingSubscription, setProcessingSubscription] = useState(false);
   const [showCurrencySwitchDialog, setShowCurrencySwitchDialog] = useState(false);
-  const [targetCurrency, setTargetCurrency] = useState<'NGN' | 'USD' | 'GBP'>('USD');
+  const [targetCurrency, setTargetCurrency] = useState<'NGN' | 'USD'>('USD');
 
   // Check for payment/subscription status in URL
   useEffect(() => {
@@ -152,10 +152,16 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
     return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
   };
 
-  const handleCurrencySwitch = (newCurrency: 'NGN' | 'USD' | 'GBP') => {
+  const handleCurrencySwitch = (newCurrency: 'NGN' | 'USD') => {
     if (detectedCurrency === 'NGN' && newCurrency === 'USD' && !hasOverride) {
       setTargetCurrency(newCurrency);
       setShowCurrencySwitchDialog(true);
+    } else if (newCurrency === 'NGN' && hasOverride) {
+      clearCurrencyOverride();
+      toast({
+        title: "Switched back to NGN",
+        description: "Now showing local pricing",
+      });
     } else {
       setCurrencyOverride(newCurrency);
       toast({
@@ -290,56 +296,50 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
           </div>
         </div>
 
-        {/* Currency Switcher */}
-        <Card className="mb-6">
-          <CardContent className="pt-6">
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium mb-1">Currency</p>
-                  <p className="text-xs text-muted-foreground">
-                    {hasOverride ? 'Viewing international pricing' : 'Showing local pricing'}
-                  </p>
+        {/* Currency Switcher - Only for Nigerian Users */}
+        {detectedCurrency === 'NGN' && (
+          <Card className="mb-6">
+            <CardContent className="pt-6">
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium mb-1">Currency</p>
+                    <p className="text-xs text-muted-foreground">
+                      {hasOverride ? 'Viewing international pricing' : 'Showing local pricing'}
+                    </p>
+                  </div>
+                  {hasOverride && (
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={clearCurrencyOverride}
+                    >
+                      Reset to {detectedCurrency}
+                    </Button>
+                  )}
                 </div>
-                {hasOverride && (
-                  <Button 
-                    variant="outline" 
+                <div className="flex gap-2">
+                  <Button
+                    variant={activeCurrency === 'NGN' ? 'default' : 'outline'}
                     size="sm"
-                    onClick={clearCurrencyOverride}
+                    onClick={() => handleCurrencySwitch('NGN')}
+                    className="flex-1"
                   >
-                    Reset to {detectedCurrency}
+                    ₦ NGN
                   </Button>
-                )}
+                  <Button
+                    variant={activeCurrency === 'USD' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => handleCurrencySwitch('USD')}
+                    className="flex-1"
+                  >
+                    $ USD
+                  </Button>
+                </div>
               </div>
-              <div className="flex gap-2">
-                <Button
-                  variant={activeCurrency === 'NGN' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => handleCurrencySwitch('NGN')}
-                  className="flex-1"
-                >
-                  ₦ NGN
-                </Button>
-                <Button
-                  variant={activeCurrency === 'USD' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => handleCurrencySwitch('USD')}
-                  className="flex-1"
-                >
-                  $ USD
-                </Button>
-                <Button
-                  variant={activeCurrency === 'GBP' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => handleCurrencySwitch('GBP')}
-                  className="flex-1"
-                >
-                  £ GBP
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Premium Mode Alert for Nigerian Users */}
         {detectedCurrency === 'NGN' && activeCurrency === 'NGN' && (
@@ -661,17 +661,18 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
           <CardContent>
             <Accordion type="single" collapsible className="w-full">
               <AccordionItem value="item-1">
-                <AccordionTrigger>Why do I need USD pricing for Premium mode?</AccordionTrigger>
+                <AccordionTrigger>Why can't I access Premium mode with Naira pricing?</AccordionTrigger>
                 <AccordionContent>
                   Premium mode uses advanced real-time AI technology that costs significantly more to operate. 
-                  USD/GBP pricing ensures we can provide the best quality ultra-realistic voice experience 
-                  while maintaining fair pricing for all users.
+                  To maintain profitable Standard mode pricing in Nigeria (₦), we offer Premium mode 
+                  only with international USD pricing. This allows us to serve both price-sensitive 
+                  and premium users effectively.
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="item-2">
                 <AccordionTrigger>Can I mix NGN and USD purchases?</AccordionTrigger>
                 <AccordionContent>
-                  Yes! All credits work for Standard mode. Once you make a USD or GBP purchase, you'll permanently 
+                  Yes! All credits work for Standard mode. Once you make a USD purchase, you'll permanently 
                   unlock Premium mode access. Your NGN credits and USD credits are combined into one balance.
                 </AccordionContent>
               </AccordionItem>
