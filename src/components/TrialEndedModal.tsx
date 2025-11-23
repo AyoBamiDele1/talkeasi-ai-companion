@@ -19,11 +19,11 @@ const TrialEndedModal = ({ open, onOpenChange }: TrialEndedModalProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="text-2xl text-center">
-            ✨ Your free minute is up!
+        <DialogHeader className="text-center space-y-2">
+          <DialogTitle className="text-2xl">
+            ✨ Your free 2 minutes are up!
           </DialogTitle>
-          <DialogDescription className="text-center">
+          <DialogDescription>
             Want to keep improving your English?
           </DialogDescription>
         </DialogHeader>

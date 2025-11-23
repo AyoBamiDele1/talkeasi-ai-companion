@@ -55,6 +55,12 @@ const Trial = () => {
   }, [isSessionActive]);
 
   const handleSessionStart = () => {
+    // Prevent starting if trial already used
+    const trialUsed = localStorage.getItem('talkeasi_trial_used');
+    if (trialUsed) {
+      setShowModal(true);
+      return;
+    }
     setIsSessionActive(true);
   };
 
