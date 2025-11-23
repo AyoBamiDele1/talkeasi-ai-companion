@@ -26,24 +26,24 @@ const CREDIT_PACKAGES: Record<string, {
   priceUSD: number;
   priceGBP: number;
 }> = {
-  "40_credits": {
-    credits: 40,
+  "50_credits": {
+    credits: 50,
     priceId: "price_1SWMK92dz9WA913sD8RjAHqP",
     priceNGN: 1000,
     priceUSD: 1.99,
     priceGBP: 1.60
   },
-  "90_credits": {
-    credits: 90,
+  "100_credits": {
+    credits: 100,
     priceId: "price_1SWMKP2dz9WA913sbt0ftTUf",
-    priceNGN: 1800,
+    priceNGN: 1500,
     priceUSD: 2.99,
     priceGBP: 2.40
   },
-  "170_credits": {
-    credits: 170,
+  "200_credits": {
+    credits: 200,
     priceId: "price_1SWMKe2dz9WA913sV9VkYNyE",
-    priceNGN: 3000,
+    priceNGN: 2500,
     priceUSD: 4.99,
     priceGBP: 4.00
   }
@@ -53,7 +53,7 @@ const PRO_PLAN = {
   priceId: "price_1SWMKu2dz9WA913sJSKAHETl",
   productId: "prod_TTIwjh5O9HkYuf",
   credits: 600,
-  priceNGN: 6000,
+  priceNGN: 7500,
   priceUSD: 9.99,
   priceGBP: 8.00
 };
@@ -405,28 +405,28 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
         <div className="grid gap-4 sm:grid-cols-3">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">40 Credits</CardTitle>
+              <CardTitle className="text-lg">50 Credits</CardTitle>
               <CardDescription>
                 {formatPrice(
-                  CREDIT_PACKAGES["40_credits"].priceNGN,
-                  CREDIT_PACKAGES["40_credits"].priceUSD,
-                  CREDIT_PACKAGES["40_credits"].priceGBP
+                  CREDIT_PACKAGES["50_credits"].priceNGN,
+                  CREDIT_PACKAGES["50_credits"].priceUSD,
+                  CREDIT_PACKAGES["50_credits"].priceGBP
                 )}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="space-y-1 text-sm">
                 <p className="text-muted-foreground">
-                  ~{calculateEstimatedTime(40, 'standard')} standard
+                  ~{calculateEstimatedTime(50, 'standard')} standard
                 </p>
                 {currency !== 'NGN' && (
                   <p className="text-muted-foreground">
-                    ~{calculateEstimatedTime(40, 'premium')} premium
+                    ~{calculateEstimatedTime(50, 'premium')} premium
                   </p>
                 )}
               </div>
               <Button 
-                onClick={() => handlePurchaseCredits('40_credits')} 
+                onClick={() => handlePurchaseCredits('50_credits')} 
                 className="w-full"
                 disabled={processingPayment}
               >
@@ -445,30 +445,30 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
           <Card className="border-primary/50">
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg">90 Credits</CardTitle>
+                <CardTitle className="text-lg">100 Credits</CardTitle>
                 <Badge variant="secondary" className="text-xs">Popular</Badge>
               </div>
               <CardDescription>
                 {formatPrice(
-                  CREDIT_PACKAGES["90_credits"].priceNGN,
-                  CREDIT_PACKAGES["90_credits"].priceUSD,
-                  CREDIT_PACKAGES["90_credits"].priceGBP
+                  CREDIT_PACKAGES["100_credits"].priceNGN,
+                  CREDIT_PACKAGES["100_credits"].priceUSD,
+                  CREDIT_PACKAGES["100_credits"].priceGBP
                 )}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="space-y-1 text-sm">
                 <p className="text-muted-foreground">
-                  ~{calculateEstimatedTime(90, 'standard')} standard
+                  ~{calculateEstimatedTime(100, 'standard')} standard
                 </p>
                 {currency !== 'NGN' && (
                   <p className="text-muted-foreground">
-                    ~{calculateEstimatedTime(90, 'premium')} premium
+                    ~{calculateEstimatedTime(100, 'premium')} premium
                   </p>
                 )}
               </div>
               <Button 
-                onClick={() => handlePurchaseCredits('90_credits')} 
+                onClick={() => handlePurchaseCredits('100_credits')} 
                 className="w-full"
                 disabled={processingPayment}
               >
@@ -486,28 +486,28 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">170 Credits</CardTitle>
+              <CardTitle className="text-lg">200 Credits</CardTitle>
               <CardDescription>
                 {formatPrice(
-                  CREDIT_PACKAGES["170_credits"].priceNGN,
-                  CREDIT_PACKAGES["170_credits"].priceUSD,
-                  CREDIT_PACKAGES["170_credits"].priceGBP
+                  CREDIT_PACKAGES["200_credits"].priceNGN,
+                  CREDIT_PACKAGES["200_credits"].priceUSD,
+                  CREDIT_PACKAGES["200_credits"].priceGBP
                 )}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="space-y-1 text-sm">
                 <p className="text-muted-foreground">
-                  ~{calculateEstimatedTime(170, 'standard')} standard
+                  ~{calculateEstimatedTime(200, 'standard')} standard
                 </p>
                 {currency !== 'NGN' && (
                   <p className="text-muted-foreground">
-                    ~{calculateEstimatedTime(170, 'premium')} premium
+                    ~{calculateEstimatedTime(200, 'premium')} premium
                   </p>
                 )}
               </div>
               <Button 
-                onClick={() => handlePurchaseCredits('170_credits')} 
+                onClick={() => handlePurchaseCredits('200_credits')} 
                 className="w-full"
                 disabled={processingPayment}
               >
