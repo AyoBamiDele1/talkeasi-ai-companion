@@ -66,8 +66,8 @@ const Trial = () => {
 
   const handleTrialEnd = () => {
     localStorage.setItem('talkeasi_trial_used', 'true');
-    setShowModal(true);
     setIsSessionActive(false);
+    setShowModal(true);
   };
 
   const handleConversationEnd = () => {
@@ -116,14 +116,20 @@ const Trial = () => {
           <p className="text-muted-foreground">💡 Hold the mic button while you speak, then release to let the AI respond.</p>
         </div>
         
-        <RealtimeVoiceInterface 
-          isTrialMode={true}
-          lessonContext="AI Companion"
-          voice="shimmer"
-          onMessageUpdate={handleMessageUpdate}
-          onSessionStart={handleSessionStart}
-          onSessionEnd={handleConversationEnd}
-        />
+        {!localStorage.getItem('talkeasi_trial_used') ? (
+          <RealtimeVoiceInterface 
+            isTrialMode={true}
+            lessonContext="AI Companion"
+            voice="shimmer"
+            onMessageUpdate={handleMessageUpdate}
+            onSessionStart={handleSessionStart}
+            onSessionEnd={handleConversationEnd}
+          />
+        ) : (
+          <div className="text-center p-8 bg-muted/50 rounded-lg">
+            <p className="text-muted-foreground">Trial has ended. Please create an account to continue.</p>
+          </div>
+        )}
         
         {/* Show last 3 messages */}
         {messages.length > 0 && (
