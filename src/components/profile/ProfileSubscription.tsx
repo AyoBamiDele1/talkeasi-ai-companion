@@ -52,7 +52,7 @@ const CREDIT_PACKAGES: Record<string, {
 const PRO_PLAN = {
   priceId: "price_1SWMKu2dz9WA913sJSKAHETl",
   productId: "prod_TTIwjh5O9HkYuf",
-  credits: 500,
+  credits: 600,
   priceNGN: 6000,
   priceUSD: 9.99,
   priceGBP: 8.00
