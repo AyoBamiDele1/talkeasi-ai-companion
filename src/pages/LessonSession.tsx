@@ -24,7 +24,7 @@ import ProcessingIndicator from '@/components/ProcessingIndicator';
 import RealtimeVoiceInterface from '@/components/RealtimeVoiceInterface';
 import PronunciationAnalysis from '@/components/PronunciationAnalysis';
 import ConversationTimer from '@/components/ConversationTimer';
-import { lessonContentDatabase, getConversationPrompt } from '@/data/lessonContent';
+import { lessonContentDatabase, getConversationPrompt, getLessonContentByTitle, LessonContentStructure } from '@/data/lessonContent';
 
 interface Message {
   id: string;
@@ -51,6 +51,8 @@ const LessonSession = () => {
   const [useRealtimeMode, setUseRealtimeMode] = useState(true); // Use RealtimeVoiceInterface with hands-free option
   const [showAdvancedAnalysis, setShowAdvancedAnalysis] = useState(false);
   const [isSessionActive, setIsSessionActive] = useState(false);
+  const [lessonContent, setLessonContent] = useState<LessonContentStructure | null>(null);
+  const [coveredScenarios, setCoveredScenarios] = useState<Set<string>>(new Set());
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -76,6 +78,17 @@ const LessonSession = () => {
       }
 
       setLesson(data);
+      
+      // Load lesson content for structured context
+      if (data?.title) {
+        const content = getLessonContentByTitle(data.title);
+        if (content) {
+          setLessonContent(content);
+          console.log(`Loaded lesson content for: ${data.title}`);
+        } else {
+          console.warn(`No lesson content found for: ${data.title}`);
+        }
+      }
       
       // Create initial AI message based on lesson content
       if (data && messages.length === 0) {
@@ -620,6 +633,9 @@ const LessonSession = () => {
       {useRealtimeMode ? (
         <RealtimeVoiceInterface
           lessonContext={lesson?.title || 'English Conversation Practice'}
+          lessonTitle={lesson?.title}
+          lessonContent={lessonContent || undefined}
+          coveredScenarios={Array.from(coveredScenarios)}
           onTranscriptUpdate={(transcript) => {
             setCurrentStreamText(transcript);
           }}
