@@ -477,6 +477,10 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       const { data: aiData, error: aiError } = await supabase.functions.invoke('openai-conversation', {
         body: {
           text: userTranscript,
+          conversationHistory: messages.map(msg => ({
+            role: msg.role === 'user' ? 'user' : 'assistant',
+            content: msg.content
+          })),
           lessonContext: lessonContext,
           userCountry: location?.country_code || 'default'
         }

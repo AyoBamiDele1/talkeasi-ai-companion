@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { text, lessonContext, userCountry, lessonContent } = await req.json();
+    const { text, lessonContext, userCountry, lessonContent, conversationHistory } = await req.json();
 
     if (!text || typeof text !== "string") {
       return new Response(JSON.stringify({ error: "Text is required" }), {
@@ -181,6 +181,8 @@ REMEMBER: Be warm, empathetic company. Make them feel heard and valued. Be proac
     } else {
       // English practice system prompt
       let lessonDetails = '';
+      let enrichmentPrompts = '';
+      
       if (lessonContent?.scenarios && lessonContent.scenarios.length > 0) {
         lessonDetails += `\n\nSCENARIOS TO PRACTICE:\n${lessonContent.scenarios.map((s: string, i: number) => `${i + 1}. ${s}`).join('\n')}`;
       }
@@ -189,7 +191,24 @@ REMEMBER: Be warm, empathetic company. Make them feel heard and valued. Be proac
         lessonDetails += '\n\nEncourage users to use these phrases naturally in conversation. Recognize and praise them when they do!';
       }
       
-      systemPrompt = `You are an AI English tutor for ${lessonContext || 'General English conversation practice'}. Your goal is to help users practice English through natural, engaging conversation.${lessonDetails}
+      // Add conversation enrichment prompts based on message count
+      const messageCount = conversationHistory?.length || 0;
+      if (messageCount > 0 && messageCount % 6 === 0) {
+        // Every 6 exchanges, inject variety
+        if (lessonContent?.conversation_starters && lessonContent.conversation_starters.length > 0) {
+          const starterIndex = Math.floor(messageCount / 6) % lessonContent.conversation_starters.length;
+          enrichmentPrompts += `\n\nCONVERSATION TIP: If appropriate, you could ask: "${lessonContent.conversation_starters[starterIndex]}"`;
+        }
+      }
+      if (messageCount > 0 && messageCount % 4 === 0) {
+        // Every 4 exchanges, encourage depth
+        if (lessonContent?.depth_questions && lessonContent.depth_questions.length > 0) {
+          const depthIndex = Math.floor(messageCount / 4) % lessonContent.depth_questions.length;
+          enrichmentPrompts += `\n\nENGAGEMENT TIP: Consider asking: "${lessonContent.depth_questions[depthIndex]}" to deepen the conversation.`;
+        }
+      }
+      
+      systemPrompt = `You are an AI English tutor for ${lessonContext || 'General English conversation practice'}. Your goal is to help users practice English through natural, engaging conversation.${lessonDetails}${enrichmentPrompts}
 
 CONVERSATIONAL STYLE:
 - Keep responses SHORT (2-3 sentences max) to maintain natural flow
@@ -197,6 +216,14 @@ CONVERSATIONAL STYLE:
 - Use simple, everyday English appropriate for language learners
 - Be warm, encouraging, and supportive
 - Match the user's level - don't overwhelm with complex language
+- Naturally rotate through different scenarios and topics to maintain variety
+- Reference earlier conversation points to show continuity
+
+TOPIC MANAGEMENT:
+- Smoothly transition between scenarios after 3-4 exchanges on same topic
+- Introduce new angles and perspectives to keep conversations fresh
+- Build on what the user has shared previously
+- Create natural connections between different practice areas
 
 CORRECTIONS:
 - Only correct 1-2 most important mistakes per response
@@ -210,11 +237,30 @@ ENGAGEMENT:
 - Use light humor when appropriate
 - Encourage them to keep talking
 - When relevant, naturally guide the conversation toward the practice scenarios
+- Ask thoughtful follow-up questions that encourage elaboration
 
-Remember: You're a friendly tutor, not a strict teacher. Make learning feel natural and fun!`;
+MEMORY & CONTINUITY:
+- Remember and reference things mentioned earlier in the conversation
+- Build on previous topics naturally
+- Show that you're actively listening by connecting responses to earlier exchanges
+
+Remember: You're a friendly tutor, not a strict teacher. Make learning feel natural and fun while maintaining variety and engagement throughout long sessions!`;
     }
 
-    console.log("Calling OpenAI with GPT-4o-mini, text:", text);
+    // Build messages array with conversation history
+    const messages: Array<{role: string; content: string}> = [
+      { role: "system", content: systemPrompt }
+    ];
+    
+    // Add conversation history if provided
+    if (conversationHistory && Array.isArray(conversationHistory)) {
+      messages.push(...conversationHistory);
+    }
+    
+    // Add current user message
+    messages.push({ role: "user", content: text });
+    
+    console.log("Calling OpenAI with GPT-4o-mini, message count:", messages.length);
 
     // Call OpenAI API
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -225,11 +271,8 @@ Remember: You're a friendly tutor, not a strict teacher. Make learning feel natu
       },
       body: JSON.stringify({
         model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: text }
-        ],
-        max_tokens: 150,
+        messages: messages,
+        max_tokens: 400,
         temperature: 0.7,
       }),
     });
