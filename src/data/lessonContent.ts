@@ -66,7 +66,7 @@ export const lessonContentDatabase: Record<string, LessonContentStructure> = {
     challenges: []
   },
 
-  "Job Interview Practice": {
+  "Job, Career & Interview Conversations": {
     scenarios: [
       "Tell me about yourself - personal introduction",
       "Why do you want to work here?",
@@ -130,7 +130,7 @@ export const lessonContentDatabase: Record<string, LessonContentStructure> = {
     ]
   },
 
-  "Travel & Tourism": {
+  "Travel & Dream Destinations": {
     scenarios: [
       "Airport check-in and boarding",
       "Hotel reservation and check-in",
@@ -194,202 +194,173 @@ export const lessonContentDatabase: Record<string, LessonContentStructure> = {
     ]
   },
 
-  "Business Introduction": {
+  "Hobbies and Interests": {
     scenarios: [
-      "Formal self-introduction in a meeting",
-      "Introducing your company",
-      "Explaining your role and responsibilities",
-      "Networking event introduction",
-      "Conference presentation opening",
-      "Client first meeting introduction",
-      "Email introduction follow-up",
-      "Introducing a colleague",
-      "Elevator pitch (30-second introduction)",
-      "LinkedIn connection request context",
-      "Cold call introduction",
-      "Partnership proposal introduction",
-      "Investor pitch introduction",
-      "Cross-cultural business introduction",
-      "Virtual meeting introduction"
+      "Discussing favorite hobbies and pastimes",
+      "Sharing passion projects",
+      "Recommending activities to try",
+      "Weekend and leisure routines",
+      "Creative pursuits and artistic interests",
+      "Sports and fitness activities",
+      "Learning new skills and languages",
+      "Collections and special interests",
+      "Gaming and entertainment preferences",
+      "Social hobbies and group activities",
+      "Outdoor adventures and nature",
+      "DIY and crafting projects",
+      "Music and playing instruments",
+      "Reading habits and book preferences",
+      "Cultural activities and events"
     ],
     topics: [
-      "professional background",
-      "company overview",
-      "industry expertise",
-      "value proposition",
-      "networking",
-      "collaboration opportunities",
-      "business goals",
-      "achievements",
-      "services/products",
-      "target audience"
-    ],
-    key_phrases: [
-      "I'm pleased to meet you.",
-      "Let me introduce myself...",
-      "My name is... and I work at...",
-      "I specialize in...",
-      "Our company focuses on...",
-      "I've been in this industry for...",
-      "I'd love to learn more about your work.",
-      "Perhaps we could explore opportunities to collaborate.",
-      "I look forward to connecting with you.",
-      "Thank you for taking the time to meet with me."
-    ],
-    conversation_starters: [
-      "Imagine you're at a networking event. How would you introduce yourself?",
-      "Let's practice a formal business introduction for a client meeting.",
-      "Give me your elevator pitch - you have 30 seconds.",
-      "Introduce your company to a potential partner."
-    ],
-    depth_questions: [
-      "What makes your approach unique?",
-      "How did you get started in this field?",
-      "What are your company's core values?",
-      "Who is your ideal client or customer?",
-      "What challenges do you help solve?"
-    ],
-    challenges: [
-      "adapt introduction for different audience",
-      "handle unexpected questions after introduction",
-      "introduce yourself in under 15 seconds",
-      "memorable introduction that stands out",
-      "virtual vs in-person introduction differences"
-    ]
-  },
-
-  "Casual Conversations": {
-    scenarios: [
-      "Weekend plans discussion",
-      "Favorite hobbies and interests",
-      "Recent movies or TV shows",
-      "Sports and fitness chat",
-      "Food and cooking experiences",
-      "Music preferences and concerts",
-      "Pet stories and animal talk",
-      "Weather and seasonal activities",
-      "Funny stories and anecdotes",
-      "Book recommendations",
-      "Gaming and technology",
-      "Fashion and style",
-      "Home and living space",
-      "Local events and activities",
-      "Childhood memories"
-    ],
-    topics: [
-      "entertainment",
       "leisure activities",
-      "daily life",
-      "pop culture",
+      "creativity",
+      "sports",
+      "arts and music",
+      "reading",
+      "gaming",
+      "crafts",
+      "outdoor activities",
+      "social activities",
       "personal interests",
-      "social life",
-      "family",
-      "friends",
-      "celebrations",
-      "experiences"
+      "skill development",
+      "entertainment",
+      "cultural pursuits",
+      "collections",
+      "fitness"
     ],
     key_phrases: [
-      "How's it going?",
-      "What have you been up to?",
-      "That sounds fun!",
-      "I totally agree!",
-      "Tell me more about that.",
-      "Have you tried...?",
-      "That reminds me of...",
-      "I'm a big fan of...",
-      "What do you think about...?",
-      "By the way..."
+      "I'm really into...",
+      "In my free time, I...",
+      "Have you ever tried...?",
+      "I've been practicing...",
+      "My favorite thing to do is...",
+      "I recently started...",
+      "I've always wanted to learn...",
+      "What I love most about it is...",
+      "I'm passionate about...",
+      "It helps me unwind by..."
     ],
     conversation_starters: [
-      "So, what are your plans for the weekend?",
-      "Seen any good movies lately?",
-      "Do you have any hobbies you're passionate about?",
-      "What kind of music do you listen to?",
-      "Any favorite restaurants or dishes?"
+      "What do you like to do in your free time?",
+      "Do you have any hobbies you're really passionate about?",
+      "Have you picked up any new interests recently?",
+      "What's something you've always wanted to try?",
+      "How do you usually spend your weekends?"
     ],
     depth_questions: [
-      "What got you interested in that?",
-      "Do you have a favorite memory related to that?",
-      "If you could try anything new, what would it be?",
-      "What's something most people don't know about you?",
-      "What makes you laugh the most?"
+      "What got you interested in that hobby?",
+      "How long have you been doing that?",
+      "What's the most rewarding part about it?",
+      "Have you met interesting people through this hobby?",
+      "Would you recommend this to others? Why?",
+      "What's your next goal related to this interest?",
+      "How does this hobby make you feel?",
+      "What's the biggest challenge you've faced with it?"
     ],
     challenges: [
-      "keep conversation flowing naturally",
-      "transition between topics smoothly",
-      "show genuine interest",
-      "share personal anecdotes",
-      "practice active listening"
+      "explain your hobby to a beginner",
+      "recommend similar activities",
+      "share a memorable experience",
+      "discuss how your hobby has changed you",
+      "compare different hobbies"
     ]
   },
 
-  "Phone Conversation": {
+  "Health, Wellness & Lifestyle": {
     scenarios: [
-      "Answering a professional call",
-      "Making an appointment",
-      "Customer service complaint",
-      "Leaving a voicemail message",
-      "Taking a message for someone",
-      "Clarifying information on call",
-      "Rescheduling an appointment",
-      "Calling about a job application",
-      "Technical support call",
-      "Sales inquiry call",
-      "Confirming details over phone",
-      "Handling difficult customers",
-      "Conference call participation",
-      "Following up after meeting",
-      "Networking cold call"
+      "Discussing fitness routines and exercise",
+      "Healthy eating habits and nutrition",
+      "Stress management techniques",
+      "Sleep habits and routines",
+      "Work-life balance strategies",
+      "Mental wellness and mindfulness",
+      "Doctor and medical appointments",
+      "Setting wellness goals",
+      "Self-care practices",
+      "Lifestyle changes and improvements",
+      "Managing chronic conditions",
+      "Preventive health measures",
+      "Meditation and yoga practices",
+      "Healthy habit formation",
+      "Recovery and rest days"
     ],
     topics: [
-      "phone etiquette",
-      "active listening",
-      "clear communication",
-      "problem-solving",
-      "scheduling",
-      "information gathering",
-      "professional tone",
-      "message taking",
-      "follow-up",
-      "conflict resolution"
+      "exercise and fitness",
+      "nutrition",
+      "mental health",
+      "sleep",
+      "stress management",
+      "wellness",
+      "healthy habits",
+      "lifestyle",
+      "self-care",
+      "mindfulness",
+      "medical visits",
+      "work-life balance",
+      "preventive care",
+      "holistic health",
+      "recovery"
     ],
     key_phrases: [
-      "Thank you for calling...",
-      "How may I help you?",
-      "Could you please hold?",
-      "Let me transfer you to...",
-      "I'm calling regarding...",
-      "Could you repeat that, please?",
-      "Let me check on that for you.",
-      "I'll get back to you shortly.",
-      "Is there anything else I can help you with?",
-      "Thank you for your time."
+      "I've been trying to...",
+      "My routine includes...",
+      "I find that... helps me...",
+      "I'm working on improving my...",
+      "A healthy habit I practice is...",
+      "I make sure to...",
+      "It's important to me to...",
+      "I've noticed that when I...",
+      "My goal is to...",
+      "I feel better when I..."
     ],
     conversation_starters: [
-      "Ring ring! Practice answering a professional business call.",
-      "You need to make an appointment. Let's practice that call.",
-      "A customer is calling with a complaint. How do you handle it?",
-      "Practice leaving a clear, professional voicemail."
+      "What does your typical fitness routine look like?",
+      "How do you manage stress in your daily life?",
+      "What healthy habits are you working on?",
+      "How do you prioritize your wellbeing?",
+      "What does self-care mean to you?"
     ],
     depth_questions: [
-      "How do you ensure clear communication on phone?",
-      "What's challenging about phone conversations vs face-to-face?",
-      "How do you handle misunderstandings on calls?",
-      "What makes a phone conversation professional?",
-      "How do you maintain focus during long calls?"
+      "What motivated you to focus on your health?",
+      "How has your lifestyle changed over time?",
+      "What's the biggest challenge in maintaining healthy habits?",
+      "How do you balance health goals with daily responsibilities?",
+      "What wellness practice has made the biggest difference for you?",
+      "How do you stay motivated to keep up with your routine?",
+      "What advice would you give someone starting their wellness journey?",
+      "How do you know when you need to rest or take a break?"
     ],
     challenges: [
-      "handle angry customer",
-      "understand accent or unclear speech",
-      "multitask while on call",
-      "stay calm under pressure",
-      "end call professionally when rushed"
+      "explain your wellness routine",
+      "discuss overcoming health obstacles",
+      "share tips for staying consistent",
+      "talk about mental and physical health connection",
+      "describe your ideal healthy day"
     ]
   }
 };
 
+// Mapping from database lesson titles to content keys
+const LESSON_TITLE_MAPPING: Record<string, string> = {
+  "AI Companion": "AI Companion",
+  "Job, Career & Interview Conversations": "Job, Career & Interview Conversations",
+  "Travel & Dream Destinations": "Travel & Dream Destinations",
+  "Hobbies and Interests": "Hobbies and Interests",
+  "Health, Wellness & Lifestyle": "Health, Wellness & Lifestyle"
+};
+
+export function getLessonContentByTitle(dbTitle: string): LessonContentStructure | null {
+  const mappedKey = LESSON_TITLE_MAPPING[dbTitle];
+  if (!mappedKey) {
+    console.warn(`No content mapping found for lesson: ${dbTitle}`);
+    return null;
+  }
+  return lessonContentDatabase[mappedKey] || null;
+}
+
 export const getTopicsForLesson = (lessonTitle: string): string[] => {
-  const content = lessonContentDatabase[lessonTitle];
+  const content = getLessonContentByTitle(lessonTitle);
   return content?.topics || [];
 };
 
@@ -397,7 +368,7 @@ export const getNextScenario = (
   lessonTitle: string, 
   coveredScenarios: Set<string>
 ): string | null => {
-  const content = lessonContentDatabase[lessonTitle];
+  const content = getLessonContentByTitle(lessonTitle);
   if (!content) return null;
   
   const available = content.scenarios.filter(s => !coveredScenarios.has(s));
@@ -414,7 +385,7 @@ export const getConversationPrompt = (
   lessonTitle: string,
   messageCount: number
 ): string | null => {
-  const content = lessonContentDatabase[lessonTitle];
+  const content = getLessonContentByTitle(lessonTitle);
   if (!content) return null;
   
   // Rotate through starters and depth questions

@@ -234,8 +234,16 @@ export class RealtimeChat {
   private audioContext: AudioContext | null = null;
   private recorder: AudioRecorder | null = null;
   private isConnected = false;
+  private lessonContextToSend: any = null;
 
-  constructor(private onMessage: (message: any) => void) {}
+  constructor(
+    private onMessage: (message: any) => void,
+    lessonContext?: { lessonTitle?: string; lessonContent?: any; coveredScenarios?: string[] }
+  ) {
+    if (lessonContext) {
+      this.lessonContextToSend = lessonContext;
+    }
+  }
 
   async connect(): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -263,7 +271,17 @@ export class RealtimeChat {
             }
 
             if (data.type === 'connection_established') {
-              console.log('Connection established, starting audio recording...');
+              console.log('Connection established, sending lesson context and starting audio...');
+              
+              // Send lesson context if available
+              if (this.lessonContextToSend && this.ws) {
+                console.log('Sending lesson context:', this.lessonContextToSend.lessonTitle);
+                this.ws.send(JSON.stringify({
+                  type: 'lesson_init',
+                  payload: this.lessonContextToSend
+                }));
+              }
+              
               // Start audio recording
               await this.startAudioRecording();
             } else if (data.type === 'response.audio.delta' || data.type === 'response.output_audio.delta') {

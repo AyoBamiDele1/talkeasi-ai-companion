@@ -23,6 +23,9 @@ interface ConversationMessage {
 
 interface RealtimeVoiceInterfaceProps {
   lessonContext?: string;
+  lessonTitle?: string;
+  lessonContent?: any;
+  coveredScenarios?: string[];
   voice?: string;
   onTranscriptUpdate?: (transcript: string) => void;
   onConversationEnd?: () => void;
@@ -206,6 +209,9 @@ class AudioRecorder {
 
 const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   lessonContext,
+  lessonTitle,
+  lessonContent,
+  coveredScenarios = [],
   voice = 'alloy',
   onTranscriptUpdate,
   onConversationEnd,
@@ -579,9 +585,17 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     onSessionStart?.();
 
     try {
-      const chat = new RealtimeChat((message) => {
-        console.log('[Premium] Received message:', message);
-      });
+      const chat = new RealtimeChat(
+        (message) => {
+          handleRealtimeMessage(message);
+        },
+        // Pass lesson context for Premium Mode
+        lessonTitle && lessonContent ? {
+          lessonTitle,
+          lessonContent,
+          coveredScenarios
+        } : undefined
+      );
 
       await chat.connect();
       realtimeChatRef.current = chat;

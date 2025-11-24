@@ -23,6 +23,7 @@ serve(async (req) => {
   
   let openAISocket: WebSocket | null = null;
   let sessionConfigured = false;
+  let lessonContext: any = null;
 
   socket.onopen = async () => {
     console.log("Client WebSocket connected");
@@ -114,11 +115,37 @@ serve(async (req) => {
         if (data.type === 'session.created') {
           console.log("Session created by server; sending session.update...");
           if (openAISocket && !sessionConfigured) {
+            // Generate dynamic instructions based on lesson context
+            let instructions = 'You are a warm, friendly conversation partner. Keep responses natural and conversational (2-3 sentences max). Ask engaging follow-up questions. Be encouraging and supportive. Make the conversation feel realistic and natural.';
+            
+            if (lessonContext) {
+              const { lessonTitle, lessonContent, coveredScenarios } = lessonContext;
+              
+              if (lessonTitle === 'AI Companion') {
+                // AI Companion mode: warm and supportive
+                const topics = lessonContent?.topics?.join(', ') || 'life, interests, feelings';
+                instructions = `You are a warm, supportive AI companion. The user wants to have a friendly conversation. Topics you can explore: ${topics}. Keep responses natural (2-3 sentences). Be empathetic, engaging, and genuinely interested. Ask follow-up questions to deepen the conversation.`;
+              } else {
+                // Educational lesson mode
+                const currentScenario = coveredScenarios && coveredScenarios.length > 0 
+                  ? coveredScenarios[coveredScenarios.length - 1]
+                  : lessonContent?.scenarios?.[0] || 'general conversation';
+                
+                const topics = lessonContent?.topics?.join(', ') || 'various topics';
+                const keyPhrases = lessonContent?.key_phrases?.slice(0, 5).join(', ') || '';
+                const phrasesHint = keyPhrases ? `Encourage phrases like: ${keyPhrases}.` : '';
+                
+                instructions = `You are an English tutor helping with "${lessonTitle}". Current scenario: ${currentScenario}. Topics to explore: ${topics}. ${phrasesHint} Provide gentle corrections when needed. Ask engaging follow-up questions. Keep responses conversational (2-3 sentences). Be encouraging and supportive of the learner's progress.`;
+              }
+              
+              console.log("Using lesson-specific instructions:", instructions.substring(0, 100) + "...");
+            }
+            
             const sessionConfig = {
               type: 'session.update',
               session: {
                 type: 'realtime',
-                instructions: 'You are a warm, friendly conversation partner. Keep responses natural and conversational (2-3 sentences max). Ask engaging follow-up questions. Be encouraging and supportive. Make the conversation feel realistic and natural.',
+                instructions,
                 audio: {
                   input: {
                     format: { type: 'audio/pcm', rate: 24000 },
@@ -164,12 +191,28 @@ serve(async (req) => {
   };
 
   socket.onmessage = (event) => {
-    if (openAISocket && openAISocket.readyState === WebSocket.OPEN) {
-      // Forward client messages to OpenAI
-      console.log("Forwarding message to OpenAI:", event.data.substring(0, 100));
-      openAISocket.send(event.data);
-    } else {
-      console.log("OpenAI socket not ready, dropping message");
+    try {
+      const data = JSON.parse(event.data);
+      
+      // Handle lesson context initialization
+      if (data.type === 'lesson_init') {
+        console.log("Received lesson context:", data.payload?.lessonTitle || 'No title');
+        lessonContext = data.payload;
+        return; // Don't forward to OpenAI
+      }
+      
+      // Forward all other messages to OpenAI
+      if (openAISocket && openAISocket.readyState === WebSocket.OPEN) {
+        console.log("Forwarding message to OpenAI:", event.data.substring(0, 100));
+        openAISocket.send(event.data);
+      } else {
+        console.log("OpenAI socket not ready, dropping message");
+      }
+    } catch (error) {
+      // If not JSON, forward as-is
+      if (openAISocket && openAISocket.readyState === WebSocket.OPEN) {
+        openAISocket.send(event.data);
+      }
     }
   };
 
