@@ -56,11 +56,11 @@ const Home = () => {
             <div className="w-16 h-16 bg-pink-100 dark:bg-pink-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-4xl">💞</span>
             </div>
-            <h2 className="text-xl font-bold mb-2">AI Companion Mode</h2>
+            <h2 className="text-xl font-bold mb-2">AI Companion</h2>
             <p className="text-sm text-muted-foreground mb-1">Chat with your AI friend. Share your thoughts and feelings.</p>
             
             <Button className="w-full mt-4" onClick={() => navigate('/lesson/9b25e5bb-3702-448f-aae7-39c0b44fb558')}>
-              Start Companion Chat
+              Start Chatting
             </Button>
           </CardContent>
         </Card>
@@ -71,13 +71,13 @@ const Home = () => {
             <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-4xl">🎓</span>
             </div>
-            <h2 className="text-xl font-bold mb-2">English Practice Mode</h2>
+            <h2 className="text-xl font-bold mb-2">English Lessons</h2>
             <p className="text-sm text-muted-foreground mb-1">
               Practice your English with real-time AI feedback.
             </p>
             
             <Button className="w-full mt-4" onClick={() => navigate('/lessons')}>
-              Start English Lesson
+              Start Learning
             </Button>
           </CardContent>
         </Card>
