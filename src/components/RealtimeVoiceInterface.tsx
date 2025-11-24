@@ -857,17 +857,17 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
           <div className="mb-4 space-y-3">
             <Button
               size="lg"
-              variant="outline"
-              className="w-full h-auto py-3 flex-col items-start hover:bg-primary hover:text-primary-foreground"
+              variant="default"
+              className="w-full h-auto py-3 flex-col items-start"
               onClick={startHandsFreeSession}
               disabled={isConnecting}
             >
               <div className="flex items-center w-full mb-1">
                 <Phone className="w-5 h-5 mr-2" />
                 <span className="font-semibold text-lg">Standard Mode</span>
-                <Badge variant="secondary" className="ml-auto">4 credits/min</Badge>
+                <Badge variant="secondary" className="ml-auto bg-background/20">4 credits/min</Badge>
               </div>
-              <p className="text-xs text-muted-foreground text-left">Speak, then tap to send - simple and reliable</p>
+              <p className="text-xs opacity-90 text-left">Speak, then tap to send - simple and reliable</p>
             </Button>
 
             {currency !== 'NGN' && (
