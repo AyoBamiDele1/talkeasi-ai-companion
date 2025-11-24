@@ -24,6 +24,7 @@ import ProcessingIndicator from '@/components/ProcessingIndicator';
 import RealtimeVoiceInterface from '@/components/RealtimeVoiceInterface';
 import PronunciationAnalysis from '@/components/PronunciationAnalysis';
 import ConversationTimer from '@/components/ConversationTimer';
+import { lessonContentDatabase, getConversationPrompt } from '@/data/lessonContent';
 
 interface Message {
   id: string;
@@ -287,6 +288,10 @@ const LessonSession = () => {
       const aiResponse = await supabase.functions.invoke('openai-conversation', {
         body: { 
           text: userText,
+          conversationHistory: messages.map(msg => ({
+            role: msg.type === 'user' ? 'user' : 'assistant',
+            content: msg.text
+          })),
           lessonContext: lesson?.title || 'English Conversation Practice',
           userCountry: location?.country_code || 'default',
           lessonContent: lesson?.content || {}
