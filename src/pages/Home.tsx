@@ -57,10 +57,10 @@ const Home = () => {
               <span className="text-4xl">💞</span>
             </div>
             <h2 className="text-xl font-bold mb-2">AI Companion</h2>
-            <p className="text-sm text-muted-foreground mb-1">Chat with your AI friend. Share your thoughts and feelings.</p>
+            <p className="text-sm text-muted-foreground mb-1">Talk with your AI friend. Share your thoughts and feelings.</p>
             
             <Button className="w-full mt-4" onClick={() => navigate('/lesson/9b25e5bb-3702-448f-aae7-39c0b44fb558')}>
-              Start Chatting
+              Start Talking
             </Button>
           </CardContent>
         </Card>
@@ -77,7 +77,7 @@ const Home = () => {
             </p>
             
             <Button className="w-full mt-4" onClick={() => navigate('/lessons')}>
-              Start Learning
+              Start Practicing
             </Button>
           </CardContent>
         </Card>
