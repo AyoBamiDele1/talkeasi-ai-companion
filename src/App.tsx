@@ -18,6 +18,10 @@ const LessonSession = lazy(() => import("./pages/LessonSession"));
 const Progress = lazy(() => import("./pages/Progress"));
 const Profile = lazy(() => import("./pages/Profile"));
 const Trial = lazy(() => import("./pages/Trial"));
+const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
+const PaymentCanceled = lazy(() => import("./pages/PaymentCanceled"));
+const SubscriptionSuccess = lazy(() => import("./pages/SubscriptionSuccess"));
+const SubscriptionCanceled = lazy(() => import("./pages/SubscriptionCanceled"));
 
 const queryClient = new QueryClient();
 
@@ -57,6 +61,26 @@ const App = () => (
                 <Route path="/lesson/:lessonId" element={
                   <ProtectedRoute>
                     <LessonSession />
+                  </ProtectedRoute>
+                } />
+                <Route path="/payment-success" element={
+                  <ProtectedRoute>
+                    <PaymentSuccess />
+                  </ProtectedRoute>
+                } />
+                <Route path="/payment-canceled" element={
+                  <ProtectedRoute>
+                    <PaymentCanceled />
+                  </ProtectedRoute>
+                } />
+                <Route path="/subscription-success" element={
+                  <ProtectedRoute>
+                    <SubscriptionSuccess />
+                  </ProtectedRoute>
+                } />
+                <Route path="/subscription-canceled" element={
+                  <ProtectedRoute>
+                    <SubscriptionCanceled />
                   </ProtectedRoute>
                 } />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useUserLocation } from "@/hooks/useUserLocation";
 import { Separator } from "@/components/ui/separator";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 interface ProfileSubscriptionProps {
   onBack: () => void;
@@ -69,52 +69,6 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
   } = useUserLocation();
   const [processingPayment, setProcessingPayment] = useState(false);
   const [processingSubscription, setProcessingSubscription] = useState(false);
-
-  // Check for payment/subscription status in URL
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const paymentStatus = params.get('payment');
-    const subscriptionStatus = params.get('subscription');
-
-    if (paymentStatus === 'success') {
-      toast({
-        title: "Payment successful!",
-        description: "Your credits will be added to your account shortly.",
-      });
-      // Clean up URL
-      window.history.replaceState({}, '', window.location.pathname);
-      // Refresh data
-      setTimeout(() => {
-        refetchCredits();
-      }, 2000);
-    } else if (paymentStatus === 'canceled') {
-      toast({
-        title: "Payment canceled",
-        description: "Your payment was canceled.",
-        variant: "destructive"
-      });
-      window.history.replaceState({}, '', window.location.pathname);
-    }
-
-    if (subscriptionStatus === 'success') {
-      toast({
-        title: "Subscription activated!",
-        description: "Welcome to Pro! Your monthly credits will be available shortly.",
-      });
-      window.history.replaceState({}, '', window.location.pathname);
-      setTimeout(() => {
-        refetchSubscription();
-        refetchCredits();
-      }, 2000);
-    } else if (subscriptionStatus === 'canceled') {
-      toast({
-        title: "Subscription canceled",
-        description: "Your subscription was not completed.",
-        variant: "destructive"
-      });
-      window.history.replaceState({}, '', window.location.pathname);
-    }
-  }, []);
 
   const { data: creditBalance, refetch: refetchCredits } = useQuery({
     queryKey: ['user-credits', user?.id],
