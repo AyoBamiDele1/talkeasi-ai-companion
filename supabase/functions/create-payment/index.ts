@@ -24,6 +24,57 @@ serve(async (req) => {
     const user = data.user;
     if (!user?.email) throw new Error("User not authenticated or email not available");
 
+    // Rate limiting check (5 requests per minute)
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+
+    const oneMinuteAgo = new Date(Date.now() - 60000).toISOString();
+    const { data: rateLimitData, error: rateLimitError } = await supabaseAdmin
+      .from("payment_rate_limits")
+      .select("request_count")
+      .eq("user_id", user.id)
+      .eq("endpoint", "create-payment")
+      .gte("window_start", oneMinuteAgo)
+      .single();
+
+    if (rateLimitError && rateLimitError.code !== "PGRST116") {
+      console.error("Rate limit check error:", rateLimitError);
+    }
+
+    if (rateLimitData && rateLimitData.request_count >= 5) {
+      console.warn(`Rate limit exceeded for user ${user.id} on create-payment`);
+      return new Response(
+        JSON.stringify({ 
+          error: "Too many payment requests. Please wait a minute and try again." 
+        }), 
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 429,
+        }
+      );
+    }
+
+    // Update or insert rate limit record
+    if (rateLimitData) {
+      await supabaseAdmin
+        .from("payment_rate_limits")
+        .update({ request_count: rateLimitData.request_count + 1 })
+        .eq("user_id", user.id)
+        .eq("endpoint", "create-payment")
+        .gte("window_start", oneMinuteAgo);
+    } else {
+      await supabaseAdmin
+        .from("payment_rate_limits")
+        .insert({
+          user_id: user.id,
+          endpoint: "create-payment",
+          request_count: 1,
+          window_start: new Date().toISOString()
+        });
+    }
+
     const { priceId, currency } = await req.json();
     if (!priceId) throw new Error("Price ID is required");
     if (!currency) throw new Error("Currency is required");
