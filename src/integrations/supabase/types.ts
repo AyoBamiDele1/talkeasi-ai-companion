@@ -298,6 +298,33 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_rate_limits: {
+        Row: {
+          created_at: string
+          endpoint: string
+          id: string
+          request_count: number
+          user_id: string
+          window_start: string
+        }
+        Insert: {
+          created_at?: string
+          endpoint: string
+          id?: string
+          request_count?: number
+          user_id: string
+          window_start?: string
+        }
+        Update: {
+          created_at?: string
+          endpoint?: string
+          id?: string
+          request_count?: number
+          user_id?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       post_comments: {
         Row: {
           content: string
@@ -558,6 +585,7 @@ export type Database = {
         Args: { check_user_id: string }
         Returns: undefined
       }
+      cleanup_old_rate_limits: { Args: never; Returns: undefined }
       get_public_profile: {
         Args: { profile_user_id: string }
         Returns: {
