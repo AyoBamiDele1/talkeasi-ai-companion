@@ -48,8 +48,8 @@ serve(async (req) => {
         },
       ],
       mode: "payment",
-      success_url: `${req.headers.get("origin")}/profile?payment=success`,
-      cancel_url: `${req.headers.get("origin")}/profile?payment=canceled`,
+      success_url: `${req.headers.get("origin")}/payment-success`,
+      cancel_url: `${req.headers.get("origin")}/payment-canceled`,
       metadata: {
         user_id: user.id,
         currency: currency,
