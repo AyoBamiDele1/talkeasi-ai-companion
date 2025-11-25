@@ -47,18 +47,14 @@ serve(async (req) => {
         return new Response("No price ID found", { status: 400 });
       }
 
-      // Map price IDs to credit amounts (you'll need to expand this based on your actual price IDs)
+      // Map actual Stripe price IDs to credit amounts
       const priceToCredits: Record<string, number> = {
-        // These are placeholder - replace with your actual Stripe price IDs
-        "price_ngn_40": 40,
-        "price_ngn_90": 90,
-        "price_ngn_170": 170,
-        "price_usd_40": 40,
-        "price_usd_90": 90,
-        "price_usd_170": 170,
-        "price_gbp_40": 40,
-        "price_gbp_90": 90,
-        "price_gbp_170": 170,
+        // Credit packages
+        "price_1SWMK92dz9WA913sD8RjAHqP": 50,   // 50 credits
+        "price_1SWMKP2dz9WA913sbt0ftTUf": 100,  // 100 credits
+        "price_1SWMKe2dz9WA913sV9VkYNyE": 200,  // 200 credits
+        // Pro subscription (600 credits/month)
+        "price_1SWMKu2dz9WA913sJSKAHETl": 600,  // Pro Plan
       };
 
       const credits = priceToCredits[priceId] || 0;
