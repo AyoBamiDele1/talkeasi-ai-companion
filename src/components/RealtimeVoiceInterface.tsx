@@ -547,10 +547,10 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   const startHandsFreeSession = async () => {
     console.log('[DEBUG] Starting Standard Mode session with gpt-4o-mini-realtime-preview');
     
-    if (userCredits < 4) {
+    if (userCredits < 3) {
       toast({
         title: "Insufficient Credits",
-        description: "You need at least 4 credits to start a Standard Mode session (1 min).",
+        description: "You need at least 3 credits to start a Standard Mode session (1 min).",
         variant: "destructive"
       });
       return;
@@ -602,10 +602,10 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   const startPremiumSession = async () => {
     console.log('[DEBUG] Starting Premium Mode session with gpt-4o-realtime-preview-2024-12-17');
     
-    if (userCredits < 10) {
+    if (userCredits < 20) {
       toast({
         title: "Insufficient Credits",
-        description: "You need at least 10 credits to start a Premium Mode session (1 min).",
+        description: "You need at least 20 credits to start a Premium Mode session (1 min).",
         variant: "destructive"
       });
       return;
@@ -893,7 +893,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
           </div>}
 
         {/* Low Balance Warning */}
-        {!isTrialMode && userCredits < 10 && userCredits > 0 && <Alert className="mb-4 bg-warning/10 border-warning/20">
+        {!isTrialMode && userCredits < 20 && userCredits > 0 && <Alert className="mb-4 bg-warning/10 border-warning/20">
             <AlertCircle className="h-4 w-4 text-warning" />
             <AlertTitle>Low Credits</AlertTitle>
             <AlertDescription>
@@ -957,7 +957,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
               <div className="flex items-center w-full mb-1">
                 <Phone className="w-5 h-5 mr-2" />
                 <span className="font-semibold text-lg">Standard Mode</span>
-                <Badge variant="secondary" className="ml-auto bg-background/20">4 credits/min</Badge>
+                <Badge variant="secondary" className="ml-auto bg-background/20">3 credits/min</Badge>
               </div>
               <p className="text-xs opacity-90 text-left">Natural conversation flow with instant responses</p>
             </Button>
@@ -973,7 +973,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
                 <div className="flex items-center w-full mb-1">
                   <Phone className="w-5 h-5 mr-2" />
                   <span className="font-semibold text-lg">Premium Mode</span>
-                  <Badge variant="secondary" className="ml-auto bg-background/20">10 credits/min</Badge>
+                  <Badge variant="secondary" className="ml-auto bg-background/20">20 credits/min</Badge>
                 </div>
                 <p className="text-xs opacity-90 text-left">Highest quality AI responses</p>
               </Button>

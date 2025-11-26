@@ -87,7 +87,7 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
   });
 
   const calculateEstimatedTime = (credits: number, mode: 'standard' | 'premium') => {
-    const creditsPerMinute = mode === 'standard' ? 4 : 10;
+    const creditsPerMinute = mode === 'standard' ? 3 : 20;
     const minutes = credits / creditsPerMinute;
     
     if (minutes < 60) {
@@ -500,9 +500,9 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
                   <Zap className="w-5 h-5 text-primary" />
                   Standard Mode
                 </CardTitle>
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary">4 credits/min</Badge>
-                </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary">3 credits/min</Badge>
+                  </div>
               </CardHeader>
               <CardContent>
                 <CardDescription className="mb-4">
@@ -542,7 +542,7 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
                     Premium Mode
                   </CardTitle>
                   <div className="flex items-center gap-2">
-                    <Badge variant="default">10 credits/min</Badge>
+                    <Badge variant="default">20 credits/min</Badge>
                     <Badge variant="secondary">Premium</Badge>
                   </div>
                 </CardHeader>
