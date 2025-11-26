@@ -113,7 +113,7 @@ const Trial = () => {
               </p>
             </>
           )}
-          <p className="text-muted-foreground">💡 Hold the mic button while you speak, then release to let the AI respond.</p>
+          <p className="text-muted-foreground">💡 Just speak naturally - the AI will respond instantly!</p>
         </div>
         
         {!localStorage.getItem('talkeasi_trial_used') ? (

@@ -238,7 +238,12 @@ export class RealtimeChat {
 
   constructor(
     private onMessage: (message: any) => void,
-    lessonContext?: { lessonTitle?: string; lessonContent?: any; coveredScenarios?: string[] }
+    lessonContext?: { 
+      lessonTitle?: string; 
+      lessonContent?: any; 
+      coveredScenarios?: string[];
+      model?: string;
+    }
   ) {
     if (lessonContext) {
       this.lessonContextToSend = lessonContext;
