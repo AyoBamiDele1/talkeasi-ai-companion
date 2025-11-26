@@ -998,7 +998,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
 
           {isSessionActive && (
             <Button variant="ghost" size="icon" onClick={endSession}>
-              {isHandsFreeMode ? <PhoneOff className="w-5 h-5" /> : <MessageSquare className="w-5 h-5" />}
+              <PhoneOff className="w-5 h-5" />
             </Button>
           )}
         </div>
