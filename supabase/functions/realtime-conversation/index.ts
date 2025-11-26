@@ -77,8 +77,11 @@ serve(async (req) => {
       console.log("Using ephemeral key for connection");
 
       // Connect to OpenAI Realtime API with ephemeral key
+      // Model will be set after lesson_init message, defaults to mini
+      const model = lessonContext?.model || 'gpt-4o-mini-realtime-preview';
+      console.log("Connecting with model:", model);
       openAISocket = new WebSocket(
-        `wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-12-17`,
+        `wss://api.openai.com/v1/realtime?model=${model}`,
         ["realtime", `openai-insecure-api-key.${ephemeralKey}`]
       );
     } catch (error) {
@@ -216,6 +219,7 @@ Keep responses natural and conversational (2-3 sentences). Speak like a close fr
       // Handle lesson context initialization
       if (data.type === 'lesson_init') {
         console.log("Received lesson context:", data.payload?.lessonTitle || 'No title');
+        console.log("Model requested:", data.payload?.model || 'gpt-4o-mini-realtime-preview (default)');
         lessonContext = data.payload;
         return; // Don't forward to OpenAI
       }

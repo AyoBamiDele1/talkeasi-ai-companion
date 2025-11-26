@@ -545,7 +545,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   };
 
   const startHandsFreeSession = async () => {
-    console.log('[DEBUG] Starting Standard Mode session');
+    console.log('[DEBUG] Starting Standard Mode session with gpt-4o-mini-realtime-preview');
     
     if (userCredits < 4) {
       toast({
@@ -562,11 +562,45 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     setIsSessionActive(true);
     setSessionStartTime(Date.now());
     onSessionStart?.();
-    setIsConnecting(false);
+
+    try {
+      const chat = new RealtimeChat(
+        (message) => {
+          handleRealtimeMessage(message);
+        },
+        // Pass lesson context with mini model for Standard Mode
+        {
+          lessonTitle: lessonTitle,
+          lessonContent: lessonContent,
+          coveredScenarios: coveredScenarios,
+          model: 'gpt-4o-mini-realtime-preview'
+        }
+      );
+
+      await chat.connect();
+      realtimeChatRef.current = chat;
+      setIsConnecting(false);
+      
+      toast({
+        title: "Connected",
+        description: "Standard Mode conversation started!",
+      });
+    } catch (error) {
+      console.error('[DEBUG] Error starting Standard Mode:', error);
+      setIsConnecting(false);
+      setIsSessionActive(false);
+      setIsHandsFreeMode(false);
+      
+      toast({
+        title: "Connection Error",
+        description: "Failed to start Standard Mode. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const startPremiumSession = async () => {
-    console.log('[DEBUG] Starting Premium Mode session');
+    console.log('[DEBUG] Starting Premium Mode session with gpt-4o-realtime-preview-2024-12-17');
     
     if (userCredits < 10) {
       toast({
@@ -589,12 +623,13 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
         (message) => {
           handleRealtimeMessage(message);
         },
-        // Pass lesson context for Premium Mode
-        lessonTitle && lessonContent ? {
-          lessonTitle,
-          lessonContent,
-          coveredScenarios
-        } : undefined
+        // Pass lesson context with full model for Premium Mode
+        {
+          lessonTitle: lessonTitle,
+          lessonContent: lessonContent,
+          coveredScenarios: coveredScenarios,
+          model: 'gpt-4o-realtime-preview-2024-12-17'
+        }
       );
 
       await chat.connect();
@@ -620,12 +655,49 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   };
 
   const startTapToTalkSession = async () => {
-    console.log('[DEBUG] Starting Tap-to-Talk session');
+    console.log('[DEBUG] Starting Trial Mode session with gpt-4o-mini-realtime-preview');
+    
+    setIsConnecting(true);
     setCurrentMode('tap');
-    setIsHandsFreeMode(false);
+    setIsHandsFreeMode(true); // Now hands-free for Trial Mode too!
     setIsSessionActive(true);
     setSessionStartTime(Date.now());
     onSessionStart?.();
+
+    try {
+      const chat = new RealtimeChat(
+        (message) => {
+          handleRealtimeMessage(message);
+        },
+        // Pass lesson context with mini model for Trial Mode
+        {
+          lessonTitle: 'AI Companion',
+          lessonContent: lessonContent,
+          coveredScenarios: coveredScenarios,
+          model: 'gpt-4o-mini-realtime-preview'
+        }
+      );
+
+      await chat.connect();
+      realtimeChatRef.current = chat;
+      setIsConnecting(false);
+      
+      toast({
+        title: "Connected",
+        description: "Trial conversation started - just speak naturally!",
+      });
+    } catch (error) {
+      console.error('[DEBUG] Error starting Trial Mode:', error);
+      setIsConnecting(false);
+      setIsSessionActive(false);
+      setIsHandsFreeMode(false);
+      
+      toast({
+        title: "Connection Error",
+        description: "Failed to start trial. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const startSession = async () => {
@@ -864,9 +936,11 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
                 ? `Listening: "${currentTranscript}"`
                 : isHandsFreeMode 
                   ? (currentMode === 'premium' 
-                    ? "Premium Mode: Ultra-realistic responses" 
-                    : "Standard Mode: Tap mic to record, speak, then tap send")
-                  : "Hold microphone button to speak (trial mode)"}
+                    ? "Premium Mode: Highest quality AI" 
+                    : currentMode === 'tap'
+                      ? "Trial Mode: Just speak naturally!"
+                      : "Standard Mode: Natural conversation flow")
+                  : "Loading..."}
           </p>
         </div>
 
@@ -885,7 +959,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
                 <span className="font-semibold text-lg">Standard Mode</span>
                 <Badge variant="secondary" className="ml-auto bg-background/20">4 credits/min</Badge>
               </div>
-              <p className="text-xs opacity-90 text-left">Speak, then tap to send - simple and reliable</p>
+              <p className="text-xs opacity-90 text-left">Natural conversation flow with instant responses</p>
             </Button>
 
             {currency !== 'NGN' && (
@@ -901,7 +975,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
                   <span className="font-semibold text-lg">Premium Mode</span>
                   <Badge variant="secondary" className="ml-auto bg-background/20">10 credits/min</Badge>
                 </div>
-                <p className="text-xs opacity-90 text-left">Ultra-realistic instant voice chat</p>
+                <p className="text-xs opacity-90 text-left">Highest quality AI responses</p>
               </Button>
             )}
           </div>
@@ -925,43 +999,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
             </Button>
           )}
 
-          {isSessionActive && !isHandsFreeMode && (
-            <Button
-              size="lg"
-              className={`w-16 h-16 rounded-full ${isRecording ? 'bg-destructive hover:bg-destructive/90' : 'bg-primary hover:bg-primary/90'}`}
-              onMouseDown={startRecording}
-              onMouseUp={stopRecording}
-              onTouchStart={startRecording}
-              onTouchEnd={stopRecording}
-              disabled={isProcessing || isSpeaking || isAISpeaking}
-            >
-              {isRecording ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
-            </Button>
-          )}
-
-          {isSessionActive && isHandsFreeMode && currentMode === 'standard' && (
-            <div className="flex items-center gap-4">
-              {!isRecording ? (
-                <Button
-                  size="lg"
-                  className="w-16 h-16 rounded-full bg-primary hover:bg-primary/90"
-                  onClick={startRecording}
-                  disabled={isProcessing || isSpeaking || isAISpeaking}
-                >
-                  <Mic className="w-6 h-6" />
-                </Button>
-              ) : (
-                <Button
-                  size="lg"
-                  className="w-16 h-16 rounded-full bg-green-500 hover:bg-green-600"
-                  onClick={stopRecording}
-                  disabled={isProcessing}
-                >
-                  <MessageSquare className="w-6 h-6" />
-                </Button>
-              )}
-            </div>
-          )}
+          {/* All modes now use hands-free realtime, no manual controls needed */}
 
           {isSessionActive && (
             <Button variant="ghost" size="icon" onClick={endSession}>
