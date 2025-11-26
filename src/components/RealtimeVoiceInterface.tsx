@@ -681,11 +681,6 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       await chat.connect();
       realtimeChatRef.current = chat;
       setIsConnecting(false);
-      
-      toast({
-        title: "Connected",
-        description: "Trial conversation started - just speak naturally!",
-      });
     } catch (error) {
       console.error('[DEBUG] Error starting Trial Mode:', error);
       setIsConnecting(false);
@@ -940,7 +935,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
                     : currentMode === 'tap'
                       ? "Trial Mode: Just speak naturally!"
                       : "Standard Mode: Natural conversation flow")
-                  : "Loading..."}
+                  : "Connecting to AI..."}
           </p>
         </div>
 
