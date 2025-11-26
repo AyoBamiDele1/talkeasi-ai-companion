@@ -935,7 +935,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
                     : currentMode === 'tap'
                       ? "Trial Mode: Just speak naturally!"
                       : "Standard Mode: Natural conversation flow")
-                  : "Connected to AI..."}
+                  : "Connected to AI... Start Talking!"}
           </p>
         </div>
 
