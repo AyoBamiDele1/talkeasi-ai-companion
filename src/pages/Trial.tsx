@@ -104,16 +104,10 @@ const Trial = () => {
       <div className={`${isSessionActive ? 'pt-24' : 'pt-8'} pb-32 px-4`}>
         <div className="max-w-2xl mx-auto text-center mb-6">
           {!isSessionActive && (
-            <>
-              <h1 className="text-3xl font-bold text-foreground mb-2">
-                Try TalkEasi Free!
-              </h1>
-              <p className="text-muted-foreground mb-4">
-                Chat with your AI companion and English tutor — try it free for 2 minutes!
-              </p>
-            </>
+            <p className="text-lg text-muted-foreground mb-4">
+              Talk to your AI friend — free for 2 minutes!
+            </p>
           )}
-          <p className="text-muted-foreground">💡 Just speak naturally - the AI will respond instantly!</p>
         </div>
         
         {!localStorage.getItem('talkeasi_trial_used') ? (
