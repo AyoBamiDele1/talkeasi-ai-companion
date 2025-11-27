@@ -150,13 +150,13 @@ export default function Auth() {
             
             <TabsContent value="signup">
               <Card>
-                <CardHeader className="p-3 sm:p-6 pb-2 sm:pb-6">
-                  <CardTitle className="text-lg sm:text-2xl">Create account</CardTitle>
-                  <CardDescription className="text-xs sm:text-sm">Start your English learning journey today</CardDescription>
+                <CardHeader className="p-3 sm:p-6 pb-1.5 sm:pb-6">
+                  <CardTitle className="text-base sm:text-2xl">Create account</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">Start your English learning journey</CardDescription>
                 </CardHeader>
-                <CardContent className="p-3 sm:p-6 pt-2 sm:pt-6">
-                  <form onSubmit={handleSignUp} className="space-y-2.5 sm:space-y-4">
-                    <div className="space-y-1 sm:space-y-2">
+                <CardContent className="p-3 sm:p-6 pt-1.5 sm:pt-6">
+                  <form onSubmit={handleSignUp} className="space-y-2 sm:space-y-4">
+                    <div className="space-y-0.5 sm:space-y-2">
                       <Label htmlFor="signup-name" className="text-xs sm:text-sm">Display Name</Label>
                       <Input
                         id="signup-name"
@@ -164,10 +164,10 @@ export default function Auth() {
                         type="text"
                         placeholder="Your name"
                         required
-                        className="h-9 sm:h-10 text-sm"
+                        className="h-8 sm:h-10 text-sm"
                       />
                     </div>
-                    <div className="space-y-1 sm:space-y-2">
+                    <div className="space-y-0.5 sm:space-y-2">
                       <Label htmlFor="signup-email" className="text-xs sm:text-sm">Email</Label>
                       <Input
                         id="signup-email"
@@ -175,10 +175,10 @@ export default function Auth() {
                         type="email"
                         placeholder="your.email@example.com"
                         required
-                        className="h-9 sm:h-10 text-sm"
+                        className="h-8 sm:h-10 text-sm"
                       />
                     </div>
-                    <div className="space-y-1 sm:space-y-2">
+                    <div className="space-y-0.5 sm:space-y-2">
                       <Label htmlFor="signup-password" className="text-xs sm:text-sm">Password</Label>
                       <div className="relative">
                         <Input
@@ -187,19 +187,19 @@ export default function Auth() {
                           type={showSignUpPassword ? "text" : "password"}
                           minLength={6}
                           required
-                          className="pr-10 h-9 sm:h-10 text-sm"
+                          className="pr-9 h-8 sm:h-10 text-sm"
                         />
                         <button
                           type="button"
                           onClick={() => setShowSignUpPassword(!showSignUpPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                           aria-label={showSignUpPassword ? "Hide password" : "Show password"}
                         >
                           {showSignUpPassword ? <EyeOff className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> : <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
                         </button>
                       </div>
                     </div>
-                    <Button type="submit" className="w-full h-9 sm:h-10 text-sm sm:text-base font-semibold mt-3 sm:mt-4" disabled={isLoading}>
+                    <Button type="submit" className="w-full h-8 sm:h-10 text-xs sm:text-base font-semibold mt-2 sm:mt-4" disabled={isLoading}>
                       {isLoading ? "Creating account..." : "Create Account"}
                     </Button>
                   </form>
