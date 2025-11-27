@@ -17,7 +17,7 @@ const Index = () => {
   }, [user, loading, navigate]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-primary/10 to-background p-6">
+    <div className="flex min-h-screen items-start md:items-center justify-center bg-gradient-to-b from-primary/10 to-background p-6 pt-16 md:pt-6">
       <Card className="w-full max-w-md">
         <CardContent className="p-8 text-center">
           <div className="text-center mb-6 md:mb-8">
