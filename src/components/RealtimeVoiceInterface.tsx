@@ -988,10 +988,10 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
           
           <p className="text-sm text-muted-foreground">
             {!isSessionActive 
-              ? (isTrialMode ? "Tap to start your free 2-minute trial" : currency === 'NGN' ? "" : "💡 Choose a mode below to start talking")
+              ? (isTrialMode ? "Tap to start your free 2-minute trial" : currency === 'NGN' ? "💡 Tap the button below to start talking" : "💡 Choose a mode below to start talking")
               : isHandsFreeMode && currentTranscript
                 ? `Listening: "${currentTranscript}"`
-                : isHandsFreeMode 
+                : isHandsFreeMode
                   ? (currentMode === 'premium' 
                     ? "Premium Mode: Highest quality AI" 
                     : currentMode === 'tap'
