@@ -18,27 +18,27 @@ const TrialEndedModal = ({ open, onOpenChange }: TrialEndedModalProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md">
-        <DialogHeader className="text-center space-y-2">
-          <DialogTitle className="text-2xl text-center">
+      <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md p-4 sm:p-6">
+        <DialogHeader className="text-center space-y-2 px-2">
+          <DialogTitle className="text-xl sm:text-2xl text-center">
             ✨ Your free 2 minutes are up!
           </DialogTitle>
-          <DialogDescription className="text-center">
+          <DialogDescription className="text-center text-sm">
             Want to keep improving your English?
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-3 py-4">
+        <div className="space-y-3 py-4 px-2">
           {/* Primary CTA */}
           <Button 
             size="lg" 
-            className="w-full h-auto py-3 text-center" 
+            className="w-full h-auto py-3 text-center min-h-[60px]" 
             onClick={() => navigate('/auth?mode=signup')}
           >
-            <span className="flex flex-col items-center gap-1 w-full">
-              <span className="text-base font-semibold text-center">👤 Create Free Account</span>
-              <span className="text-xs opacity-90 text-center px-2">
-                Start with 5 free credits • No credit card required
+            <span className="flex flex-col items-center gap-1 w-full px-2">
+              <span className="text-sm sm:text-base font-semibold text-center">👤 Create Free Account</span>
+              <span className="text-[10px] sm:text-xs opacity-90 text-center leading-tight">
+                Start with 5 free credits
               </span>
             </span>
           </Button>
@@ -47,20 +47,20 @@ const TrialEndedModal = ({ open, onOpenChange }: TrialEndedModalProps) => {
           <Button 
             size="lg" 
             variant="outline" 
-            className="w-full text-center"
+            className="w-full text-center text-sm sm:text-base px-2"
             onClick={() => navigate('/auth?mode=login')}
           >
-            🔑 Already have an account? Login.
+            <span className="truncate">🔑 Already have an account? Login.</span>
           </Button>
         </div>
 
-        <p className="text-xs text-center text-muted-foreground px-4">
-          Create an account to save progress, access full lessons, and continue learning.
+        <p className="text-[10px] sm:text-xs text-center text-muted-foreground px-4 leading-relaxed">
+          Create an account to save progress and continue learning.
         </p>
 
         {/* Optional: Social proof */}
-        <div className="text-center text-xs text-muted-foreground pt-2 border-t px-4">
-          Join 1,000+ people expressing themselves freely with TalkEasi.
+        <div className="text-center text-[10px] sm:text-xs text-muted-foreground pt-2 border-t px-4">
+          Join 1,000+ people with TalkEasi.
         </div>
       </DialogContent>
     </Dialog>
