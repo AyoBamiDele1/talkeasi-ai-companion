@@ -221,6 +221,15 @@ class AudioQueue {
     this.queue = [];
     this.isPlaying = false;
     this.nextStartTime = 0;
+    
+    // CRITICAL: Suspend audio context to kill ALL scheduled audio
+    if (this.audioContext.state === 'running') {
+      this.audioContext.suspend().then(() => {
+        console.log('Audio context suspended to stop all playback');
+      }).catch(e => {
+        console.log('Error suspending audio context:', e);
+      });
+    }
     console.log('Audio queue cleared');
   }
 }
@@ -407,16 +416,24 @@ export class RealtimeChat {
   }
 
   private cleanup() {
+    console.log('Running cleanup - stopping all audio and closing context');
     if (this.recorder) {
       this.recorder.stop();
       this.recorder = null;
     }
-    if (this.audioContext) {
-      this.audioContext.close();
-      this.audioContext = null;
-    }
     if (audioQueueInstance) {
       audioQueueInstance.clear();
+      // CRITICAL: Null out the singleton to force fresh instance next time
+      audioQueueInstance = null;
+    }
+    if (this.audioContext) {
+      // Close audio context to completely kill all audio
+      this.audioContext.close().then(() => {
+        console.log('Audio context closed');
+      }).catch(e => {
+        console.log('Error closing audio context:', e);
+      });
+      this.audioContext = null;
     }
   }
 
@@ -424,15 +441,13 @@ export class RealtimeChat {
     console.log('Disconnecting RealtimeChat and clearing audio queue');
     this.isConnected = false;
     
-    // CRITICAL: Clear audio queue FIRST to stop any playing/scheduled audio
-    if (audioQueueInstance) {
-      audioQueueInstance.clear();
-    }
-    
+    // CRITICAL: Close WebSocket FIRST to prevent new audio chunks
     if (this.ws) {
       this.ws.close();
       this.ws = null;
     }
+    
+    // Then cleanup everything else
     this.cleanup();
   }
 }
