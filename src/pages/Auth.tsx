@@ -82,16 +82,16 @@ export default function Auth() {
   }
 
   return (
-    <div className="h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-secondary/10 p-4 overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-secondary/10 p-3 sm:p-4 py-6">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 mb-4">
-            <div className="bg-primary text-primary-foreground p-2 rounded-lg">
-              <Mic className="h-6 w-6" />
+        <div className="text-center mb-4 sm:mb-8">
+          <div className="inline-flex items-center gap-2 mb-3 sm:mb-4">
+            <div className="bg-primary text-primary-foreground p-1.5 sm:p-2 rounded-lg">
+              <Mic className="h-5 w-5 sm:h-6 sm:w-6" />
             </div>
-            <h1 className="text-2xl font-bold text-foreground">TalkEasi</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">TalkEasi</h1>
           </div>
-          <p className="text-muted-foreground">Chat, learn, and grow with your AI English companion.</p>
+          <p className="text-sm sm:text-base text-muted-foreground">Chat, learn, and grow with your AI English companion.</p>
         </div>
 
         <Card>
@@ -107,9 +107,9 @@ export default function Auth() {
                   <CardTitle>Welcome back</CardTitle>
                   <CardDescription>Sign in to continue your learning journey</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleSignIn} className="space-y-4">
-                    <div className="space-y-2">
+                <CardContent className="p-4 sm:p-6">
+                  <form onSubmit={handleSignIn} className="space-y-3 sm:space-y-4">
+                    <div className="space-y-1.5 sm:space-y-2">
                       <Label htmlFor="signin-email">Email</Label>
                       <Input
                         id="signin-email"
@@ -119,7 +119,7 @@ export default function Auth() {
                         required
                       />
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-1.5 sm:space-y-2">
                       <Label htmlFor="signin-password">Password</Label>
                       <div className="relative">
                         <Input
@@ -153,9 +153,9 @@ export default function Auth() {
                   <CardTitle>Create account</CardTitle>
                   <CardDescription>Start your English learning journey today</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleSignUp} className="space-y-4">
-                    <div className="space-y-2">
+                <CardContent className="p-4 sm:p-6">
+                  <form onSubmit={handleSignUp} className="space-y-3 sm:space-y-4">
+                    <div className="space-y-1.5 sm:space-y-2">
                       <Label htmlFor="signup-name">Display Name</Label>
                       <Input
                         id="signup-name"
@@ -165,7 +165,7 @@ export default function Auth() {
                         required
                       />
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-1.5 sm:space-y-2">
                       <Label htmlFor="signup-email">Email</Label>
                       <Input
                         id="signup-email"
@@ -175,7 +175,7 @@ export default function Auth() {
                         required
                       />
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-1.5 sm:space-y-2">
                       <Label htmlFor="signup-password">Password</Label>
                       <div className="relative">
                         <Input
