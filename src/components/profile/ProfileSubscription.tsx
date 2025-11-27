@@ -67,7 +67,7 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
     loading: locationLoading,
     currency
   } = useUserLocation();
-  const [processingPayment, setProcessingPayment] = useState(false);
+  const [processingPayment, setProcessingPayment] = useState<string | null>(null);
   const [processingSubscription, setProcessingSubscription] = useState(false);
 
   const { data: creditBalance, refetch: refetchCredits } = useQuery({
@@ -112,7 +112,7 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
       return;
     }
 
-    setProcessingPayment(true);
+    setProcessingPayment(packageKey);
 
     try {
       const { data, error } = await supabase.functions.invoke('create-payment', {
@@ -135,7 +135,7 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
         variant: "destructive"
       });
     } finally {
-      setProcessingPayment(false);
+      setProcessingPayment(null);
     }
   };
 
@@ -385,9 +385,9 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
               <Button 
                 onClick={() => handlePurchaseCredits('50_credits')} 
                 className="w-full"
-                disabled={processingPayment}
+                disabled={processingPayment !== null}
               >
-                {processingPayment ? (
+                {processingPayment === '50_credits' ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
                     Processing...
@@ -427,9 +427,9 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
               <Button 
                 onClick={() => handlePurchaseCredits('100_credits')} 
                 className="w-full"
-                disabled={processingPayment}
+                disabled={processingPayment !== null}
               >
-                {processingPayment ? (
+                {processingPayment === '100_credits' ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
                     Processing...
@@ -466,9 +466,9 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
               <Button 
                 onClick={() => handlePurchaseCredits('200_credits')} 
                 className="w-full"
-                disabled={processingPayment}
+                disabled={processingPayment !== null}
               >
-                {processingPayment ? (
+                {processingPayment === '200_credits' ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
                     Processing...
