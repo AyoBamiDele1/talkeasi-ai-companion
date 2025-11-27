@@ -149,7 +149,16 @@ const Trial = () => {
       </div>
 
       {/* Trial Ended Modal */}
-      <TrialEndedModal open={showModal} onOpenChange={setShowModal} />
+      <TrialEndedModal 
+        open={showModal} 
+        onOpenChange={(open) => {
+          if (!open) {
+            // Modal is being closed - redirect to signup
+            navigate('/auth?mode=signup');
+          }
+          setShowModal(open);
+        }} 
+      />
     </div>
   );
 };
