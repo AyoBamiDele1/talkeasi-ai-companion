@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +27,7 @@ interface UserStats {
 }
 type ProfileView = 'main' | 'settings' | 'subscription' | 'goals' | 'language' | 'help' | 'analytics';
 const Profile = () => {
+  const [searchParams] = useSearchParams();
   const {
     user,
     signOut
@@ -40,6 +42,14 @@ const Profile = () => {
   });
   const [loading, setLoading] = useState(true);
   const [currentView, setCurrentView] = useState<ProfileView>('main');
+  
+  useEffect(() => {
+    const viewParam = searchParams.get('view') as ProfileView;
+    if (viewParam && ['settings', 'subscription', 'goals', 'language', 'help', 'analytics'].includes(viewParam)) {
+      setCurrentView(viewParam);
+    }
+  }, [searchParams]);
+
   useEffect(() => {
     if (user) {
       fetchProfile();

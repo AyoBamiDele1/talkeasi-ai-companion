@@ -955,7 +955,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
             <AlertTitle>Low Credits</AlertTitle>
             <AlertDescription>
               You have {userCredits} credits remaining.
-              <Button variant="link" onClick={() => navigate('/profile')} className="ml-2 p-0 h-auto">
+              <Button variant="link" onClick={() => navigate('/profile?view=subscription')} className="ml-2 p-0 h-auto">
                 Top Up Now
               </Button>
             </AlertDescription>
