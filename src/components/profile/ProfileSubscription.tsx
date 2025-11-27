@@ -146,7 +146,10 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
 
     try {
       const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { priceId: PRO_PLAN.priceId }
+        body: { 
+          priceId: PRO_PLAN.priceId,
+          currency: currency
+        }
       });
 
       if (error) throw error;
