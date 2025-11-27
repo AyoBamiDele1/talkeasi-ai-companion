@@ -82,16 +82,16 @@ export default function Auth() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-secondary/10 p-3 sm:p-4 py-6">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-4 sm:mb-8">
-          <div className="inline-flex items-center gap-2 mb-3 sm:mb-4">
+    <div className="min-h-screen flex items-start sm:items-center justify-center bg-gradient-to-br from-primary/5 to-secondary/10 p-3 sm:p-4 py-4 sm:py-6 overflow-y-auto">
+      <div className="w-full max-w-md my-auto">
+        <div className="text-center mb-3 sm:mb-8">
+          <div className="inline-flex items-center gap-2 mb-2 sm:mb-4">
             <div className="bg-primary text-primary-foreground p-1.5 sm:p-2 rounded-lg">
               <Mic className="h-5 w-5 sm:h-6 sm:w-6" />
             </div>
             <h1 className="text-xl sm:text-2xl font-bold text-foreground">TalkEasi</h1>
           </div>
-          <p className="text-sm sm:text-base text-muted-foreground">Chat, learn, and grow with your AI English companion.</p>
+          <p className="text-xs sm:text-base text-muted-foreground px-2">Chat, learn, and grow with your AI English companion.</p>
         </div>
 
         <Card>
@@ -103,31 +103,32 @@ export default function Auth() {
             
             <TabsContent value="signin">
               <Card>
-                <CardHeader>
-                  <CardTitle>Welcome back</CardTitle>
-                  <CardDescription>Sign in to continue your learning journey</CardDescription>
+                <CardHeader className="p-3 sm:p-6 pb-2 sm:pb-6">
+                  <CardTitle className="text-lg sm:text-2xl">Welcome back</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">Sign in to continue your learning journey</CardDescription>
                 </CardHeader>
-                <CardContent className="p-4 sm:p-6">
-                  <form onSubmit={handleSignIn} className="space-y-3 sm:space-y-4">
-                    <div className="space-y-1.5 sm:space-y-2">
-                      <Label htmlFor="signin-email">Email</Label>
+                <CardContent className="p-3 sm:p-6 pt-2 sm:pt-6">
+                  <form onSubmit={handleSignIn} className="space-y-2.5 sm:space-y-4">
+                    <div className="space-y-1 sm:space-y-2">
+                      <Label htmlFor="signin-email" className="text-xs sm:text-sm">Email</Label>
                       <Input
                         id="signin-email"
                         name="email"
                         type="email"
                         placeholder="your.email@example.com"
                         required
+                        className="h-9 sm:h-10 text-sm"
                       />
                     </div>
-                    <div className="space-y-1.5 sm:space-y-2">
-                      <Label htmlFor="signin-password">Password</Label>
+                    <div className="space-y-1 sm:space-y-2">
+                      <Label htmlFor="signin-password" className="text-xs sm:text-sm">Password</Label>
                       <div className="relative">
                         <Input
                           id="signin-password"
                           name="password"
                           type={showSignInPassword ? "text" : "password"}
                           required
-                          className="pr-10"
+                          className="pr-10 h-9 sm:h-10 text-sm"
                         />
                         <button
                           type="button"
@@ -135,11 +136,11 @@ export default function Auth() {
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                           aria-label={showSignInPassword ? "Hide password" : "Show password"}
                         >
-                          {showSignInPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          {showSignInPassword ? <EyeOff className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> : <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
                         </button>
                       </div>
                     </div>
-                    <Button type="submit" className="w-full" disabled={isLoading}>
+                    <Button type="submit" className="w-full h-9 sm:h-10 text-sm sm:text-base mt-3 sm:mt-4" disabled={isLoading}>
                       {isLoading ? "Signing in..." : "Sign In"}
                     </Button>
                   </form>
@@ -149,34 +150,36 @@ export default function Auth() {
             
             <TabsContent value="signup">
               <Card>
-                <CardHeader>
-                  <CardTitle>Create account</CardTitle>
-                  <CardDescription>Start your English learning journey today</CardDescription>
+                <CardHeader className="p-3 sm:p-6 pb-2 sm:pb-6">
+                  <CardTitle className="text-lg sm:text-2xl">Create account</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">Start your English learning journey today</CardDescription>
                 </CardHeader>
-                <CardContent className="p-4 sm:p-6">
-                  <form onSubmit={handleSignUp} className="space-y-3 sm:space-y-4">
-                    <div className="space-y-1.5 sm:space-y-2">
-                      <Label htmlFor="signup-name">Display Name</Label>
+                <CardContent className="p-3 sm:p-6 pt-2 sm:pt-6">
+                  <form onSubmit={handleSignUp} className="space-y-2.5 sm:space-y-4">
+                    <div className="space-y-1 sm:space-y-2">
+                      <Label htmlFor="signup-name" className="text-xs sm:text-sm">Display Name</Label>
                       <Input
                         id="signup-name"
                         name="displayName"
                         type="text"
                         placeholder="Your name"
                         required
+                        className="h-9 sm:h-10 text-sm"
                       />
                     </div>
-                    <div className="space-y-1.5 sm:space-y-2">
-                      <Label htmlFor="signup-email">Email</Label>
+                    <div className="space-y-1 sm:space-y-2">
+                      <Label htmlFor="signup-email" className="text-xs sm:text-sm">Email</Label>
                       <Input
                         id="signup-email"
                         name="email"
                         type="email"
                         placeholder="your.email@example.com"
                         required
+                        className="h-9 sm:h-10 text-sm"
                       />
                     </div>
-                    <div className="space-y-1.5 sm:space-y-2">
-                      <Label htmlFor="signup-password">Password</Label>
+                    <div className="space-y-1 sm:space-y-2">
+                      <Label htmlFor="signup-password" className="text-xs sm:text-sm">Password</Label>
                       <div className="relative">
                         <Input
                           id="signup-password"
@@ -184,7 +187,7 @@ export default function Auth() {
                           type={showSignUpPassword ? "text" : "password"}
                           minLength={6}
                           required
-                          className="pr-10"
+                          className="pr-10 h-9 sm:h-10 text-sm"
                         />
                         <button
                           type="button"
@@ -192,11 +195,11 @@ export default function Auth() {
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                           aria-label={showSignUpPassword ? "Hide password" : "Show password"}
                         >
-                          {showSignUpPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          {showSignUpPassword ? <EyeOff className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> : <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
                         </button>
                       </div>
                     </div>
-                    <Button type="submit" className="w-full font-semibold" disabled={isLoading}>
+                    <Button type="submit" className="w-full h-9 sm:h-10 text-sm sm:text-base font-semibold mt-3 sm:mt-4" disabled={isLoading}>
                       {isLoading ? "Creating account..." : "Create Account"}
                     </Button>
                   </form>
