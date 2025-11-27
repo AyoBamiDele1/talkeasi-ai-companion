@@ -75,8 +75,9 @@ serve(async (req) => {
         });
     }
 
-    const { priceId } = await req.json();
+    const { priceId, currency } = await req.json();
     if (!priceId) throw new Error("Price ID is required");
+    if (!currency) throw new Error("Currency is required");
 
     console.log("Creating checkout session for user:", user.email);
 
@@ -105,6 +106,7 @@ serve(async (req) => {
       cancel_url: `${req.headers.get("origin")}/subscription-canceled`,
       metadata: {
         user_id: user.id,
+        currency: currency,
       },
     });
 

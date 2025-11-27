@@ -1,10 +1,15 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { Home, BookOpen, TrendingUp, User } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
 
 const BottomNavigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
+
+  // Only show navigation for authenticated users
+  if (!user) return null;
 
   const navItems = [
     { icon: Home, label: "Home", path: "/home" },
