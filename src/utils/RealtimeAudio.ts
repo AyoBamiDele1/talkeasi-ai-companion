@@ -205,18 +205,23 @@ class AudioQueue {
   }
 
   clear() {
-    // Stop current playback
+    console.log('Clearing audio queue - stopping all playback');
+    // Stop current playback immediately
     if (this.currentSource) {
       try {
-        this.currentSource.stop();
+        this.currentSource.stop(0); // Stop immediately, not at scheduled time
+        this.currentSource.disconnect();
       } catch (e) {
         // Ignore if already stopped
+        console.log('Audio source already stopped:', e);
       }
       this.currentSource = null;
     }
+    // Clear the queue
     this.queue = [];
     this.isPlaying = false;
     this.nextStartTime = 0;
+    console.log('Audio queue cleared');
   }
 }
 
@@ -416,7 +421,14 @@ export class RealtimeChat {
   }
 
   disconnect() {
+    console.log('Disconnecting RealtimeChat and clearing audio queue');
     this.isConnected = false;
+    
+    // CRITICAL: Clear audio queue FIRST to stop any playing/scheduled audio
+    if (audioQueueInstance) {
+      audioQueueInstance.clear();
+    }
+    
     if (this.ws) {
       this.ws.close();
       this.ws = null;
