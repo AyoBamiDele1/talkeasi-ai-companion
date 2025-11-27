@@ -18,7 +18,7 @@ const TrialEndedModal = ({ open, onOpenChange }: TrialEndedModalProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[90vw] md:max-w-md mx-4">
+      <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md">
         <DialogHeader className="text-center space-y-2">
           <DialogTitle className="text-2xl text-center">
             ✨ Your free 2 minutes are up!
