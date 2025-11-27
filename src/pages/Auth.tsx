@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { Mic, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 
 
 export default function Auth() {
@@ -86,9 +86,7 @@ export default function Auth() {
       <div className="w-full max-w-md my-auto">
         <div className="text-center mb-3 sm:mb-8">
           <div className="inline-flex items-center gap-2 mb-2 sm:mb-4">
-            <div className="bg-primary text-primary-foreground p-1.5 sm:p-2 rounded-lg">
-              <Mic className="h-5 w-5 sm:h-6 sm:w-6" />
-            </div>
+            <span className="text-2xl sm:text-3xl -tracking-[0.15em]">💞🎓</span>
             <h1 className="text-xl sm:text-2xl font-bold text-foreground">TalkEasi</h1>
           </div>
           <p className="text-xs sm:text-base text-muted-foreground px-2">Talk, learn, and grow with your AI English companion.</p>
