@@ -104,7 +104,7 @@ const Lessons = () => {
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>;
   }
-  return <div className="flex flex-col min-h-screen bg-background p-6 pb-20">
+  return <div className="flex flex-col min-h-screen bg-background p-6 pt-16 pb-20">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-foreground mb-2">
