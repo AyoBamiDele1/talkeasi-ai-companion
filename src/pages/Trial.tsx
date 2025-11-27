@@ -67,7 +67,15 @@ const Trial = () => {
   const handleTrialEnd = () => {
     localStorage.setItem('talkeasi_trial_used', 'true');
     setIsSessionActive(false);
+    
+    // CRITICAL: Force end the voice session immediately
+    // This will trigger the forceEnd effect in RealtimeVoiceInterface
     setShowModal(true);
+    
+    // Auto-redirect after a brief moment for cleanup
+    setTimeout(() => {
+      navigate('/auth?mode=signup');
+    }, 500);
   };
 
   const handleConversationEnd = () => {
@@ -153,8 +161,12 @@ const Trial = () => {
         open={showModal} 
         onOpenChange={(open) => {
           if (!open) {
-            // Modal is being closed - redirect to signup
-            navigate('/auth?mode=signup');
+            // Force session end before navigation
+            setIsSessionActive(false);
+            // Give a tiny moment for cleanup then redirect
+            setTimeout(() => {
+              navigate('/auth?mode=signup');
+            }, 100);
           }
           setShowModal(open);
         }} 

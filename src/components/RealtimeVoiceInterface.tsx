@@ -262,13 +262,50 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     }
   }, [user, isTrialMode]);
 
-  // Force end session when parent signals
+  // Force end session when parent signals - CRITICAL for trial mode
   useEffect(() => {
     if (forceEnd && isSessionActive) {
-      console.log('[DEBUG] Force ending session from parent');
-      endSession();
+      console.log('[DEBUG] FORCE END TRIGGERED - Immediately disconnecting everything');
+      
+      // Force disconnect realtime chat IMMEDIATELY
+      if (realtimeChatRef.current) {
+        realtimeChatRef.current.disconnect();
+        realtimeChatRef.current = null;
+      }
+      
+      // Stop any audio
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+      }
+      
+      // Reset all state
+      setIsSessionActive(false);
+      setIsHandsFreeMode(false);
+      setIsRecording(false);
+      setIsProcessing(false);
+      setIsAISpeaking(false);
+      setIsSpeaking(false);
+      setCurrentAudio(null);
+      
+      console.log('[DEBUG] Force end complete');
     }
-  }, [forceEnd, isSessionActive]);
+  }, [forceEnd, isSessionActive, currentAudio]);
+
+  // CRITICAL: Cleanup on unmount - force stop everything
+  useEffect(() => {
+    return () => {
+      console.log('[DEBUG] Component unmounting - forcing cleanup');
+      if (realtimeChatRef.current) {
+        realtimeChatRef.current.disconnect();
+        realtimeChatRef.current = null;
+      }
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+      }
+    };
+  }, []);
 
   const fetchUserCredits = async () => {
     if (!user) return;
