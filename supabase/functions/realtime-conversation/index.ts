@@ -174,9 +174,9 @@ Keep responses natural and conversational (2-3 sentences). Speak like a close fr
                     transcription: { model: 'whisper-1' },
                     turn_detection: {
                       type: 'server_vad',
-                      threshold: 0.5,
+                      threshold: 0.7,
                       prefix_padding_ms: 300,
-                      silence_duration_ms: 1500
+                      silence_duration_ms: 2000
                     }
                   },
                   output: {
