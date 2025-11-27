@@ -101,10 +101,10 @@ const Trial = () => {
       )}
 
       {/* Center Voice Interface */}
-      <div className={`${isSessionActive ? 'pt-24' : 'pt-8'} pb-32 px-4`}>
-        <div className="max-w-2xl mx-auto text-center mb-6">
+      <div className={`${isSessionActive ? 'pt-16 sm:pt-24' : 'pt-4 sm:pt-8'} pb-16 sm:pb-32 px-4`}>
+        <div className="max-w-2xl mx-auto text-center mb-4 sm:mb-6">
           {!isSessionActive && (
-            <p className="text-lg text-muted-foreground mb-4">
+            <p className="text-base sm:text-lg text-muted-foreground mb-3 sm:mb-4">
               Talk to your AI friend — free for 2 minutes!
             </p>
           )}
