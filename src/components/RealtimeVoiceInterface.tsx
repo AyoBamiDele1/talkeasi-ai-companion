@@ -33,6 +33,7 @@ interface RealtimeVoiceInterfaceProps {
   onSessionStart?: () => void;
   onSessionEnd?: () => void;
   isTrialMode?: boolean;
+  forceEnd?: boolean;
 }
 
 // Audio recording class with VAD support
@@ -218,7 +219,8 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   onMessageUpdate,
   onSessionStart,
   onSessionEnd,
-  isTrialMode = false
+  isTrialMode = false,
+  forceEnd = false
 }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -259,6 +261,14 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       fetchUserCredits();
     }
   }, [user, isTrialMode]);
+
+  // Force end session when parent signals
+  useEffect(() => {
+    if (forceEnd && isSessionActive) {
+      console.log('[DEBUG] Force ending session from parent');
+      endSession();
+    }
+  }, [forceEnd, isSessionActive]);
 
   const fetchUserCredits = async () => {
     if (!user) return;

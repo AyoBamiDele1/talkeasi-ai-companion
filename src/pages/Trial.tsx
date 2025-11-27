@@ -113,6 +113,7 @@ const Trial = () => {
         {!localStorage.getItem('talkeasi_trial_used') ? (
           <RealtimeVoiceInterface 
             isTrialMode={true}
+            forceEnd={showModal}
             lessonContext="AI Companion"
             voice="shimmer"
             onMessageUpdate={handleMessageUpdate}
