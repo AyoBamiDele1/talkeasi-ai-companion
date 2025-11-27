@@ -564,6 +564,9 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     onSessionStart?.();
 
     try {
+      // Pre-request microphone permission immediately for faster UX
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+      
       const chat = new RealtimeChat(
         (message) => {
           handleRealtimeMessage(message);
@@ -593,7 +596,9 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       
       toast({
         title: "Connection Error",
-        description: "Failed to start Standard Mode. Please try again.",
+        description: error.name === 'NotAllowedError' 
+          ? "Microphone access denied. Please allow microphone access to continue."
+          : "Failed to start Standard Mode. Please try again.",
         variant: "destructive"
       });
     }
@@ -619,6 +624,9 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     onSessionStart?.();
 
     try {
+      // Pre-request microphone permission immediately for faster UX
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+      
       const chat = new RealtimeChat(
         (message) => {
           handleRealtimeMessage(message);
@@ -648,7 +656,9 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       
       toast({
         title: "Connection Error",
-        description: "Failed to start Premium Mode. Please try again.",
+        description: error.name === 'NotAllowedError' 
+          ? "Microphone access denied. Please allow microphone access to continue."
+          : "Failed to start Premium Mode. Please try again.",
         variant: "destructive"
       });
     }
@@ -665,6 +675,9 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     onSessionStart?.();
 
     try {
+      // Pre-request microphone permission immediately for faster UX
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+      
       const chat = new RealtimeChat(
         (message) => {
           handleRealtimeMessage(message);
@@ -689,7 +702,9 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       
       toast({
         title: "Connection Error",
-        description: "Failed to start trial. Please try again.",
+        description: error.name === 'NotAllowedError' 
+          ? "Microphone access denied. Please allow microphone access to continue."
+          : "Failed to start trial. Please try again.",
         variant: "destructive"
       });
     }
