@@ -91,7 +91,7 @@ export default function Auth() {
             </div>
             <h1 className="text-xl sm:text-2xl font-bold text-foreground">TalkEasi</h1>
           </div>
-          <p className="text-xs sm:text-base text-muted-foreground px-2">Chat, learn, and grow with your AI English companion.</p>
+          <p className="text-xs sm:text-base text-muted-foreground px-2">Talk, learn, and grow with your AI English companion.</p>
         </div>
 
         <Card>
