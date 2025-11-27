@@ -5,7 +5,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
-import logo from "@/assets/talkeasi-logo.png";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -24,7 +23,7 @@ const Index = () => {
           <div className="text-center mb-6 md:mb-8">
             <div className="mb-4 md:mb-6">
               <div className="inline-block p-3 md:p-4 bg-primary/10 rounded-full mb-3 md:mb-4">
-                <img src={logo} alt="TalkEasi Logo" className="w-16 h-16 md:w-20 md:h-20" />
+                <span className="text-3xl md:text-4xl">💞🎓</span>
               </div>
               <h1 className="text-3xl md:text-5xl font-bold text-foreground mb-2 md:mb-3">
                 TalkEasi

@@ -7,8 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { Eye, EyeOff } from 'lucide-react';
-import logo from '@/assets/talkeasi-logo.png';
+import { Mic, Eye, EyeOff } from 'lucide-react';
 
 
 export default function Auth() {
@@ -86,9 +85,9 @@ export default function Auth() {
     <div className="min-h-screen flex items-start sm:items-center justify-center bg-gradient-to-br from-primary/5 to-secondary/10 p-3 sm:p-4 py-4 sm:py-6 overflow-y-auto">
       <div className="w-full max-w-md my-auto">
         <div className="text-center mb-3 sm:mb-8">
-          <div className="inline-flex flex-col items-center gap-2 mb-2 sm:mb-4">
-            <div className="p-2 sm:p-3 bg-primary/10 rounded-full">
-              <img src={logo} alt="TalkEasi Logo" className="w-12 h-12 sm:w-16 sm:h-16" />
+          <div className="inline-flex items-center gap-2 mb-2 sm:mb-4">
+            <div className="bg-primary text-primary-foreground p-1.5 sm:p-2 rounded-lg">
+              <Mic className="h-5 w-5 sm:h-6 sm:w-6" />
             </div>
             <h1 className="text-xl sm:text-2xl font-bold text-foreground">TalkEasi</h1>
           </div>
