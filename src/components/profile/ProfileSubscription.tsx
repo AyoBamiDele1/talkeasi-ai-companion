@@ -277,71 +277,6 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
           </CardContent>
         </Card>
 
-        {/* Pro Subscription */}
-        {!isSubscribed && (
-          <>
-            <h2 className="text-xl font-semibold text-foreground mb-4">Pro Subscription</h2>
-            <Card className="mb-6 border-primary/50">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Crown className="w-5 h-5 text-primary" />
-                    <CardTitle>Pro Plan</CardTitle>
-                  </div>
-                  <Badge variant="secondary">Most Popular</Badge>
-                </div>
-                <CardDescription>Best value for regular users</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <p className="text-3xl font-bold text-foreground">
-                    {formatPrice(PRO_PLAN.priceNGN, PRO_PLAN.priceUSD, PRO_PLAN.priceGBP)}
-                    <span className="text-lg font-normal text-muted-foreground">/month</span>
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-start gap-2">
-                    <Check className="w-5 h-5 text-primary mt-0.5" />
-                    <div>
-                      <p className="font-medium">{PRO_PLAN.credits} Credits per Month</p>
-                      <p className="text-sm text-muted-foreground">
-                        ~{calculateEstimatedTime(PRO_PLAN.credits, 'standard')} of conversation
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Check className="w-5 h-5 text-primary" />
-                    <p className="text-sm">Priority support</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Check className="w-5 h-5 text-primary" />
-                    <p className="text-sm">Cancel anytime</p>
-                  </div>
-                </div>
-
-                <Button 
-                  onClick={handleSubscribe} 
-                  className="w-full" 
-                  size="lg"
-                  disabled={processingSubscription}
-                >
-                  {processingSubscription ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                      Processing...
-                    </>
-                  ) : (
-                    "Subscribe Now"
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
-          </>
-        )}
-
-        <Separator className="my-6" />
-
         {/* Buy Credits */}
         <h2 className="text-xl font-semibold text-foreground mb-4">Buy Credits</h2>
         <div className="grid gap-4 sm:grid-cols-3">
@@ -450,6 +385,71 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
             </CardContent>
           </Card>
         </div>
+
+        <Separator className="my-6" />
+
+        {/* Pro Subscription */}
+        {!isSubscribed && (
+          <>
+            <h2 className="text-xl font-semibold text-foreground mb-4">Pro Subscription</h2>
+            <Card className="mb-6 border-primary/50">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Crown className="w-5 h-5 text-primary" />
+                    <CardTitle>Pro Plan</CardTitle>
+                  </div>
+                  <Badge variant="secondary">Most Popular</Badge>
+                </div>
+                <CardDescription>Best value for regular users</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <p className="text-3xl font-bold text-foreground">
+                    {formatPrice(PRO_PLAN.priceNGN, PRO_PLAN.priceUSD, PRO_PLAN.priceGBP)}
+                    <span className="text-lg font-normal text-muted-foreground">/month</span>
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-start gap-2">
+                    <Check className="w-5 h-5 text-primary mt-0.5" />
+                    <div>
+                      <p className="font-medium">{PRO_PLAN.credits} Credits per Month</p>
+                      <p className="text-sm text-muted-foreground">
+                        ~{calculateEstimatedTime(PRO_PLAN.credits, 'standard')} of conversation
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Check className="w-5 h-5 text-primary" />
+                    <p className="text-sm">Priority support</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Check className="w-5 h-5 text-primary" />
+                    <p className="text-sm">Cancel anytime</p>
+                  </div>
+                </div>
+
+                <Button 
+                  onClick={handleSubscribe} 
+                  className="w-full" 
+                  size="lg"
+                  disabled={processingSubscription}
+                >
+                  {processingSubscription ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      Processing...
+                    </>
+                  ) : (
+                    "Subscribe Now"
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
+          </>
+        )}
 
         <Separator className="my-6" />
 
