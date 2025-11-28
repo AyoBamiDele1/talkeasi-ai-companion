@@ -474,7 +474,7 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
                     <Zap className="w-5 h-5 text-primary" />
                     Standard Mode
                   </CardTitle>
-                  <Badge variant="secondary" className="text-xs">3 credits/min</Badge>
+                  <Badge variant="secondary" className="text-xs whitespace-nowrap">3 credits/min</Badge>
                 </div>
               </CardHeader>
               <CardContent>
