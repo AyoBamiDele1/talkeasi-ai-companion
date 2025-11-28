@@ -13,7 +13,6 @@ import NotFound from "./pages/NotFound";
 import BottomNavigation from "./components/BottomNavigation";
 
 // Lazy load heavy components
-const Lessons = lazy(() => import("./pages/Lessons"));
 const LessonSession = lazy(() => import("./pages/LessonSession"));
 const Progress = lazy(() => import("./pages/Progress"));
 const Profile = lazy(() => import("./pages/Profile"));
@@ -41,11 +40,6 @@ const App = () => (
                 <Route path="/home" element={
                   <ProtectedRoute>
                     <Home />
-                  </ProtectedRoute>
-                } />
-                <Route path="/lessons" element={
-                  <ProtectedRoute>
-                    <Lessons />
                   </ProtectedRoute>
                 } />
                 <Route path="/progress" element={
