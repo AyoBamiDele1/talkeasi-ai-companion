@@ -469,13 +469,13 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
             {/* Standard Mode Card */}
             <Card className="border-2">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-primary" />
-                  Standard Mode
-                </CardTitle>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary">3 credits/min</Badge>
-                  </div>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <Zap className="w-5 h-5 text-primary" />
+                    Standard Mode
+                  </CardTitle>
+                  <Badge variant="secondary">3 credits/min</Badge>
+                </div>
               </CardHeader>
               <CardContent>
                 <CardDescription className="mb-4">
