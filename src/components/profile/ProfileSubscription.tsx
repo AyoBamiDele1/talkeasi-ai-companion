@@ -458,7 +458,7 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
           <div className="mb-4">
             <h3 className="text-lg font-semibold flex items-center gap-2">
               <Clock className="w-5 h-5 text-primary" />
-              Voice Modes & Features
+              Voice Mode & Features
             </h3>
             <p className="text-sm text-muted-foreground mt-1">
               Credits are deducted based on your conversation time.
