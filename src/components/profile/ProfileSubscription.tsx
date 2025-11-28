@@ -260,27 +260,14 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
                 <p className="text-sm text-muted-foreground">Available Credits</p>
               </div>
               
-              <div className={`grid gap-4 ${currency === 'NGN' ? 'grid-cols-1' : 'grid-cols-2'}`}>
-                <div className="space-y-1">
-                  <div className="flex items-center gap-1.5">
-                    <Zap className="w-4 h-4 text-primary" />
-                    <p className="text-xs font-medium">Standard Mode</p>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    ~{calculateEstimatedTime(creditBalance || 0, 'standard')}
-                  </p>
+              <div className="space-y-1">
+                <div className="flex items-center gap-1.5">
+                  <Zap className="w-4 h-4 text-primary" />
+                  <p className="text-xs font-medium">Standard Mode</p>
                 </div>
-                {currency !== 'NGN' && (
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-1.5">
-                      <Crown className="w-4 h-4 text-primary" />
-                      <p className="text-xs font-medium">Premium Mode</p>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      ~{calculateEstimatedTime(creditBalance || 0, 'premium')}
-                    </p>
-                  </div>
-                )}
+                <p className="text-sm text-muted-foreground">
+                  ~{calculateEstimatedTime(creditBalance || 0, 'standard')}
+                </p>
               </div>
 
               <Button onClick={handleRefreshStatus} variant="outline" size="sm" className="w-full">
@@ -319,10 +306,7 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
                     <div>
                       <p className="font-medium">{PRO_PLAN.credits} Credits per Month</p>
                       <p className="text-sm text-muted-foreground">
-                        {currency === 'NGN' 
-                          ? `~${calculateEstimatedTime(PRO_PLAN.credits, 'standard')} of conversation`
-                          : `~${calculateEstimatedTime(PRO_PLAN.credits, 'standard')} standard or ~${calculateEstimatedTime(PRO_PLAN.credits, 'premium')} premium`
-                        }
+                        ~{calculateEstimatedTime(PRO_PLAN.credits, 'standard')} of conversation
                       </p>
                     </div>
                   </div>
@@ -375,13 +359,8 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
             <CardContent className="space-y-3">
               <div className="space-y-1 text-sm">
                 <p className="text-muted-foreground">
-                  ~{calculateEstimatedTime(50, 'standard')} standard
+                  ~{calculateEstimatedTime(50, 'standard')}
                 </p>
-                {currency !== 'NGN' && (
-                  <p className="text-muted-foreground">
-                    ~{calculateEstimatedTime(50, 'premium')} premium
-                  </p>
-                )}
               </div>
               <Button 
                 onClick={() => handlePurchaseCredits('50_credits')} 
@@ -417,13 +396,8 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
             <CardContent className="space-y-3">
               <div className="space-y-1 text-sm">
                 <p className="text-muted-foreground">
-                  ~{calculateEstimatedTime(100, 'standard')} standard
+                  ~{calculateEstimatedTime(100, 'standard')}
                 </p>
-                {currency !== 'NGN' && (
-                  <p className="text-muted-foreground">
-                    ~{calculateEstimatedTime(100, 'premium')} premium
-                  </p>
-                )}
               </div>
               <Button 
                 onClick={() => handlePurchaseCredits('100_credits')} 
@@ -456,13 +430,8 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
             <CardContent className="space-y-3">
               <div className="space-y-1 text-sm">
                 <p className="text-muted-foreground">
-                  ~{calculateEstimatedTime(200, 'standard')} standard
+                  ~{calculateEstimatedTime(200, 'standard')}
                 </p>
-                {currency !== 'NGN' && (
-                  <p className="text-muted-foreground">
-                    ~{calculateEstimatedTime(200, 'premium')} premium
-                  </p>
-                )}
               </div>
               <Button 
                 onClick={() => handlePurchaseCredits('200_credits')} 
