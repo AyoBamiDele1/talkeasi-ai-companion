@@ -8,6 +8,7 @@ import { Mic, MicOff, Volume2, VolumeX, ArrowLeft, MessageSquare, Phone, PhoneOf
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { FEATURES } from '@/config/features';
 import { useUserLocation } from '@/hooks/useUserLocation';
 import ProcessingIndicator from './ProcessingIndicator';
 import { RealtimeChat } from '@/utils/RealtimeAudio';
@@ -1012,7 +1013,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
               <p className="text-xs opacity-90 text-left">Natural conversation flow with instant responses</p>
             </Button>
 
-            {currency !== 'NGN' && (
+            {FEATURES.PREMIUM_MODE_ENABLED && (
               <Button
                 size="lg"
                 variant="default"

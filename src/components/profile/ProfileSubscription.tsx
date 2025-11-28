@@ -13,6 +13,7 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { useUserLocation } from "@/hooks/useUserLocation";
 import { Separator } from "@/components/ui/separator";
 import { useState } from "react";
+import { FEATURES } from "@/config/features";
 
 interface ProfileSubscriptionProps {
   onBack: () => void;
@@ -536,8 +537,8 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
               </CardContent>
             </Card>
 
-            {/* Premium Mode Card - Hidden for Nigerian users */}
-            {currency !== 'NGN' && (
+            {/* Premium Mode Card - Hidden (owner controls via feature flag) */}
+            {FEATURES.PREMIUM_MODE_ENABLED && (
               <Card className="border-2 border-primary/50 bg-gradient-to-br from-background to-muted/30">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
