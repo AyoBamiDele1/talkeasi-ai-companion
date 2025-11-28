@@ -7,12 +7,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { User, Settings, CreditCard, HelpCircle, LogOut, Crown, Globe, BarChart3 } from "lucide-react";
+import { User, Settings, CreditCard, HelpCircle, LogOut, Crown, Globe } from "lucide-react";
 import ProfileSettings from "@/components/profile/ProfileSettings";
 import ProfileSubscription from "@/components/profile/ProfileSubscription";
 import ProfileLanguageSettings from "@/components/profile/ProfileLanguageSettings";
 import ProfileHelpSupport from "@/components/profile/ProfileHelpSupport";
-import ProfileAnalytics from "@/components/profile/ProfileAnalytics";
 import { FEATURES } from "@/config/features";
 interface UserProfile {
   display_name: string;
@@ -25,7 +24,7 @@ interface UserStats {
   completed_lessons: number;
   accuracy: number;
 }
-type ProfileView = 'main' | 'settings' | 'subscription' | 'goals' | 'language' | 'help' | 'analytics';
+type ProfileView = 'main' | 'settings' | 'subscription' | 'goals' | 'language' | 'help';
 const Profile = () => {
   const [searchParams] = useSearchParams();
   const {
@@ -45,7 +44,7 @@ const Profile = () => {
   
   useEffect(() => {
     const viewParam = searchParams.get('view') as ProfileView;
-    if (viewParam && ['settings', 'subscription', 'goals', 'language', 'help', 'analytics'].includes(viewParam)) {
+    if (viewParam && ['settings', 'subscription', 'goals', 'language', 'help'].includes(viewParam)) {
       setCurrentView(viewParam);
     }
   }, [searchParams]);
@@ -138,10 +137,6 @@ const Profile = () => {
     badge: "Premium",
     action: () => setCurrentView('subscription')
   }, {
-    icon: BarChart3,
-    label: "Usage Analytics",
-    action: () => setCurrentView('analytics')
-  }, {
     icon: Globe,
     label: "Language Settings",
     action: () => setCurrentView('language')
@@ -158,8 +153,6 @@ const Profile = () => {
         return <ProfileSettings onBack={() => setCurrentView('main')} />;
       case 'subscription':
         return <ProfileSubscription onBack={() => setCurrentView('main')} />;
-      case 'analytics':
-        return <ProfileAnalytics onBack={() => setCurrentView('main')} />;
       case 'language':
         return <ProfileLanguageSettings onBack={() => setCurrentView('main')} />;
       case 'help':
