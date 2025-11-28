@@ -4,11 +4,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { useUserLocation } from "@/hooks/useUserLocation";
 const Home = () => {
   const navigate = useNavigate();
   const {
     user
   } = useAuth();
+  const { isNigerian, loading: locationLoading } = useUserLocation();
   const [userProfile, setUserProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
@@ -48,7 +50,7 @@ const Home = () => {
       {/* Cards Container - Centered in remaining space */}
       <div className="flex-1 flex items-center">
         {/* Two Mode Cards - Stack on mobile, side-by-side on desktop */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto w-full">
+        <div className={`grid grid-cols-1 ${(locationLoading || isNigerian) ? 'md:grid-cols-2' : ''} gap-4 max-w-4xl mx-auto w-full`}>
         
         {/* Card 1: AI Companion Mode */}
         <Card className="hover:shadow-lg transition-shadow">
@@ -65,22 +67,24 @@ const Home = () => {
           </CardContent>
         </Card>
 
-        {/* Card 2: English Practice Mode */}
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardContent className="p-6 text-center">
-            <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-4xl">🎓</span>
-            </div>
-            <h2 className="text-xl font-bold mb-2">English Lessons</h2>
-            <p className="text-sm text-muted-foreground mb-1">
-              Practice your English with real-time AI feedback.
-            </p>
-            
-            <Button className="w-full mt-4" onClick={() => navigate('/lessons')}>
-              Start Practicing
-            </Button>
-          </CardContent>
-        </Card>
+        {/* Card 2: English Practice Mode - Only for Nigerian users */}
+        {(locationLoading || isNigerian) && (
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardContent className="p-6 text-center">
+              <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-4xl">🎓</span>
+              </div>
+              <h2 className="text-xl font-bold mb-2">English Lessons</h2>
+              <p className="text-sm text-muted-foreground mb-1">
+                Practice your English with real-time AI feedback.
+              </p>
+              
+              <Button className="w-full mt-4" onClick={() => navigate('/lessons')}>
+                Start Practicing
+              </Button>
+            </CardContent>
+          </Card>
+        )}
         </div>
       </div>
     </div>;

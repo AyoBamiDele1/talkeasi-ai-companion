@@ -2,9 +2,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress as ProgressBar } from "@/components/ui/progress";
 import { TrendingUp, Award } from "lucide-react";
 import { useProgress } from "@/hooks/useProgress";
+import { useUserLocation } from "@/hooks/useUserLocation";
 
 const Progress = () => {
   const { stats, loading } = useProgress();
+  const { isNigerian, loading: locationLoading } = useUserLocation();
 
   if (loading) {
     return (
@@ -19,7 +21,11 @@ const Progress = () => {
       <div className="flex flex-col min-h-screen bg-background p-6 pb-20">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-foreground mb-2">Your Progress</h1>
-          <p className="text-muted-foreground">Complete some lessons to see your progress!</p>
+          <p className="text-muted-foreground">
+            {(locationLoading || isNigerian) 
+              ? "Complete some lessons to see your progress!" 
+              : "Start conversations to see your progress!"}
+          </p>
         </div>
       </div>
     );
@@ -33,7 +39,9 @@ const Progress = () => {
           Your Progress
         </h1>
         <p className="text-muted-foreground">
-          Track your English improvement journey
+          {(locationLoading || isNigerian) 
+            ? "Track your English improvement journey" 
+            : "Track your conversation history"}
         </p>
       </div>
 

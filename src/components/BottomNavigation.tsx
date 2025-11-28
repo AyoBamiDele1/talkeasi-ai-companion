@@ -2,25 +2,32 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Home, BookOpen, TrendingUp, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+import { useUserLocation } from "@/hooks/useUserLocation";
 
 const BottomNavigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const { isNigerian, loading } = useUserLocation();
 
   // Only show navigation for authenticated users
   if (!user) return null;
 
-  const navItems = [
+  const allNavItems = [
     { icon: Home, label: "Home", path: "/home" },
     { icon: BookOpen, label: "Lessons", path: "/lessons" },
     { icon: TrendingUp, label: "Progress", path: "/progress" },
     { icon: User, label: "Profile", path: "/profile" }
   ];
 
+  // Filter out Lessons for non-Nigerian users
+  const navItems = allNavItems.filter(item => 
+    item.path !== '/lessons' || loading || isNigerian
+  );
+
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border z-40">
-      <div className="grid grid-cols-4 max-w-md mx-auto">
+      <div className={`grid grid-cols-${navItems.length} max-w-md mx-auto`}>
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
