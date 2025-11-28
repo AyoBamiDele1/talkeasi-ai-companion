@@ -1001,9 +1001,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
                   <span>{isTrialMode ? "Tap to start your free 2-minute trial" : "Tap the button below to start talking"}</span>
                 </>
               )
-              : isHandsFreeMode && currentTranscript
-                ? `Listening: "${currentTranscript}"`
-                : isHandsFreeMode
+              : isHandsFreeMode
                   ? (currentMode === 'premium' 
                     ? "Premium Mode: Highest quality AI" 
                     : currentMode === 'tap'
