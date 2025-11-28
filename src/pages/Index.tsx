@@ -23,7 +23,7 @@ const Index = () => {
           <div className="text-center mb-6 md:mb-8">
             <div className="mb-4 md:mb-6">
               <div className="inline-block p-3 md:p-4 bg-primary/10 rounded-full mb-3 md:mb-4">
-                <span className="text-3xl md:text-4xl -tracking-[0.15em]">💞🎓</span>
+                <span className="text-3xl md:text-4xl">💞</span>
               </div>
               <h1 className="text-3xl md:text-5xl font-bold text-foreground mb-2 md:mb-3">
                 TalkEasi
