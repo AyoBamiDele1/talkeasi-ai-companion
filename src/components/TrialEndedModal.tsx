@@ -24,7 +24,7 @@ const TrialEndedModal = ({ open, onOpenChange }: TrialEndedModalProps) => {
             ✨ Your free 2 minutes are up!
           </DialogTitle>
           <DialogDescription className="text-center text-sm">
-            Want to keep improving your English?
+            Want to keep talking with your AI friend?
           </DialogDescription>
         </DialogHeader>
 
