@@ -4,13 +4,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { useUserLocation } from "@/hooks/useUserLocation";
+import { FEATURES } from "@/config/features";
 const Home = () => {
   const navigate = useNavigate();
   const {
     user
   } = useAuth();
-  const { isNigerian, loading: locationLoading } = useUserLocation();
   const [userProfile, setUserProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
@@ -50,7 +49,7 @@ const Home = () => {
       {/* Cards Container - Centered in remaining space */}
       <div className="flex-1 flex items-center">
         {/* Two Mode Cards - Stack on mobile, side-by-side on desktop */}
-        <div className={`grid grid-cols-1 ${(locationLoading || isNigerian) ? 'md:grid-cols-2' : ''} gap-4 max-w-4xl mx-auto w-full`}>
+        <div className={`grid grid-cols-1 ${FEATURES.ENGLISH_LESSONS_ENABLED ? 'md:grid-cols-2' : ''} gap-4 max-w-4xl mx-auto w-full`}>
         
         {/* Card 1: AI Companion Mode */}
         <Card className="hover:shadow-lg transition-shadow">
@@ -67,8 +66,8 @@ const Home = () => {
           </CardContent>
         </Card>
 
-        {/* Card 2: English Practice Mode - Only for Nigerian users */}
-        {(locationLoading || isNigerian) && (
+        {/* Card 2: English Practice Mode */}
+        {FEATURES.ENGLISH_LESSONS_ENABLED && (
           <Card className="hover:shadow-lg transition-shadow">
             <CardContent className="p-6 text-center">
               <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center mx-auto mb-4">

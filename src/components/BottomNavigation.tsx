@@ -2,13 +2,12 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Home, BookOpen, TrendingUp, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
-import { useUserLocation } from "@/hooks/useUserLocation";
+import { FEATURES } from "@/config/features";
 
 const BottomNavigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
-  const { isNigerian, loading } = useUserLocation();
 
   // Only show navigation for authenticated users
   if (!user) return null;
@@ -20,9 +19,9 @@ const BottomNavigation = () => {
     { icon: User, label: "Profile", path: "/profile" }
   ];
 
-  // Filter out Lessons for non-Nigerian users
+  // Filter out Lessons if feature is disabled
   const navItems = allNavItems.filter(item => 
-    item.path !== '/lessons' || loading || isNigerian
+    item.path !== '/lessons' || FEATURES.ENGLISH_LESSONS_ENABLED
   );
 
   return (

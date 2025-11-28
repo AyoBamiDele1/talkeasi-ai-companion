@@ -9,4 +9,5 @@
  */
 export const FEATURES = {
   PREMIUM_MODE_ENABLED: false, // Owner controls this - no automation
+  ENGLISH_LESSONS_ENABLED: false, // Owner controls this - manual only
 } as const;
