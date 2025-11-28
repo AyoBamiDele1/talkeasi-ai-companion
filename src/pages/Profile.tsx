@@ -7,13 +7,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { User, Settings, CreditCard, HelpCircle, LogOut, Crown, Target, Globe, BarChart3 } from "lucide-react";
+import { User, Settings, CreditCard, HelpCircle, LogOut, Crown, Globe, BarChart3 } from "lucide-react";
 import ProfileSettings from "@/components/profile/ProfileSettings";
 import ProfileSubscription from "@/components/profile/ProfileSubscription";
-import ProfileLearningGoals from "@/components/profile/ProfileLearningGoals";
 import ProfileLanguageSettings from "@/components/profile/ProfileLanguageSettings";
 import ProfileHelpSupport from "@/components/profile/ProfileHelpSupport";
 import ProfileAnalytics from "@/components/profile/ProfileAnalytics";
+import { FEATURES } from "@/config/features";
 interface UserProfile {
   display_name: string;
   native_language: string;
@@ -142,10 +142,6 @@ const Profile = () => {
     label: "Usage Analytics",
     action: () => setCurrentView('analytics')
   }, {
-    icon: Target,
-    label: "Learning Goals",
-    action: () => setCurrentView('goals')
-  }, {
     icon: Globe,
     label: "Language Settings",
     action: () => setCurrentView('language')
@@ -164,8 +160,6 @@ const Profile = () => {
         return <ProfileSubscription onBack={() => setCurrentView('main')} />;
       case 'analytics':
         return <ProfileAnalytics onBack={() => setCurrentView('main')} />;
-      case 'goals':
-        return <ProfileLearningGoals onBack={() => setCurrentView('main')} />;
       case 'language':
         return <ProfileLanguageSettings onBack={() => setCurrentView('main')} />;
       case 'help':
@@ -205,35 +199,6 @@ const Profile = () => {
                 
               </div>
             </div>
-          </div>
-
-          {/* Stats */}
-          <div className="grid grid-cols-2 gap-4 pt-4 border-t">
-            <div className="text-center">
-              <div className="text-xl font-bold text-foreground">{stats.completed_lessons}</div>
-              <div className="text-xs text-muted-foreground">Lessons</div>
-            </div>
-            <div className="text-center">
-              <div className="text-xl font-bold text-foreground">{stats.accuracy}%</div>
-              <div className="text-xs text-muted-foreground">Accuracy</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Learning Goals */}
-      <Card className="mb-6">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Target className="w-5 h-5 text-primary" />
-            Learning Goals
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-2">
-            {profile?.learning_goals && profile.learning_goals.length > 0 ? profile.learning_goals.map((goal, index) => <Badge key={index} variant="outline">
-                  {goal}
-                </Badge>) : <Badge variant="outline">Business Communication</Badge>}
           </div>
         </CardContent>
       </Card>
