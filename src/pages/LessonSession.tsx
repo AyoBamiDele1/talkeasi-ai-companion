@@ -557,7 +557,7 @@ const LessonSession = () => {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => navigate(-1)}
+          onClick={() => navigate('/')}
         >
           <ArrowLeft className="w-5 h-5" />
         </Button>
@@ -733,7 +733,7 @@ const LessonSession = () => {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => navigate('/lessons')}
+                onClick={() => navigate('/')}
               >
                 <ArrowLeft className="w-5 h-5" />
               </Button>
@@ -785,9 +785,9 @@ const LessonSession = () => {
               <Button 
                 variant="outline" 
                 className="flex-1" 
-                onClick={() => navigate('/lessons')}
+                onClick={() => navigate('/')}
               >
-                Back to Lessons
+                Back to Home
               </Button>
               <Button 
                 className="flex-1" 
