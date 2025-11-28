@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -244,6 +245,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   const { user } = useAuth();
   const navigate = useNavigate();
   const { currency } = useUserLocation();
+  const queryClient = useQueryClient();
   const messageIdCounter = useRef(0);
   const idleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
@@ -804,8 +806,19 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
 
         if (error) {
           console.error('[DEBUG] Error deducting credits:', error);
+          toast({
+            title: "Credit Deduction Failed",
+            description: "Failed to deduct credits for this session. Please check your balance.",
+            variant: "destructive"
+          });
         } else {
           await fetchUserCredits();
+          // Invalidate companion progress cache to force refresh
+          queryClient.invalidateQueries({ queryKey: ['companion-progress'] });
+          toast({
+            title: "Session Complete",
+            description: `${Math.ceil(durationMinutes)} minute session ended. Credits deducted.`,
+          });
         }
       } catch (error) {
         console.error('[DEBUG] Error in credit deduction:', error);
