@@ -941,13 +941,6 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-card border-t p-4 z-50">
       <div className="max-w-md mx-auto">
-        {/* Credit Balance Badge (only for authenticated users) */}
-        {!isTrialMode && <div className="fixed top-4 right-4 z-50">
-            <Badge variant="secondary" className="text-sm px-3 py-1.5">
-              <Coins className="w-3.5 h-3.5 mr-1.5" />
-              {userCredits} credits
-            </Badge>
-          </div>}
 
         {/* Low Balance Warning */}
         {!isTrialMode && userCredits < 20 && userCredits > 0 && <Alert className="mb-4 bg-warning/10 border-warning/20">
