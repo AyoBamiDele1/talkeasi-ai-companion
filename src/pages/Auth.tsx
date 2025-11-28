@@ -87,7 +87,7 @@ export default function Auth() {
         <div className="text-center mb-3 sm:mb-8">
           <div className="inline-flex items-center gap-2 mb-2 sm:mb-4">
             <div className="inline-block p-1.5 sm:p-2 bg-primary/10 rounded-full">
-              <span className="text-xl sm:text-2xl -tracking-[0.15em]">💞🎓</span>
+              <span className="text-xl sm:text-2xl -tracking-[0.15em]">💞</span>
             </div>
             <h1 className="text-xl sm:text-2xl font-bold text-foreground">TalkEasi</h1>
           </div>
