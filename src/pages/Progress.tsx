@@ -173,7 +173,7 @@ const Progress = () => {
                     {formatDistanceToNow(new Date(session.date), { addSuffix: true })}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {session.durationMinutes} min · {session.creditsUsed} credits
+                    {Math.round(session.durationMinutes)} min · {session.creditsUsed} credits
                   </p>
                 </div>
                 <MessageSquare className="w-4 h-4 text-muted-foreground" />

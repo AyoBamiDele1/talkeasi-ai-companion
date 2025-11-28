@@ -70,7 +70,7 @@ export const useCompanionProgress = () => {
         const metadata = tx.metadata as Record<string, any> | null;
         return {
           date: tx.created_at,
-          durationMinutes: metadata?.duration_minutes || 0,
+          durationMinutes: Math.round(metadata?.duration_minutes || 0),
           creditsUsed: Math.abs(tx.amount),
         };
       });
@@ -94,7 +94,7 @@ export const useCompanionProgress = () => {
         return {
           date: dateStr,
           hadConversation: dayTransactions.length > 0,
-          minutes: dayMinutes,
+          minutes: Math.round(dayMinutes),
         };
       });
 
