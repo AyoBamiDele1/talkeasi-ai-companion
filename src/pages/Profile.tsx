@@ -7,10 +7,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { User, Settings, CreditCard, HelpCircle, LogOut, Crown, Globe } from "lucide-react";
+import { User, Settings, CreditCard, HelpCircle, LogOut, Crown } from "lucide-react";
 import ProfileSettings from "@/components/profile/ProfileSettings";
 import ProfileSubscription from "@/components/profile/ProfileSubscription";
-import ProfileLanguageSettings from "@/components/profile/ProfileLanguageSettings";
 import ProfileHelpSupport from "@/components/profile/ProfileHelpSupport";
 import { FEATURES } from "@/config/features";
 interface UserProfile {
@@ -24,7 +23,7 @@ interface UserStats {
   completed_lessons: number;
   accuracy: number;
 }
-type ProfileView = 'main' | 'settings' | 'subscription' | 'goals' | 'language' | 'help';
+type ProfileView = 'main' | 'settings' | 'subscription' | 'goals' | 'help';
 const Profile = () => {
   const [searchParams] = useSearchParams();
   const {
@@ -44,7 +43,7 @@ const Profile = () => {
   
   useEffect(() => {
     const viewParam = searchParams.get('view') as ProfileView;
-    if (viewParam && ['settings', 'subscription', 'goals', 'language', 'help'].includes(viewParam)) {
+    if (viewParam && ['settings', 'subscription', 'goals', 'help'].includes(viewParam)) {
       setCurrentView(viewParam);
     }
   }, [searchParams]);
@@ -137,10 +136,6 @@ const Profile = () => {
     badge: "Premium",
     action: () => setCurrentView('subscription')
   }, {
-    icon: Globe,
-    label: "Language Settings",
-    action: () => setCurrentView('language')
-  }, {
     icon: HelpCircle,
     label: "Help & Support",
     action: () => setCurrentView('help')
@@ -153,8 +148,6 @@ const Profile = () => {
         return <ProfileSettings onBack={() => setCurrentView('main')} />;
       case 'subscription':
         return <ProfileSubscription onBack={() => setCurrentView('main')} />;
-      case 'language':
-        return <ProfileLanguageSettings onBack={() => setCurrentView('main')} />;
       case 'help':
         return <ProfileHelpSupport onBack={() => setCurrentView('main')} />;
       default:
