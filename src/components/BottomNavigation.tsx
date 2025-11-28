@@ -27,7 +27,7 @@ const BottomNavigation = () => {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border z-40">
-      <div className={`grid grid-cols-${navItems.length} max-w-md mx-auto`}>
+      <div className={`grid ${navItems.length === 3 ? 'grid-cols-3' : 'grid-cols-4'} max-w-md mx-auto`}>
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
