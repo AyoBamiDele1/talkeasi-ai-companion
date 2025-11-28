@@ -283,7 +283,7 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">50 Credits</CardTitle>
-              <CardDescription>
+              <CardDescription className="text-lg font-semibold">
                 {formatPrice(
                   CREDIT_PACKAGES["50_credits"].priceNGN,
                   CREDIT_PACKAGES["50_credits"].priceUSD,
@@ -292,8 +292,8 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="space-y-1 text-sm">
-                <p className="text-muted-foreground">
+              <div className="space-y-1">
+                <p className="text-base text-muted-foreground">
                   ~{calculateEstimatedTime(50, 'standard')}
                 </p>
               </div>
@@ -320,7 +320,7 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
                 <CardTitle className="text-lg">100 Credits</CardTitle>
                 <Badge variant="secondary" className="text-xs">Popular</Badge>
               </div>
-              <CardDescription>
+              <CardDescription className="text-lg font-semibold">
                 {formatPrice(
                   CREDIT_PACKAGES["100_credits"].priceNGN,
                   CREDIT_PACKAGES["100_credits"].priceUSD,
@@ -329,8 +329,8 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="space-y-1 text-sm">
-                <p className="text-muted-foreground">
+              <div className="space-y-1">
+                <p className="text-base text-muted-foreground">
                   ~{calculateEstimatedTime(100, 'standard')}
                 </p>
               </div>
@@ -354,7 +354,7 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">200 Credits</CardTitle>
-              <CardDescription>
+              <CardDescription className="text-lg font-semibold">
                 {formatPrice(
                   CREDIT_PACKAGES["200_credits"].priceNGN,
                   CREDIT_PACKAGES["200_credits"].priceUSD,
@@ -363,8 +363,8 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="space-y-1 text-sm">
-                <p className="text-muted-foreground">
+              <div className="space-y-1">
+                <p className="text-base text-muted-foreground">
                   ~{calculateEstimatedTime(200, 'standard')}
                 </p>
               </div>
