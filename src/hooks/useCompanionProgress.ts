@@ -65,8 +65,8 @@ export const useCompanionProgress = () => {
         ?.filter((tx) => new Date(tx.created_at) >= startOfMonth)
         .reduce((sum, tx) => sum + Math.abs(tx.amount), 0) || 0;
 
-      // Build recent sessions (last 10)
-      const recentSessions = (transactions || []).slice(0, 10).map((tx) => {
+      // Build recent sessions (last 5)
+      const recentSessions = (transactions || []).slice(0, 5).map((tx) => {
         const metadata = tx.metadata as Record<string, any> | null;
         return {
           date: tx.created_at,
