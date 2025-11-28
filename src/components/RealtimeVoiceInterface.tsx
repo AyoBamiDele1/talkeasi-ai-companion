@@ -984,7 +984,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
             {!isSessionActive 
               ? (
                 <>
-                  <Lightbulb className="w-4 h-4" />
+                  <Lightbulb className="w-4 h-4 fill-primary text-primary" />
                   <span>{isTrialMode ? "Tap to start your free 2-minute trial" : "Tap the button below to start talking"}</span>
                 </>
               )
