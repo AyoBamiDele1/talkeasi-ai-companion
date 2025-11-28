@@ -78,7 +78,7 @@ const Home = () => {
                 Practice your English with real-time AI feedback.
               </p>
               
-              <Button className="w-full mt-4" onClick={() => navigate('/lessons')}>
+              <Button className="w-full mt-4" onClick={() => navigate('/home')}>
                 Start Practicing
               </Button>
             </CardContent>
