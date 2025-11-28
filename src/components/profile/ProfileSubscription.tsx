@@ -461,7 +461,7 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
               Voice Modes & Features
             </h3>
             <p className="text-sm text-muted-foreground mt-1">
-              Credits are deducted based on your conversation time. Choose the mode that best fits your needs.
+              Credits are deducted based on your conversation time.
             </p>
           </div>
 
