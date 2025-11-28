@@ -13,7 +13,8 @@ import {
   CheckCircle,
   AlertCircle,
   Trophy,
-  BarChart
+  BarChart,
+  Coins
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
@@ -53,6 +54,7 @@ const LessonSession = () => {
   const [isSessionActive, setIsSessionActive] = useState(false);
   const [lessonContent, setLessonContent] = useState<LessonContentStructure | null>(null);
   const [coveredScenarios, setCoveredScenarios] = useState<Set<string>>(new Set());
+  const [userCredits, setUserCredits] = useState<number>(0);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -63,6 +65,33 @@ const LessonSession = () => {
       fetchLesson();
     }
   }, [lessonId]);
+
+  useEffect(() => {
+    if (user) {
+      fetchUserCredits();
+    }
+  }, [user]);
+
+  const fetchUserCredits = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('user_credits')
+        .select('balance')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching credits:', error);
+        return;
+      }
+
+      setUserCredits(data?.balance || 0);
+    } catch (error) {
+      console.error('Error fetching credits:', error);
+    }
+  };
 
   const fetchLesson = async () => {
     try {
@@ -534,6 +563,10 @@ const LessonSession = () => {
         </Button>
         
         <div className="flex flex-col items-center gap-2">
+          <Badge variant="secondary" className="text-xs px-2 py-1">
+            <Coins className="w-3 h-3 mr-1" />
+            {userCredits} credits
+          </Badge>
           <h1 className="font-semibold text-sm">{lesson?.title || 'Lesson Session'}</h1>
           <ConversationTimer 
             isActive={isSessionActive}
