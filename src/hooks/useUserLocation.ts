@@ -121,5 +121,6 @@ export const useUserLocation = () => {
     currencySymbol: getCurrencySymbol(location?.currency || 'USD'),
     formatPrice,
     getSecondaryPrices,
+    isNigerian: location?.country_code === 'NG',
   };
 };
