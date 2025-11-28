@@ -5,12 +5,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
-import { useUserLocation } from "@/hooks/useUserLocation";
 
 const Index = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
-  const { isNigerian, loading: locationLoading } = useUserLocation();
 
   useEffect(() => {
     if (!loading && user) {
@@ -31,14 +29,12 @@ const Index = () => {
                 TalkEasi
               </h1>
               <p className="text-base md:text-xl text-muted-foreground">
-                {(locationLoading || isNigerian) ? "Your AI Companion + English Lessons" : "Your AI Companion"}
+                Your AI Companion
               </p>
             </div>
 
             <p className="text-muted-foreground mb-4 md:mb-6">
-              {(locationLoading || isNigerian) 
-                ? "Talk when you're lonely, or practice English." 
-                : "Talk when you're lonely. Your AI friend is always here."}
+              Talk when you're lonely. Your AI friend is always here.
               <br className="hidden md:block" />
               Your AI friend is always available.
             </p>
