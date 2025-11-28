@@ -1035,7 +1035,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
         {/* Controls */}
         <div className="flex items-center justify-center space-x-4">
           {!isTrialMode && (
-            <Button variant="ghost" size="icon" onClick={() => navigate('/lessons')}>
+            <Button variant="ghost" size="icon" onClick={() => navigate('/home')}>
               <ArrowLeft className="w-5 h-5" />
             </Button>
           )}
