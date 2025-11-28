@@ -557,7 +557,7 @@ const LessonSession = () => {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => navigate('/lessons')}
+          onClick={() => navigate(-1)}
         >
           <ArrowLeft className="w-5 h-5" />
         </Button>

@@ -12,7 +12,7 @@ interface LocationData {
 }
 
 const STORAGE_KEY = 'user_location_data';
-const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+const CACHE_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
 
 export const useUserLocation = () => {
   const [location, setLocation] = useState<LocationData | null>(null);
@@ -27,7 +27,7 @@ export const useUserLocation = () => {
           const { data, timestamp } = JSON.parse(cached);
           const now = Date.now();
           
-          // Use cached data if it's less than 24 hours old
+          // Use cached data if it's less than 1 hour old
           if (now - timestamp < CACHE_DURATION) {
             setLocation(data);
             setLoading(false);
