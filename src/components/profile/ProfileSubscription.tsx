@@ -14,15 +14,14 @@ import { useUserLocation } from "@/hooks/useUserLocation";
 import { Separator } from "@/components/ui/separator";
 import { useState } from "react";
 import { FEATURES } from "@/config/features";
-
 interface ProfileSubscriptionProps {
   onBack: () => void;
 }
 
 // Map price IDs to packages
-const CREDIT_PACKAGES: Record<string, { 
-  credits: number; 
-  priceId: string; 
+const CREDIT_PACKAGES: Record<string, {
+  credits: number;
+  priceId: string;
   priceNGN: number;
   priceUSD: number;
   priceGBP: number;
@@ -49,7 +48,6 @@ const CREDIT_PACKAGES: Record<string, {
     priceGBP: 4.00
   }
 };
-
 const PRO_PLAN = {
   priceId: "price_1SWMKu2dz9WA913sJSKAHETl",
   productId: "prod_TTIwjh5O9HkYuf",
@@ -58,51 +56,57 @@ const PRO_PLAN = {
   priceUSD: 9.99,
   priceGBP: 8.00
 };
-
-const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
-  const { user, refreshSubscription } = useAuth();
-  const { toast } = useToast();
-  const { isSubscribed, productId, subscriptionEnd, refetch: refetchSubscription } = useSubscription();
-  const { 
-    formatPrice, 
+const ProfileSubscription = ({
+  onBack
+}: ProfileSubscriptionProps) => {
+  const {
+    user,
+    refreshSubscription
+  } = useAuth();
+  const {
+    toast
+  } = useToast();
+  const {
+    isSubscribed,
+    productId,
+    subscriptionEnd,
+    refetch: refetchSubscription
+  } = useSubscription();
+  const {
+    formatPrice,
     loading: locationLoading,
     currency
   } = useUserLocation();
   const [processingPayment, setProcessingPayment] = useState<string | null>(null);
   const [processingSubscription, setProcessingSubscription] = useState(false);
-
-  const { data: creditBalance, refetch: refetchCredits } = useQuery({
+  const {
+    data: creditBalance,
+    refetch: refetchCredits
+  } = useQuery({
     queryKey: ['user-credits', user?.id],
     queryFn: async () => {
       if (!user) return null;
-      const { data, error } = await supabase
-        .from('user_credits')
-        .select('balance')
-        .eq('user_id', user.id)
-        .single();
-
+      const {
+        data,
+        error
+      } = await supabase.from('user_credits').select('balance').eq('user_id', user.id).single();
       if (error) throw error;
       return data?.balance || 0;
     },
     enabled: !!user
   });
-
   const calculateEstimatedTime = (credits: number, mode: 'standard' | 'premium') => {
     const creditsPerMinute = mode === 'standard' ? 3 : 20;
     const minutes = credits / creditsPerMinute;
-    
     if (minutes < 60) {
       return `${Math.floor(minutes)} mins`;
     }
-    
     const hours = Math.floor(minutes / 60);
     const remainingMinutes = Math.floor(minutes % 60);
     return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
   };
-
   const handlePurchaseCredits = async (packageKey: string) => {
     if (!user || processingPayment) return;
-
     const pkg = CREDIT_PACKAGES[packageKey];
     if (!pkg) {
       toast({
@@ -112,19 +116,18 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
       });
       return;
     }
-
     setProcessingPayment(packageKey);
-
     try {
-      const { data, error } = await supabase.functions.invoke('create-payment', {
-        body: { 
+      const {
+        data,
+        error
+      } = await supabase.functions.invoke('create-payment', {
+        body: {
           priceId: pkg.priceId,
           currency: currency
         }
       });
-
       if (error) throw error;
-
       if (data?.url) {
         window.open(data.url, '_blank');
       }
@@ -139,22 +142,20 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
       setProcessingPayment(null);
     }
   };
-
   const handleSubscribe = async () => {
     if (!user || processingSubscription) return;
-
     setProcessingSubscription(true);
-
     try {
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { 
+      const {
+        data,
+        error
+      } = await supabase.functions.invoke('create-checkout', {
+        body: {
           priceId: PRO_PLAN.priceId,
           currency: currency
         }
       });
-
       if (error) throw error;
-
       if (data?.url) {
         window.open(data.url, '_blank');
       }
@@ -169,13 +170,13 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
       setProcessingSubscription(false);
     }
   };
-
   const handleManageSubscription = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke('customer-portal');
-
+      const {
+        data,
+        error
+      } = await supabase.functions.invoke('customer-portal');
       if (error) throw error;
-
       if (data?.url) {
         window.open(data.url, '_blank');
       }
@@ -188,29 +189,18 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
       });
     }
   };
-
   const handleRefreshStatus = async () => {
-    await Promise.all([
-      refetchSubscription(),
-      refetchCredits()
-    ]);
+    await Promise.all([refetchSubscription(), refetchCredits()]);
     refreshSubscription();
     toast({
       title: "Status refreshed",
       description: "Your subscription and credit balance have been updated."
     });
   };
-
-  return (
-    <div className="min-h-screen bg-background p-6 pb-20">
+  return <div className="min-h-screen bg-background p-6 pb-20">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center gap-4 mb-6">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onBack}
-            className="rounded-full"
-          >
+          <Button variant="ghost" size="icon" onClick={onBack} className="rounded-full">
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
@@ -220,8 +210,7 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
         </div>
 
         {/* Subscription Status */}
-        {isSubscribed && (
-          <Card className="mb-6 border-primary/50 bg-gradient-to-br from-primary/5 to-primary/10">
+        {isSubscribed && <Card className="mb-6 border-primary/50 bg-gradient-to-br from-primary/5 to-primary/10">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -242,8 +231,7 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
                 Manage Subscription
               </Button>
             </CardContent>
-          </Card>
-        )}
+          </Card>}
 
         {/* Current Balance */}
         <Card className="mb-6">
@@ -284,11 +272,7 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
             <CardHeader>
               <CardTitle className="text-lg">50 Credits</CardTitle>
               <CardDescription className="text-lg font-semibold">
-                {formatPrice(
-                  CREDIT_PACKAGES["50_credits"].priceNGN,
-                  CREDIT_PACKAGES["50_credits"].priceUSD,
-                  CREDIT_PACKAGES["50_credits"].priceGBP
-                )}
+                {formatPrice(CREDIT_PACKAGES["50_credits"].priceNGN, CREDIT_PACKAGES["50_credits"].priceUSD, CREDIT_PACKAGES["50_credits"].priceGBP)}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -297,19 +281,11 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
                   ~{calculateEstimatedTime(50, 'standard')}
                 </p>
               </div>
-              <Button 
-                onClick={() => handlePurchaseCredits('50_credits')} 
-                className="w-full"
-                disabled={processingPayment !== null}
-              >
-                {processingPayment === '50_credits' ? (
-                  <>
+              <Button onClick={() => handlePurchaseCredits('50_credits')} className="w-full" disabled={processingPayment !== null}>
+                {processingPayment === '50_credits' ? <>
                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
                     Processing...
-                  </>
-                ) : (
-                  "Buy Now"
-                )}
+                  </> : "Buy Now"}
               </Button>
             </CardContent>
           </Card>
@@ -321,11 +297,7 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
                 <Badge variant="secondary" className="text-xs">Popular</Badge>
               </div>
               <CardDescription className="text-lg font-semibold">
-                {formatPrice(
-                  CREDIT_PACKAGES["100_credits"].priceNGN,
-                  CREDIT_PACKAGES["100_credits"].priceUSD,
-                  CREDIT_PACKAGES["100_credits"].priceGBP
-                )}
+                {formatPrice(CREDIT_PACKAGES["100_credits"].priceNGN, CREDIT_PACKAGES["100_credits"].priceUSD, CREDIT_PACKAGES["100_credits"].priceGBP)}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -334,19 +306,11 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
                   ~{calculateEstimatedTime(100, 'standard')}
                 </p>
               </div>
-              <Button 
-                onClick={() => handlePurchaseCredits('100_credits')} 
-                className="w-full"
-                disabled={processingPayment !== null}
-              >
-                {processingPayment === '100_credits' ? (
-                  <>
+              <Button onClick={() => handlePurchaseCredits('100_credits')} className="w-full" disabled={processingPayment !== null}>
+                {processingPayment === '100_credits' ? <>
                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
                     Processing...
-                  </>
-                ) : (
-                  "Buy Now"
-                )}
+                  </> : "Buy Now"}
               </Button>
             </CardContent>
           </Card>
@@ -355,11 +319,7 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
             <CardHeader>
               <CardTitle className="text-lg">200 Credits</CardTitle>
               <CardDescription className="text-lg font-semibold">
-                {formatPrice(
-                  CREDIT_PACKAGES["200_credits"].priceNGN,
-                  CREDIT_PACKAGES["200_credits"].priceUSD,
-                  CREDIT_PACKAGES["200_credits"].priceGBP
-                )}
+                {formatPrice(CREDIT_PACKAGES["200_credits"].priceNGN, CREDIT_PACKAGES["200_credits"].priceUSD, CREDIT_PACKAGES["200_credits"].priceGBP)}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -368,19 +328,11 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
                   ~{calculateEstimatedTime(200, 'standard')}
                 </p>
               </div>
-              <Button 
-                onClick={() => handlePurchaseCredits('200_credits')} 
-                className="w-full"
-                disabled={processingPayment !== null}
-              >
-                {processingPayment === '200_credits' ? (
-                  <>
+              <Button onClick={() => handlePurchaseCredits('200_credits')} className="w-full" disabled={processingPayment !== null}>
+                {processingPayment === '200_credits' ? <>
                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
                     Processing...
-                  </>
-                ) : (
-                  "Buy Now"
-                )}
+                  </> : "Buy Now"}
               </Button>
             </CardContent>
           </Card>
@@ -389,8 +341,7 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
         <Separator className="my-6" />
 
         {/* Pro Subscription */}
-        {!isSubscribed && (
-          <>
+        {!isSubscribed && <>
             <h2 className="text-xl font-semibold text-foreground mb-4">Pro Subscription</h2>
             <Card className="mb-6 border-primary/50">
               <CardHeader>
@@ -431,33 +382,22 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
                   </div>
                 </div>
 
-                <Button 
-                  onClick={handleSubscribe} 
-                  className="w-full" 
-                  size="lg"
-                  disabled={processingSubscription}
-                >
-                  {processingSubscription ? (
-                    <>
+                <Button onClick={handleSubscribe} className="w-full" size="lg" disabled={processingSubscription}>
+                  {processingSubscription ? <>
                       <Loader2 className="w-4 h-4 animate-spin mr-2" />
                       Processing...
-                    </>
-                  ) : (
-                    "Subscribe Now"
-                  )}
+                    </> : "Subscribe Now"}
                 </Button>
               </CardContent>
             </Card>
-          </>
-        )}
+          </>}
 
         <Separator className="my-6" />
 
         {/* Voice Modes & Features */}
         <div>
           <div className="mb-4">
-            <h3 className="text-lg font-semibold flex items-center gap-2">
-              <Clock className="w-5 h-5 text-primary" />
+            <h3 className="text-lg font-semibold flex items-center gap-2">Voice Mode & Features<Clock className="w-5 h-5 text-primary" />
               Voice Modes & Features
             </h3>
             <p className="text-sm text-muted-foreground mt-1">
@@ -507,8 +447,7 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
             </Card>
 
             {/* Premium Mode Card - Hidden (owner controls via feature flag) */}
-            {FEATURES.PREMIUM_MODE_ENABLED && (
-              <Card className="border-2 border-primary/50 bg-gradient-to-br from-background to-muted/30">
+            {FEATURES.PREMIUM_MODE_ENABLED && <Card className="border-2 border-primary/50 bg-gradient-to-br from-background to-muted/30">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Crown className="w-5 h-5 text-primary" />
@@ -546,13 +485,10 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
                     </li>
                   </ul>
                 </CardContent>
-              </Card>
-            )}
+              </Card>}
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default ProfileSubscription;
