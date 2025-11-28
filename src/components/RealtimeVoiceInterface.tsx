@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Mic, MicOff, Volume2, VolumeX, ArrowLeft, MessageSquare, Phone, PhoneOff, Coins, AlertCircle } from 'lucide-react';
+import { Mic, MicOff, Volume2, VolumeX, ArrowLeft, MessageSquare, Phone, PhoneOff, Coins, AlertCircle, Lightbulb } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/hooks/useAuth';
@@ -980,9 +980,14 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
               </div>}
           </div>
           
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">
             {!isSessionActive 
-              ? (isTrialMode ? "Tap to start your free 2-minute trial" : currency === 'NGN' ? "💡 Tap the button below to start talking" : "Tap the button below to start talking")
+              ? (
+                <>
+                  <Lightbulb className="w-4 h-4" />
+                  <span>{isTrialMode ? "Tap to start your free 2-minute trial" : "Tap the button below to start talking"}</span>
+                </>
+              )
               : isHandsFreeMode && currentTranscript
                 ? `Listening: "${currentTranscript}"`
                 : isHandsFreeMode
