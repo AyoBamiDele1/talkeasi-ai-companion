@@ -465,7 +465,7 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             {/* Standard Mode Card */}
             <Card className="border-2">
               <CardHeader>
