@@ -98,6 +98,23 @@ serve(async (req) => {
       console.error('Failed to log transaction:', txnError);
     }
 
+    // Update streak tracking
+    try {
+      // Update last activity date
+      const today = new Date().toISOString().split('T')[0];
+      await supabase
+        .from('profiles')
+        .update({ last_activity_date: today })
+        .eq('user_id', user.id);
+
+      // Call the streak calculation function
+      await supabase.rpc('update_user_streaks', { target_user_id: user.id });
+      console.log('Streak tracking updated for user:', user.id);
+    } catch (streakError) {
+      console.error('Failed to update streak:', streakError);
+      // Don't fail the entire request if streak update fails
+    }
+
     return new Response(
       JSON.stringify({ success: true, new_balance: newBalance }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
