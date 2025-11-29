@@ -19,29 +19,35 @@ interface ProfileSubscriptionProps {
   onBack: () => void;
 }
 
-// Map price IDs to packages
+// Map price IDs to packages with Bronze/Silver/Gold tiers
 const CREDIT_PACKAGES: Record<string, { 
   credits: number; 
   priceId: string; 
   priceNGN: number;
   priceUSD: number;
   priceGBP: number;
+  name: string;
+  badge?: string;
 }> = {
-  "50_credits": {
+  "bronze": {
+    name: "Bronze Pack",
     credits: 50,
     priceId: "price_1SWMK92dz9WA913sD8RjAHqP",
     priceNGN: 1000,
     priceUSD: 1.99,
     priceGBP: 1.60
   },
-  "100_credits": {
+  "silver": {
+    name: "Silver Pack",
     credits: 100,
     priceId: "price_1SWMKP2dz9WA913sbt0ftTUf",
     priceNGN: 1500,
     priceUSD: 2.99,
-    priceGBP: 2.40
+    priceGBP: 2.40,
+    badge: "Popular"
   },
-  "200_credits": {
+  "gold": {
+    name: "Gold Pack",
     credits: 200,
     priceId: "price_1SWMKe2dz9WA913sV9VkYNyE",
     priceNGN: 2500,
@@ -282,27 +288,30 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
         <div className="grid gap-4 sm:grid-cols-3">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">50 Credits</CardTitle>
+              <CardTitle className="text-lg">{CREDIT_PACKAGES.bronze.name}</CardTitle>
+              <CardDescription className="text-sm text-muted-foreground mb-2">
+                {CREDIT_PACKAGES.bronze.credits} Credits
+              </CardDescription>
               <CardDescription className="text-lg font-semibold">
                 {formatPrice(
-                  CREDIT_PACKAGES["50_credits"].priceNGN,
-                  CREDIT_PACKAGES["50_credits"].priceUSD,
-                  CREDIT_PACKAGES["50_credits"].priceGBP
+                  CREDIT_PACKAGES.bronze.priceNGN,
+                  CREDIT_PACKAGES.bronze.priceUSD,
+                  CREDIT_PACKAGES.bronze.priceGBP
                 )}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="space-y-1">
                 <p className="text-base text-muted-foreground">
-                  ~{calculateEstimatedTime(50, 'standard')}
+                  ~{calculateEstimatedTime(CREDIT_PACKAGES.bronze.credits, 'standard')}
                 </p>
               </div>
               <Button 
-                onClick={() => handlePurchaseCredits('50_credits')} 
+                onClick={() => handlePurchaseCredits('bronze')} 
                 className="w-full"
                 disabled={processingPayment !== null}
               >
-                {processingPayment === '50_credits' ? (
+                {processingPayment === 'bronze' ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
                     Processing...
@@ -317,29 +326,32 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
           <Card className="border-primary/50">
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg">100 Credits</CardTitle>
-                <Badge variant="secondary" className="text-xs">Popular</Badge>
+                <CardTitle className="text-lg">{CREDIT_PACKAGES.silver.name}</CardTitle>
+                <Badge variant="secondary" className="text-xs">{CREDIT_PACKAGES.silver.badge}</Badge>
               </div>
+              <CardDescription className="text-sm text-muted-foreground mb-2">
+                {CREDIT_PACKAGES.silver.credits} Credits
+              </CardDescription>
               <CardDescription className="text-lg font-semibold">
                 {formatPrice(
-                  CREDIT_PACKAGES["100_credits"].priceNGN,
-                  CREDIT_PACKAGES["100_credits"].priceUSD,
-                  CREDIT_PACKAGES["100_credits"].priceGBP
+                  CREDIT_PACKAGES.silver.priceNGN,
+                  CREDIT_PACKAGES.silver.priceUSD,
+                  CREDIT_PACKAGES.silver.priceGBP
                 )}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="space-y-1">
                 <p className="text-base text-muted-foreground">
-                  ~{calculateEstimatedTime(100, 'standard')}
+                  ~{calculateEstimatedTime(CREDIT_PACKAGES.silver.credits, 'standard')}
                 </p>
               </div>
               <Button 
-                onClick={() => handlePurchaseCredits('100_credits')} 
+                onClick={() => handlePurchaseCredits('silver')} 
                 className="w-full"
                 disabled={processingPayment !== null}
               >
-                {processingPayment === '100_credits' ? (
+                {processingPayment === 'silver' ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
                     Processing...
@@ -353,27 +365,30 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">200 Credits</CardTitle>
+              <CardTitle className="text-lg">{CREDIT_PACKAGES.gold.name}</CardTitle>
+              <CardDescription className="text-sm text-muted-foreground mb-2">
+                {CREDIT_PACKAGES.gold.credits} Credits
+              </CardDescription>
               <CardDescription className="text-lg font-semibold">
                 {formatPrice(
-                  CREDIT_PACKAGES["200_credits"].priceNGN,
-                  CREDIT_PACKAGES["200_credits"].priceUSD,
-                  CREDIT_PACKAGES["200_credits"].priceGBP
+                  CREDIT_PACKAGES.gold.priceNGN,
+                  CREDIT_PACKAGES.gold.priceUSD,
+                  CREDIT_PACKAGES.gold.priceGBP
                 )}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="space-y-1">
                 <p className="text-base text-muted-foreground">
-                  ~{calculateEstimatedTime(200, 'standard')}
+                  ~{calculateEstimatedTime(CREDIT_PACKAGES.gold.credits, 'standard')}
                 </p>
               </div>
               <Button 
-                onClick={() => handlePurchaseCredits('200_credits')} 
+                onClick={() => handlePurchaseCredits('gold')} 
                 className="w-full"
                 disabled={processingPayment !== null}
               >
-                {processingPayment === '200_credits' ? (
+                {processingPayment === 'gold' ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
                     Processing...
