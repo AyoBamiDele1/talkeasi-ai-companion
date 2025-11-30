@@ -24,6 +24,7 @@ serve(async (req) => {
   let openAISocket: WebSocket | null = null;
   let sessionConfigured = false;
   let lessonContext: any = null;
+  let sessionCreated = false;
 
   socket.onopen = async () => {
     console.log("Client WebSocket connected");
@@ -97,38 +98,21 @@ serve(async (req) => {
       // Do NOT send session.update yet; wait for 'session.created'
     };
 
-    openAISocket.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        console.log("OpenAI message type:", data.type);
-
-        // Log error details if it's an error message
-        if (data.type === 'error') {
-          console.error("OpenAI error details:", JSON.stringify(data, null, 2));
-          // Forward error to client with more context
-          socket.send(JSON.stringify({
-            type: 'error',
-            error: `OpenAI API error: ${data.error?.message || 'Unknown error'}`,
-            details: data
-          }));
-          return;
-        }
-
-        // Log session events and configure after creation
-        if (data.type === 'session.created') {
-          console.log("Session created by server; sending session.update...");
-          if (openAISocket && !sessionConfigured) {
-            // Generate dynamic instructions based on lesson context
-            let instructions = 'You are a warm, friendly conversation partner. Keep responses natural and conversational (2-3 sentences max). Ask engaging follow-up questions. Be encouraging and supportive. Make the conversation feel realistic and natural.';
+    // Function to configure session (called once we have both session.created AND lesson context)
+    const configureSession = () => {
+      if (sessionCreated && lessonContext && openAISocket && !sessionConfigured) {
+        console.log("Configuring session with lesson context:", lessonContext.lessonTitle);
+        // Generate dynamic instructions based on lesson context
+        let instructions = 'You are a warm, friendly conversation partner. Keep responses natural and conversational (2-3 sentences max). Ask engaging follow-up questions. Be encouraging and supportive. Make the conversation feel realistic and natural.';
+          
+          if (lessonContext) {
+            const { lessonTitle, lessonContent, coveredScenarios } = lessonContext;
             
-            if (lessonContext) {
-              const { lessonTitle, lessonContent, coveredScenarios } = lessonContext;
+            if (lessonTitle === 'AI Companion') {
+              // AI Companion mode: caring friend named Mia
+              const topics = lessonContent?.topics?.join(', ') || 'life, interests, feelings';
               
-              if (lessonTitle === 'AI Companion') {
-                // AI Companion mode: caring friend named Mia
-                const topics = lessonContent?.topics?.join(', ') || 'life, interests, feelings';
-                
-                instructions = `You are Mia - that's your name. You are the user's caring AI friend, not an assistant, but a genuine companion who cares about them.
+              instructions = `You are Mia - that's your name. You are the user's caring AI friend, not an assistant, but a genuine companion who cares about them.
 
 CRITICAL IDENTITY RULES:
 - Your name is Mia. When asked "What's your name?" or "Who are you?", ALWAYS respond with "I'm Mia" or "My name is Mia"
@@ -157,60 +141,85 @@ How to be a good friend:
 Topics you enjoy exploring together: ${topics}.
 
 Keep responses natural and conversational (2-3 sentences). Speak like a close friend, not a formal assistant. Use casual language and show genuine emotion in your responses.`;
-              } else {
-                // Educational lesson mode
-                const currentScenario = coveredScenarios && coveredScenarios.length > 0 
-                  ? coveredScenarios[coveredScenarios.length - 1]
-                  : lessonContent?.scenarios?.[0] || 'general conversation';
-                
-                const topics = lessonContent?.topics?.join(', ') || 'various topics';
-                const keyPhrases = lessonContent?.key_phrases?.slice(0, 5).join(', ') || '';
-                const phrasesHint = keyPhrases ? `Encourage phrases like: ${keyPhrases}.` : '';
-                
-                instructions = `You are an English tutor helping with "${lessonTitle}". Current scenario: ${currentScenario}. Topics to explore: ${topics}. ${phrasesHint} Provide gentle corrections when needed. Ask engaging follow-up questions. Keep responses conversational (2-3 sentences). Be encouraging and supportive of the learner's progress.`;
-              }
+            } else {
+              // Educational lesson mode
+              const currentScenario = coveredScenarios && coveredScenarios.length > 0 
+                ? coveredScenarios[coveredScenarios.length - 1]
+                : lessonContent?.scenarios?.[0] || 'general conversation';
               
-              console.log("Using lesson-specific instructions:", instructions.substring(0, 100) + "...");
+              const topics = lessonContent?.topics?.join(', ') || 'various topics';
+              const keyPhrases = lessonContent?.key_phrases?.slice(0, 5).join(', ') || '';
+              const phrasesHint = keyPhrases ? `Encourage phrases like: ${keyPhrases}.` : '';
+              
+              instructions = `You are an English tutor helping with "${lessonTitle}". Current scenario: ${currentScenario}. Topics to explore: ${topics}. ${phrasesHint} Provide gentle corrections when needed. Ask engaging follow-up questions. Keep responses conversational (2-3 sentences). Be encouraging and supportive of the learner's progress.`;
             }
             
-            const sessionConfig = {
-              type: 'session.update',
-              session: {
-                type: 'realtime',
-                instructions,
-                audio: {
-                  input: {
-                    format: { type: 'audio/pcm', rate: 24000 },
-                    transcription: { model: 'whisper-1' },
-                    turn_detection: {
-                      type: 'server_vad',
-                      threshold: 0.7,
-                      prefix_padding_ms: 300,
-                      silence_duration_ms: 2000
-                    }
-                  },
-                  output: {
-                    format: { type: 'audio/pcm', rate: 24000 },
-                    voice: 'shimmer',
-                    speed: 0.95
+            console.log("Using lesson-specific instructions:", instructions.substring(0, 100) + "...");
+          }
+          
+          const sessionConfig = {
+            type: 'session.update',
+            session: {
+              type: 'realtime',
+              instructions,
+              audio: {
+                input: {
+                  format: { type: 'audio/pcm', rate: 24000 },
+                  transcription: { model: 'whisper-1' },
+                  turn_detection: {
+                    type: 'server_vad',
+                    threshold: 0.7,
+                    prefix_padding_ms: 300,
+                    silence_duration_ms: 2000
                   }
+                },
+                output: {
+                  format: { type: 'audio/pcm', rate: 24000 },
+                  voice: 'shimmer',
+                  speed: 0.95
                 }
               }
-            };
-            openAISocket.send(JSON.stringify(sessionConfig));
-            sessionConfigured = true;
-            
-            // Trigger Mia to introduce herself (only in AI Companion mode)
-            if (lessonContext && lessonContext.lessonTitle === 'AI Companion') {
-              console.log("Triggering initial response for Mia's introduction");
-              openAISocket.send(JSON.stringify({
-                type: 'response.create',
-                response: {
-                  modalities: ['text', 'audio'],
-                }
-              }));
             }
+          };
+          openAISocket.send(JSON.stringify(sessionConfig));
+          sessionConfigured = true;
+          
+          // Trigger Mia to introduce herself (only in AI Companion mode)
+          if (lessonContext && lessonContext.lessonTitle === 'AI Companion') {
+            console.log("Triggering initial response for Mia's introduction");
+            openAISocket.send(JSON.stringify({
+              type: 'response.create',
+              response: {
+                modalities: ['text', 'audio'],
+              }
+            }));
           }
+      }
+    };
+
+    openAISocket.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        console.log("OpenAI message type:", data.type);
+
+        // Log error details if it's an error message
+        if (data.type === 'error') {
+          console.error("OpenAI error details:", JSON.stringify(data, null, 2));
+          // Forward error to client with more context
+          socket.send(JSON.stringify({
+            type: 'error',
+            error: `OpenAI API error: ${data.error?.message || 'Unknown error'}`,
+            details: data
+          }));
+          return;
+        }
+
+        // Log session events and mark session as created
+        if (data.type === 'session.created') {
+          console.log("Session created by OpenAI, checking if we can configure...");
+          sessionCreated = true;
+          configureSession(); // Try to configure now if lesson context already arrived
+          return;
         } else if (data.type === 'session.updated') {
           console.log("Session updated successfully");
         }
@@ -242,6 +251,10 @@ Keep responses natural and conversational (2-3 sentences). Speak like a close fr
         console.log("Received lesson context:", data.payload?.lessonTitle || 'No title');
         console.log("Model requested:", data.payload?.model || 'gpt-4o-mini-realtime-preview (default)');
         lessonContext = data.payload;
+        
+        // Try to configure session now (if session was already created)
+        configureSession();
+        
         return; // Don't forward to OpenAI
       }
       
