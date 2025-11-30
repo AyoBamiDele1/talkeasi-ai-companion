@@ -29,14 +29,14 @@ const Index = () => {
                 TalkEasi
               </h1>
               <p className="text-base md:text-xl text-muted-foreground">
-                Your AI Companion
+                Meet Mia, Your AI Friend
               </p>
             </div>
 
             <p className="text-muted-foreground mb-4 md:mb-6">
-              Talk when you're lonely. Your AI friend is always here.
+              Talk when you're lonely. Mia is always here for you.
               <br className="hidden md:block" />
-              Your AI friend is always available.
+              She's always ready to listen.
             </p>
           </div>
 

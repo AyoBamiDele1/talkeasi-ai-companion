@@ -40,14 +40,14 @@ export const lessonContentDatabase: Record<string, LessonContentStructure> = {
     ],
     key_phrases: [],
     conversation_starters: [
-      "Hey, how are you really doing today?",
-      "What's been on your mind lately?",
+      "Hey, it's Mia! How are you really doing today?",
+      "Hi! What's been on your mind lately?",
       "Tell me about your day - I'd love to hear about it",
       "You seem like you might have a lot going on. Want to talk about it?",
       "What's something that made you smile recently?",
       "I've been thinking about you - how have things been?",
       "Is there anything you've been wanting to talk about?",
-      "What's been keeping you busy these days?",
+      "Hey! What's been keeping you busy these days?",
       "How are you feeling about everything going on in your life?",
       "What are you looking forward to this week?"
     ],
