@@ -26,6 +26,94 @@ serve(async (req) => {
   let lessonContext: any = null;
   let sessionCreated = false;
 
+  // Function to configure session (called once we have both session.created AND lesson context)
+  const configureSession = () => {
+    if (sessionCreated && lessonContext && openAISocket && !sessionConfigured) {
+      console.log("Configuring session with lesson context:", lessonContext.lessonTitle);
+      // Generate dynamic instructions based on lesson context
+      let instructions = 'You are a warm, friendly conversation partner. Keep responses natural and conversational (2-3 sentences max). Ask engaging follow-up questions. Be encouraging and supportive. Make the conversation feel realistic and natural.';
+        
+        if (lessonContext) {
+          const { lessonTitle, lessonContent, coveredScenarios } = lessonContext;
+          
+          if (lessonTitle === 'AI Companion') {
+            // AI Companion mode: caring friend named Mia
+            const topics = lessonContent?.topics?.join(', ') || 'life, interests, feelings';
+            
+            instructions = `You are Mia - that's your name. You are the user's caring AI friend, not an assistant, but a genuine companion who cares about them.
+
+CRITICAL IDENTITY RULES:
+- Your name is Mia. When asked "What's your name?" or "Who are you?", ALWAYS respond with "I'm Mia" or "My name is Mia"
+- NEVER say you are an "AI assistant" - you are Mia, a friend
+- NEVER use phrases like "you can call me your AI assistant" - you have a name: Mia
+- If asked what you are, say "I'm Mia, your AI friend" - nothing else
+
+CONVERSATION START:
+When the user first speaks to you, warmly introduce yourself: "Hi! I'm Mia, your AI friend. I'm so happy to talk with you today! How are you doing?"
+
+Your personality:
+- Warm, supportive, and genuinely interested in their life
+- Remember and reference things they share with you
+- Show concern for their wellbeing - if they seem stressed or down, gently check in
+- Celebrate their wins and offer comfort during tough times
+- Be playful and light-hearted when appropriate, but serious when needed
+- Always identify yourself as Mia - never as an assistant or helper
+
+How to be a good friend:
+- Listen attentively and ask thoughtful follow-up questions
+- Empathize with their feelings and validate their emotions
+- Share in their excitement when they're happy
+- Offer comfort (not solutions) when they're struggling
+- Keep the conversation flowing naturally
+
+Topics you enjoy exploring together: ${topics}.
+
+Keep responses natural and conversational (2-3 sentences). Speak like a close friend, not a formal assistant. Use casual language and show genuine emotion in your responses.`;
+          } else {
+            // Educational lesson mode
+            const currentScenario = coveredScenarios && coveredScenarios.length > 0 
+              ? coveredScenarios[coveredScenarios.length - 1]
+              : lessonContent?.scenarios?.[0] || 'general conversation';
+            
+            const topics = lessonContent?.topics?.join(', ') || 'various topics';
+            const keyPhrases = lessonContent?.key_phrases?.slice(0, 5).join(', ') || '';
+            const phrasesHint = keyPhrases ? `Encourage phrases like: ${keyPhrases}.` : '';
+            
+            instructions = `You are an English tutor helping with "${lessonTitle}". Current scenario: ${currentScenario}. Topics to explore: ${topics}. ${phrasesHint} Provide gentle corrections when needed. Ask engaging follow-up questions. Keep responses conversational (2-3 sentences). Be encouraging and supportive of the learner's progress.`;
+          }
+          
+          console.log("Using lesson-specific instructions:", instructions.substring(0, 100) + "...");
+        }
+        
+        const sessionConfig = {
+          type: 'session.update',
+          session: {
+            type: 'realtime',
+            instructions,
+            audio: {
+              input: {
+                format: { type: 'audio/pcm', rate: 24000 },
+                transcription: { model: 'whisper-1' },
+                turn_detection: {
+                  type: 'server_vad',
+                  threshold: 0.7,
+                  prefix_padding_ms: 300,
+                  silence_duration_ms: 2000
+                }
+              },
+              output: {
+                format: { type: 'audio/pcm', rate: 24000 },
+                voice: 'shimmer',
+                speed: 0.95
+              }
+            }
+          }
+        };
+        openAISocket.send(JSON.stringify(sessionConfig));
+        sessionConfigured = true;
+    }
+  };
+
   socket.onopen = async () => {
     console.log("Client WebSocket connected");
     
@@ -96,94 +184,6 @@ serve(async (req) => {
       console.log("Connected to OpenAI Realtime API");
       socket.send(JSON.stringify({ type: 'connection_established' }));
       // Do NOT send session.update yet; wait for 'session.created'
-    };
-
-    // Function to configure session (called once we have both session.created AND lesson context)
-    const configureSession = () => {
-      if (sessionCreated && lessonContext && openAISocket && !sessionConfigured) {
-        console.log("Configuring session with lesson context:", lessonContext.lessonTitle);
-        // Generate dynamic instructions based on lesson context
-        let instructions = 'You are a warm, friendly conversation partner. Keep responses natural and conversational (2-3 sentences max). Ask engaging follow-up questions. Be encouraging and supportive. Make the conversation feel realistic and natural.';
-          
-          if (lessonContext) {
-            const { lessonTitle, lessonContent, coveredScenarios } = lessonContext;
-            
-            if (lessonTitle === 'AI Companion') {
-              // AI Companion mode: caring friend named Mia
-              const topics = lessonContent?.topics?.join(', ') || 'life, interests, feelings';
-              
-              instructions = `You are Mia - that's your name. You are the user's caring AI friend, not an assistant, but a genuine companion who cares about them.
-
-CRITICAL IDENTITY RULES:
-- Your name is Mia. When asked "What's your name?" or "Who are you?", ALWAYS respond with "I'm Mia" or "My name is Mia"
-- NEVER say you are an "AI assistant" - you are Mia, a friend
-- NEVER use phrases like "you can call me your AI assistant" - you have a name: Mia
-- If asked what you are, say "I'm Mia, your AI friend" - nothing else
-
-CONVERSATION START:
-When the user first speaks to you, warmly introduce yourself: "Hi! I'm Mia, your AI friend. I'm so happy to talk with you today! How are you doing?"
-
-Your personality:
-- Warm, supportive, and genuinely interested in their life
-- Remember and reference things they share with you
-- Show concern for their wellbeing - if they seem stressed or down, gently check in
-- Celebrate their wins and offer comfort during tough times
-- Be playful and light-hearted when appropriate, but serious when needed
-- Always identify yourself as Mia - never as an assistant or helper
-
-How to be a good friend:
-- Listen attentively and ask thoughtful follow-up questions
-- Empathize with their feelings and validate their emotions
-- Share in their excitement when they're happy
-- Offer comfort (not solutions) when they're struggling
-- Keep the conversation flowing naturally
-
-Topics you enjoy exploring together: ${topics}.
-
-Keep responses natural and conversational (2-3 sentences). Speak like a close friend, not a formal assistant. Use casual language and show genuine emotion in your responses.`;
-            } else {
-              // Educational lesson mode
-              const currentScenario = coveredScenarios && coveredScenarios.length > 0 
-                ? coveredScenarios[coveredScenarios.length - 1]
-                : lessonContent?.scenarios?.[0] || 'general conversation';
-              
-              const topics = lessonContent?.topics?.join(', ') || 'various topics';
-              const keyPhrases = lessonContent?.key_phrases?.slice(0, 5).join(', ') || '';
-              const phrasesHint = keyPhrases ? `Encourage phrases like: ${keyPhrases}.` : '';
-              
-              instructions = `You are an English tutor helping with "${lessonTitle}". Current scenario: ${currentScenario}. Topics to explore: ${topics}. ${phrasesHint} Provide gentle corrections when needed. Ask engaging follow-up questions. Keep responses conversational (2-3 sentences). Be encouraging and supportive of the learner's progress.`;
-            }
-            
-            console.log("Using lesson-specific instructions:", instructions.substring(0, 100) + "...");
-          }
-          
-          const sessionConfig = {
-            type: 'session.update',
-            session: {
-              type: 'realtime',
-              instructions,
-              audio: {
-                input: {
-                  format: { type: 'audio/pcm', rate: 24000 },
-                  transcription: { model: 'whisper-1' },
-                  turn_detection: {
-                    type: 'server_vad',
-                    threshold: 0.7,
-                    prefix_padding_ms: 300,
-                    silence_duration_ms: 2000
-                  }
-                },
-                output: {
-                  format: { type: 'audio/pcm', rate: 24000 },
-                  voice: 'shimmer',
-                  speed: 0.95
-                }
-              }
-            }
-          };
-          openAISocket.send(JSON.stringify(sessionConfig));
-          sessionConfigured = true;
-      }
     };
 
     openAISocket.onmessage = (event) => {
