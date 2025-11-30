@@ -113,7 +113,7 @@ const Trial = () => {
         <div className="max-w-2xl mx-auto text-center mb-4 sm:mb-6">
           {!isSessionActive && (
             <p className="text-base sm:text-lg text-muted-foreground mb-3 sm:mb-4">
-              Talk to your AI friend — free for 2 minutes!
+              Talk to Mia — free for 2 minutes!
             </p>
           )}
         </div>

@@ -57,8 +57,8 @@ const Home = () => {
             <div className="w-16 h-16 bg-pink-100 dark:bg-pink-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-4xl">💞</span>
             </div>
-            <h2 className="text-xl font-bold mb-2">AI Companion</h2>
-            <p className="text-sm text-muted-foreground mb-1">Talk with your AI friend. Share your thoughts and feelings.</p>
+            <h2 className="text-xl font-bold mb-2">Talk to Mia</h2>
+            <p className="text-sm text-muted-foreground mb-1">Your AI friend Mia is here to listen and chat.</p>
             
             <Button className="w-full mt-4" onClick={() => navigate('/lesson/9b25e5bb-3702-448f-aae7-39c0b44fb558')}>
               Start Talking

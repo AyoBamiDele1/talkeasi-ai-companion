@@ -24,7 +24,7 @@ const TrialEndedModal = ({ open, onOpenChange }: TrialEndedModalProps) => {
             ✨ Your free 2 minutes are up!
           </DialogTitle>
           <DialogDescription className="text-center text-sm">
-            Want to keep talking with your AI friend?
+            Want to keep talking with Mia?
           </DialogDescription>
         </DialogHeader>
 
@@ -55,7 +55,7 @@ const TrialEndedModal = ({ open, onOpenChange }: TrialEndedModalProps) => {
         </div>
 
         <p className="text-[10px] sm:text-xs text-center text-muted-foreground px-4 leading-relaxed">
-          Create an account to save your conversations and keep talking with your AI friend.
+          Create an account to save your conversations and keep talking with Mia.
         </p>
 
         {/* Optional: Social proof */}

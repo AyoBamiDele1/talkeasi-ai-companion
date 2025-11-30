@@ -23,7 +23,7 @@ const Progress = () => {
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-foreground mb-2">Your Journey</h1>
           <p className="text-muted-foreground">
-            Track your conversations with your companion
+            Track your conversations with Mia
           </p>
         </div>
         <div className="flex-1 flex flex-col items-center justify-center text-center">
@@ -31,7 +31,7 @@ const Progress = () => {
             Have your first conversation to see your progress here!
           </p>
           <Button onClick={() => navigate('/home')} size="lg">
-            Talk to Your Companion
+            Talk to Mia
           </Button>
         </div>
       </div>
@@ -53,7 +53,7 @@ const Progress = () => {
           Your Journey
         </h1>
         <p className="text-muted-foreground">
-          Track your conversations with your companion
+          Track your conversations with Mia
         </p>
       </div>
 
