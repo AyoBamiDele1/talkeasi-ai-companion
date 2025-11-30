@@ -235,7 +235,7 @@ Keep responses natural and conversational (2-3 sentences). Speak like a close fr
     try {
       const data = JSON.parse(event.data);
       
-      // Handle lesson context initialization
+      // Handle lesson context initialization - NEVER forward to OpenAI
       if (data.type === 'lesson_init') {
         console.log("=== LESSON CONTEXT RECEIVED ===");
         console.log("Lesson Title:", data.payload?.lessonTitle || 'No title');
@@ -243,29 +243,27 @@ Keep responses natural and conversational (2-3 sentences). Speak like a close fr
         console.log("Session Created:", sessionCreated);
         console.log("Session Configured:", sessionConfigured);
         
-        lessonContext = data.payload;
+        try {
+          lessonContext = data.payload;
+          configureSession();
+          console.log("=== LESSON CONTEXT PROCESSING COMPLETE ===");
+        } catch (configError) {
+          console.error("Error configuring session:", configError);
+        }
         
-        // Try to configure session now (if session was already created)
-        configureSession();
-        
-        console.log("=== LESSON CONTEXT PROCESSING COMPLETE ===");
-        return; // Don't forward to OpenAI
+        // CRITICAL: Return immediately, never forward lesson_init
+        return;
       }
       
-      // Forward all other messages to OpenAI (except custom types)
+      // Forward all other messages to OpenAI
       if (openAISocket && openAISocket.readyState === WebSocket.OPEN) {
-        // Double-check we're not forwarding custom message types
-        if (data.type !== 'lesson_init') {
-          console.log("Forwarding message to OpenAI:", data.type);
-          openAISocket.send(event.data);
-        } else {
-          console.log("Blocked forwarding of custom message type:", data.type);
-        }
+        console.log("Forwarding message to OpenAI:", data.type);
+        openAISocket.send(event.data);
       } else {
         console.log("OpenAI socket not ready, dropping message");
       }
     } catch (error) {
-      // If not JSON, forward as-is
+      // If not JSON (e.g., binary audio data), forward as-is
       if (openAISocket && openAISocket.readyState === WebSocket.OPEN) {
         openAISocket.send(event.data);
       }
