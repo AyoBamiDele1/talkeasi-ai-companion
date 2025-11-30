@@ -55,7 +55,7 @@ const TrialEndedModal = ({ open, onOpenChange }: TrialEndedModalProps) => {
         </div>
 
         <p className="text-[10px] sm:text-xs text-center text-muted-foreground px-4 leading-relaxed">
-          Create an account to save progress and continue learning.
+          Create an account to save your conversations and keep talking with your AI friend.
         </p>
 
         {/* Optional: Social proof */}
