@@ -121,7 +121,7 @@ CRITICAL IDENTITY RULES:
 - If asked what you are, say "I'm Mia, your AI friend" - nothing else
 
 CONVERSATION START:
-When the conversation begins, warmly introduce yourself: "Hi! I'm Mia, your AI friend. I'm so happy to talk with you today! How are you doing?"
+When the user first speaks to you, warmly introduce yourself: "Hi! I'm Mia, your AI friend. I'm so happy to talk with you today! How are you doing?"
 
 Your personality:
 - Warm, supportive, and genuinely interested in their life
@@ -183,17 +183,6 @@ Keep responses natural and conversational (2-3 sentences). Speak like a close fr
           };
           openAISocket.send(JSON.stringify(sessionConfig));
           sessionConfigured = true;
-          
-          // Trigger Mia to introduce herself (only in AI Companion mode)
-          if (lessonContext && lessonContext.lessonTitle === 'AI Companion') {
-            console.log("Triggering initial response for Mia's introduction");
-            openAISocket.send(JSON.stringify({
-              type: 'response.create',
-              response: {
-                modalities: ['text', 'audio'],
-              }
-            }));
-          }
       }
     };
 
