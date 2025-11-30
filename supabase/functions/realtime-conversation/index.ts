@@ -232,38 +232,53 @@ Keep responses natural and conversational (2-3 sentences). Speak like a close fr
   };
 
   socket.onmessage = (event) => {
+    // CRITICAL: Check for lesson_init BEFORE any processing
+    // This prevents lesson_init from being forwarded even if JSON parsing fails
+    let messageType = null;
     try {
-      const data = JSON.parse(event.data);
-      
-      // Handle lesson context initialization - NEVER forward to OpenAI
-      if (data.type === 'lesson_init') {
-        console.log("=== LESSON CONTEXT RECEIVED ===");
+      // Peek at the message type first
+      if (typeof event.data === 'string') {
+        const parsedData = JSON.parse(event.data);
+        messageType = parsedData.type;
+      }
+    } catch (e) {
+      // Not JSON or parsing failed - will be treated as binary below
+    }
+
+    // ABSOLUTE BLOCK: Never forward lesson_init under any circumstances
+    if (messageType === 'lesson_init') {
+      console.log("=== LESSON CONTEXT RECEIVED ===");
+      try {
+        const data = JSON.parse(event.data);
         console.log("Lesson Title:", data.payload?.lessonTitle || 'No title');
         console.log("Model:", data.payload?.model || 'gpt-4o-mini-realtime-preview (default)');
         console.log("Session Created:", sessionCreated);
         console.log("Session Configured:", sessionConfigured);
         
-        try {
-          lessonContext = data.payload;
-          configureSession();
-          console.log("=== LESSON CONTEXT PROCESSING COMPLETE ===");
-        } catch (configError) {
-          console.error("Error configuring session:", configError);
-        }
-        
-        // CRITICAL: Return immediately, never forward lesson_init
-        return;
+        lessonContext = data.payload;
+        configureSession();
+        console.log("=== LESSON CONTEXT PROCESSING COMPLETE ===");
+      } catch (configError) {
+        console.error("Error configuring session:", configError);
       }
+      // CRITICAL: Return immediately - never forward to OpenAI
+      return;
+    }
+
+    // Handle all other messages
+    try {
+      const data = JSON.parse(event.data);
+      console.log("Client message type:", data.type);
       
-      // Forward all other messages to OpenAI
+      // Forward JSON messages to OpenAI
       if (openAISocket && openAISocket.readyState === WebSocket.OPEN) {
-        console.log("Forwarding message to OpenAI:", data.type);
+        console.log("Forwarding to OpenAI:", data.type);
         openAISocket.send(event.data);
       } else {
         console.log("OpenAI socket not ready, dropping message");
       }
     } catch (error) {
-      // If not JSON (e.g., binary audio data), forward as-is
+      // Binary audio data - forward as-is
       if (openAISocket && openAISocket.readyState === WebSocket.OPEN) {
         openAISocket.send(event.data);
       }
