@@ -248,20 +248,30 @@ Keep responses natural and conversational (2-3 sentences). Speak like a close fr
       
       // Handle lesson context initialization
       if (data.type === 'lesson_init') {
-        console.log("Received lesson context:", data.payload?.lessonTitle || 'No title');
-        console.log("Model requested:", data.payload?.model || 'gpt-4o-mini-realtime-preview (default)');
+        console.log("=== LESSON CONTEXT RECEIVED ===");
+        console.log("Lesson Title:", data.payload?.lessonTitle || 'No title');
+        console.log("Model:", data.payload?.model || 'gpt-4o-mini-realtime-preview (default)');
+        console.log("Session Created:", sessionCreated);
+        console.log("Session Configured:", sessionConfigured);
+        
         lessonContext = data.payload;
         
         // Try to configure session now (if session was already created)
         configureSession();
         
+        console.log("=== LESSON CONTEXT PROCESSING COMPLETE ===");
         return; // Don't forward to OpenAI
       }
       
-      // Forward all other messages to OpenAI
+      // Forward all other messages to OpenAI (except custom types)
       if (openAISocket && openAISocket.readyState === WebSocket.OPEN) {
-        console.log("Forwarding message to OpenAI:", event.data.substring(0, 100));
-        openAISocket.send(event.data);
+        // Double-check we're not forwarding custom message types
+        if (data.type !== 'lesson_init') {
+          console.log("Forwarding message to OpenAI:", data.type);
+          openAISocket.send(event.data);
+        } else {
+          console.log("Blocked forwarding of custom message type:", data.type);
+        }
       } else {
         console.log("OpenAI socket not ready, dropping message");
       }
