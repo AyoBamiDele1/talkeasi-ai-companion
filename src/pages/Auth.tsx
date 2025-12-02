@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Navigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,10 +19,21 @@ export default function Auth() {
   const [isLoading, setIsLoading] = useState(false);
   const [showSignInPassword, setShowSignInPassword] = useState(false);
   const [showSignUpPassword, setShowSignUpPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
   const [resetEmailSent, setResetEmailSent] = useState(false);
+  const [isRecoveryMode, setIsRecoveryMode] = useState(false);
 
-  // Redirect if already authenticated
-  if (user && !loading) {
+  // Check for password recovery token on mount
+  useEffect(() => {
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const type = hashParams.get('type');
+    if (type === 'recovery') {
+      setIsRecoveryMode(true);
+    }
+  }, []);
+
+  // Redirect if already authenticated (unless in recovery mode)
+  if (user && !loading && !isRecoveryMode) {
     return <Navigate to="/home" replace />;
   }
 
@@ -98,6 +109,36 @@ export default function Auth() {
         title: "Check your email",
         description: "We've sent you a password reset link.",
       });
+    }
+    
+    setIsLoading(false);
+  };
+
+  const handlePasswordUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
+    const formData = new FormData(e.currentTarget);
+    const newPassword = formData.get('new-password') as string;
+
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword
+    });
+    
+    if (error) {
+      toast({
+        title: "Password update failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "Password updated!",
+        description: "You can now sign in with your new password.",
+      });
+      setIsRecoveryMode(false);
+      window.location.hash = '';
+      window.history.replaceState(null, '', '/auth?mode=signin');
     }
     
     setIsLoading(false);
@@ -241,15 +282,46 @@ export default function Auth() {
             <TabsContent value="reset">
               <Card>
                 <CardHeader className="p-3 sm:p-6 pb-2 sm:pb-6">
-                  <CardTitle className="text-lg sm:text-2xl">Reset password</CardTitle>
+                  <CardTitle className="text-lg sm:text-2xl">
+                    {isRecoveryMode ? "Set new password" : "Reset password"}
+                  </CardTitle>
                   <CardDescription className="text-xs sm:text-sm">
-                    {resetEmailSent 
-                      ? "Check your email for the reset link" 
-                      : "Enter your email to receive a reset link"}
+                    {isRecoveryMode 
+                      ? "Enter your new password below"
+                      : resetEmailSent 
+                        ? "Check your email for the reset link" 
+                        : "Enter your email to receive a reset link"}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-3 sm:p-6 pt-2 sm:pt-6">
-                  {resetEmailSent ? (
+                  {isRecoveryMode ? (
+                    <form onSubmit={handlePasswordUpdate} className="space-y-2.5 sm:space-y-4">
+                      <div className="space-y-1 sm:space-y-2">
+                        <Label htmlFor="new-password" className="text-xs sm:text-sm">New Password</Label>
+                        <div className="relative">
+                          <Input
+                            id="new-password"
+                            name="new-password"
+                            type={showNewPassword ? "text" : "password"}
+                            minLength={6}
+                            required
+                            className="pr-10 h-9 sm:h-10 text-sm"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowNewPassword(!showNewPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                            aria-label={showNewPassword ? "Hide password" : "Show password"}
+                          >
+                            {showNewPassword ? <EyeOff className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> : <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
+                          </button>
+                        </div>
+                      </div>
+                      <Button type="submit" className="w-full h-9 sm:h-10 text-sm sm:text-base mt-3 sm:mt-4" disabled={isLoading}>
+                        {isLoading ? "Updating..." : "Update Password"}
+                      </Button>
+                    </form>
+                  ) : resetEmailSent ? (
                     <div className="text-center py-4">
                       <p className="text-sm text-muted-foreground mb-4">
                         We've sent a password reset link to your email. Please check your inbox and follow the instructions.
