@@ -105,7 +105,7 @@ export default function Auth() {
               <Card>
                 <CardHeader className="p-3 sm:p-6 pb-2 sm:pb-6">
                   <CardTitle className="text-lg sm:text-2xl">Welcome back</CardTitle>
-                  <CardDescription className="text-xs sm:text-sm">Sign in to continue your learning journey</CardDescription>
+                  <CardDescription className="text-xs sm:text-sm">Sign in to continue talking with Mia</CardDescription>
                 </CardHeader>
                 <CardContent className="p-3 sm:p-6 pt-2 sm:pt-6">
                   <form onSubmit={handleSignIn} className="space-y-2.5 sm:space-y-4">
@@ -152,7 +152,7 @@ export default function Auth() {
               <Card>
                 <CardHeader className="p-3 sm:p-6 pb-1.5 sm:pb-6">
                   <CardTitle className="text-base sm:text-2xl">Create account</CardTitle>
-                  <CardDescription className="text-xs sm:text-sm">Start your English learning journey</CardDescription>
+                  <CardDescription className="text-xs sm:text-sm">Start talking with Mia, your AI friend</CardDescription>
                 </CardHeader>
                 <CardContent className="p-3 sm:p-6 pt-1.5 sm:pt-6">
                   <form onSubmit={handleSignUp} className="space-y-2 sm:space-y-4">
