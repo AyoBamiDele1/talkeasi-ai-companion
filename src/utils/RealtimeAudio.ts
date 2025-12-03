@@ -249,6 +249,7 @@ export class RealtimeChat {
   private recorder: AudioRecorder | null = null;
   private isConnected = false;
   private lessonContextToSend: any = null;
+  private keepaliveInterval: ReturnType<typeof setInterval> | null = null;
 
   constructor(
     private onMessage: (message: any) => void,
@@ -262,6 +263,24 @@ export class RealtimeChat {
   ) {
     if (lessonContext) {
       this.lessonContextToSend = lessonContext;
+    }
+  }
+
+  private startKeepalive() {
+    // Send a keepalive ping every 25 seconds to prevent WebSocket timeout
+    this.keepaliveInterval = setInterval(() => {
+      if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+        console.log('[Keepalive] Sending ping to maintain connection');
+        // Send empty input_audio_buffer.commit as a lightweight keepalive
+        this.ws.send(JSON.stringify({ type: 'input_audio_buffer.clear' }));
+      }
+    }, 25000);
+  }
+
+  private stopKeepalive() {
+    if (this.keepaliveInterval) {
+      clearInterval(this.keepaliveInterval);
+      this.keepaliveInterval = null;
     }
   }
 
@@ -292,6 +311,9 @@ export class RealtimeChat {
 
             if (data.type === 'connection_established') {
               console.log('Connection established, sending lesson context and starting audio...');
+              
+              // Start keepalive to prevent WebSocket timeout
+              this.startKeepalive();
               
               // Send lesson context if available
               if (this.lessonContextToSend && this.ws) {
@@ -418,6 +440,9 @@ export class RealtimeChat {
 
   private cleanup() {
     console.log('Running cleanup - stopping all audio and closing context');
+    // Stop keepalive first
+    this.stopKeepalive();
+    
     if (this.recorder) {
       this.recorder.stop();
       this.recorder = null;
@@ -441,6 +466,9 @@ export class RealtimeChat {
   disconnect() {
     console.log('Disconnecting RealtimeChat and clearing audio queue');
     this.isConnected = false;
+    
+    // Stop keepalive immediately
+    this.stopKeepalive();
     
     // CRITICAL: Close WebSocket FIRST to prevent new audio chunks
     if (this.ws) {
