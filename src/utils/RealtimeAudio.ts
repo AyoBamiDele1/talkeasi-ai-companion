@@ -257,6 +257,7 @@ export class RealtimeChat {
       lessonContent?: any; 
       coveredScenarios?: string[];
       model?: string;
+      userMemories?: Array<{ content: string; memory_type: string; importance: number }>;
     }
   ) {
     if (lessonContext) {
