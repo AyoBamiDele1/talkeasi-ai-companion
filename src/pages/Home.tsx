@@ -73,7 +73,7 @@ const Home = () => {
     // Returning after gap (2+ days)
     if (daysSinceLastChat >= 2) {
       return {
-        greeting: `${timeGreeting}, ${userName}! 💬`,
+        greeting: `${timeGreeting}, ${userName}!`,
         subtitle: `It's been ${daysSinceLastChat} days - Nova missed you!`
       };
     }
@@ -88,7 +88,7 @@ const Home = () => {
 
     // Regular return
     return {
-      greeting: `Welcome back, ${userName}! 💬`,
+      greeting: `Welcome back, ${userName}!`,
       subtitle: "Nova is here for you."
     };
   };
