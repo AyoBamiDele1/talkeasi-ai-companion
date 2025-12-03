@@ -158,11 +158,11 @@ export default function Auth() {
         <div className="text-center mb-3 sm:mb-8">
           <div className="inline-flex items-center gap-2 mb-2 sm:mb-4">
             <div className="inline-block p-1.5 sm:p-2 bg-primary/10 rounded-full">
-              <span className="text-xl sm:text-2xl -tracking-[0.15em]">💞</span>
+              <span className="text-xl sm:text-2xl">💬</span>
             </div>
             <h1 className="text-xl sm:text-2xl font-bold text-foreground">TalkEasi</h1>
           </div>
-          <p className="text-xs sm:text-base text-muted-foreground px-2">Talk, share, and connect with Mia.</p>
+          <p className="text-xs sm:text-base text-muted-foreground px-2">Talk, share, and connect with Nova.</p>
         </div>
 
         <Card>
@@ -177,7 +177,7 @@ export default function Auth() {
               <Card>
                 <CardHeader className="p-3 sm:p-6 pb-2 sm:pb-6">
                   <CardTitle className="text-lg sm:text-2xl">Welcome back</CardTitle>
-                  <CardDescription className="text-xs sm:text-sm">Sign in to continue talking with Mia</CardDescription>
+                  <CardDescription className="text-xs sm:text-sm">Sign in to continue talking with Nova</CardDescription>
                 </CardHeader>
                 <CardContent className="p-3 sm:p-6 pt-2 sm:pt-6">
                   <form onSubmit={handleSignIn} className="space-y-2.5 sm:space-y-4">
@@ -224,7 +224,7 @@ export default function Auth() {
               <Card>
                 <CardHeader className="p-3 sm:p-6 pb-1.5 sm:pb-6">
                   <CardTitle className="text-base sm:text-2xl">Create account</CardTitle>
-                  <CardDescription className="text-xs sm:text-sm">Start talking with Mia, your AI friend</CardDescription>
+                  <CardDescription className="text-xs sm:text-sm">Start talking with Nova, your AI friend</CardDescription>
                 </CardHeader>
                 <CardContent className="p-3 sm:p-6 pt-1.5 sm:pt-6">
                   <form onSubmit={handleSignUp} className="space-y-2 sm:space-y-4">

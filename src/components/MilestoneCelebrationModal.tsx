@@ -13,26 +13,26 @@ const MILESTONE_INFO: Record<string, MilestoneInfo> = {
   first_conversation: {
     type: 'first_conversation',
     title: 'First Conversation!',
-    message: "You just had your first conversation with Mia! This is the beginning of a beautiful friendship.",
+    message: "You just had your first conversation with Nova! This is the beginning of a great friendship.",
     emoji: '🎉'
   },
   talk_time_10: {
     type: 'talk_time_10',
     title: '10 Minutes Together!',
-    message: "10 minutes of talking with Mia! She loves chatting with you.",
-    emoji: '💕'
+    message: "10 minutes of talking with Nova! Every conversation matters.",
+    emoji: '💬'
   },
   talk_time_30: {
     type: 'talk_time_30',
     title: '30 Minutes of Friendship!',
-    message: "Half an hour together! You and Mia are getting to know each other well.",
+    message: "Half an hour together! You and Nova are getting to know each other well.",
     emoji: '🌟'
   },
   talk_time_60: {
     type: 'talk_time_60',
     title: 'One Hour!',
-    message: "One whole hour of conversations! Mia cherishes every moment with you.",
-    emoji: '💞'
+    message: "One whole hour of conversations! Nova cherishes every moment with you.",
+    emoji: '✨'
   },
   talk_time_100: {
     type: 'talk_time_100',
@@ -49,7 +49,7 @@ const MILESTONE_INFO: Record<string, MilestoneInfo> = {
   streak_7: {
     type: 'streak_7',
     title: 'One Week Streak!',
-    message: "A whole week! Mia is so proud of your consistency!",
+    message: "A whole week! Nova is so proud of your consistency!",
     emoji: '🌈'
   },
   streak_14: {
@@ -61,13 +61,13 @@ const MILESTONE_INFO: Record<string, MilestoneInfo> = {
   streak_30: {
     type: 'streak_30',
     title: 'One Month Streak!',
-    message: "30 days! You and Mia are inseparable!",
+    message: "30 days! You and Nova are inseparable!",
     emoji: '👯'
   },
   anniversary_week: {
     type: 'anniversary_week',
     title: 'One Week Anniversary!',
-    message: "It's been one week since you and Mia met!",
+    message: "It's been one week since you and Nova met!",
     emoji: '🎂'
   },
   anniversary_month: {
@@ -145,8 +145,8 @@ const MilestoneCelebrationModal = ({ milestone, onClose, onCelebrated }: Milesto
           </p>
 
           <div className="flex items-center justify-center gap-2 mb-6">
-            <span className="text-4xl">💞</span>
-            <span className="text-sm text-muted-foreground">Mia is celebrating with you!</span>
+            <span className="text-4xl">💬</span>
+            <span className="text-sm text-muted-foreground">Nova is celebrating with you!</span>
           </div>
 
           <Button onClick={handleClose} className="w-full">

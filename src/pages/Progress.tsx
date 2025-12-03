@@ -37,16 +37,16 @@ const Progress = () => {
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-foreground mb-2">Your Journey</h1>
           <p className="text-muted-foreground">
-            Track your conversations with Mia
+            Track your conversations with Nova
           </p>
         </div>
         <div className="flex-1 flex flex-col items-center justify-center text-center">
-          <div className="text-6xl mb-4">💞</div>
+          <div className="text-6xl mb-4">💬</div>
           <p className="text-muted-foreground mb-6">
             Have your first conversation to see your progress here!
           </p>
           <Button onClick={() => navigate('/home')} size="lg">
-            Talk to Mia
+            Talk to Nova
           </Button>
         </div>
       </div>
@@ -68,7 +68,7 @@ const Progress = () => {
           Your Journey
         </h1>
         <p className="text-muted-foreground">
-          Track your conversations with Mia
+          Track your conversations with Nova
         </p>
       </div>
 
@@ -161,7 +161,7 @@ const Progress = () => {
                 {moodStats.improvementPercentage > 0 ? '+' : ''}{moodStats.improvementPercentage}%
               </div>
               <p className="text-sm text-muted-foreground">
-                average mood improvement after talking with Mia
+                average mood improvement after talking with Nova
               </p>
               <div className="flex justify-center gap-6 mt-4 text-sm">
                 <div>
