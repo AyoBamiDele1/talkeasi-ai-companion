@@ -766,6 +766,11 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       // Pre-request microphone permission immediately for faster UX
       await navigator.mediaDevices.getUserMedia({ audio: true });
       
+      // Fetch user memories for personalized conversation (even in trial mode)
+      const memories = await fetchUserMemories();
+      setUserMemories(memories);
+      console.log('[DEBUG] Loaded memories for trial session:', memories.length);
+      
       const chat = new RealtimeChat(
         (message) => {
           handleRealtimeMessage(message);
@@ -775,7 +780,8 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
           lessonTitle: 'AI Companion',
           lessonContent: lessonContent,
           coveredScenarios: coveredScenarios,
-          model: 'gpt-4o-mini-realtime-preview'
+          model: 'gpt-4o-mini-realtime-preview',
+          userMemories: memories
         }
       );
 

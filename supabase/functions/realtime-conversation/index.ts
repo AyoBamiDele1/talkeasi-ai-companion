@@ -345,52 +345,16 @@ Keep responses natural and conversational (2-3 sentences). Speak like a close fr
     }
 
     try {
-      // Create GA client secret (no beta session)
-      console.log("Creating GA client secret...");
-      const sessionResponse = await fetch("https://api.openai.com/v1/realtime/client_secrets", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${openAIApiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({}),
-      });
+      // Use direct WebSocket connection with API key (more reliable)
+      console.log("Creating direct WebSocket connection to OpenAI...");
 
-      if (!sessionResponse.ok) {
-        const errorText = await sessionResponse.text();
-        console.error("Failed to create session:", errorText);
-        socket.send(JSON.stringify({ error: `Failed to create session: ${errorText}` }));
-        socket.close(1011, 'Session creation failed');
-        return;
-      }
-
-      const sessionData = await sessionResponse.json();
-      console.log("Client secret response keys:", Object.keys(sessionData || {}));
-
-      // Support multiple possible response shapes from GA endpoint
-      const ephemeralKey: string | undefined =
-        (sessionData?.client_secret && sessionData.client_secret.value) ||
-        (typeof sessionData?.client_secret === 'string' ? sessionData.client_secret : undefined) ||
-        (typeof sessionData?.value === 'string' ? sessionData.value : undefined) ||
-        (typeof sessionData?.secret === 'string' ? sessionData.secret : undefined) ||
-        (sessionData?.data && sessionData.data.client_secret && sessionData.data.client_secret.value);
-
-      if (!ephemeralKey) {
-        console.error("No client secret in response", sessionData);
-        socket.send(JSON.stringify({ error: 'No client secret received' }));
-        socket.close(1011, 'Invalid session response');
-        return;
-      }
-
-      console.log("Using ephemeral key for connection");
-
-      // Connect to OpenAI Realtime API with ephemeral key
+      // Connect to OpenAI Realtime API directly with API key
       // Model will be set after lesson_init message, defaults to mini
       const model = lessonContext?.model || 'gpt-4o-mini-realtime-preview';
       console.log("Connecting with model:", model);
       openAISocket = new WebSocket(
         `wss://api.openai.com/v1/realtime?model=${model}`,
-        ["realtime", `openai-insecure-api-key.${ephemeralKey}`]
+        ["realtime", `openai-insecure-api-key.${openAIApiKey}`]
       );
     } catch (error) {
       console.error("Error creating session:", error);
