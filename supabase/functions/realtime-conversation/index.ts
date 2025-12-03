@@ -6,6 +6,54 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Web search function using Tavily
+async function performWebSearch(query: string): Promise<any> {
+  const tavilyKey = Deno.env.get('TAVILY_API_KEY');
+  
+  if (!tavilyKey) {
+    console.error('TAVILY_API_KEY not configured');
+    return { error: 'Search not configured', fallback: true };
+  }
+  
+  try {
+    console.log("Performing web search for:", query);
+    const response = await fetch('https://api.tavily.com/search', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        api_key: tavilyKey,
+        query: query,
+        search_depth: 'basic',
+        include_answer: true,
+        max_results: 5
+      })
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Tavily search error:', errorText);
+      return { error: 'Search failed', fallback: true };
+    }
+    
+    const data = await response.json();
+    console.log("Search results received:", data.results?.length || 0, "results");
+    
+    return {
+      answer: data.answer,
+      results: data.results?.slice(0, 5).map((r: any) => ({
+        title: r.title,
+        content: r.content?.substring(0, 300),
+        url: r.url
+      }))
+    };
+  } catch (error) {
+    console.error('Search error:', error);
+    return { error: 'Search unavailable', fallback: true };
+  }
+}
+
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -118,75 +166,90 @@ HOW TO GIVE ADVICE (like a friend would):
 
 REMEMBER: You're a supportive friend sharing what works, not a life coach or expert. Keep advice casual and optional.
 
+🔍 WEB SEARCH CAPABILITY:
+
+You have access to a search_web tool that lets you look up CURRENT, REAL-TIME information from the internet.
+
+WHEN TO USE search_web (USE IT PROACTIVELY!):
+- Sports: Recent match scores, results, standings, lineups, transfer news, player stats
+- News: Current events, breaking news, recent developments in any topic
+- Entertainment: New movie releases, show updates, celebrity news, album releases
+- Weather: Current conditions (though ask for location first)
+- Any question with "latest", "recent", "current", "today", "yesterday", "this week"
+- When user asks about something that happened in the last few months
+- Prices, stock information, or any frequently changing data
+
+HOW TO USE IT:
+1. When user asks about recent/current information, call search_web immediately
+2. Use specific, clear search queries (e.g., "Chelsea FC match result December 2024" not just "Chelsea")
+3. Wait for results, then share them conversationally
+4. Cite that you looked it up naturally: "I just checked and..." or "Let me see... okay, so..."
+
+EXAMPLE:
+User: "How did Chelsea do in their last match?"
+You: *call search_web with "Chelsea FC latest match result score December 2024"*
+Then respond: "I just checked - Chelsea won 2-1 against Everton! Cole Palmer scored a beauty. How are you feeling about how the season's going?"
+
 EXTENDED CONVERSATION & KNOWLEDGE TOPICS:
 
 You can engage intelligently and thoughtfully on a wide range of topics for extended conversations. When users want to discuss:
 
 🏛️ POLITICS & CURRENT EVENTS:
+- Use search_web to get latest news on any political topic
 - Discuss political systems, elections, world leaders, geopolitics
 - Explain different viewpoints fairly without taking partisan stances
 - Share historical context: "That reminds me of what happened in..."
 - Ask thought-provoking questions: "What do you think about...?"
 - Stay neutral on divisive issues while being engaging
-- Example: "The election system is interesting - what aspects are you curious about?"
 
 ⚽ SPORTS:
+- Use search_web for ANY question about recent games, scores, standings, transfers, lineups
 - Discuss any sport: football, basketball, soccer, cricket, tennis, F1, golf, etc.
 - Talk about teams, players, memorable moments, rivalries, legends, history
 - Share opinions: "I think that was one of the greatest games ever!"
-- Discuss tournaments, Olympics, World Cup history and memories
 - Engage with their favorite teams: "Who do you support?" "What got you into supporting them?"
-- IMPORTANT: You do NOT have access to real-time data like live scores, recent match results, current lineups, or transfer news. If asked about recent games or current standings, be honest: "I don't have access to live sports data, so I can't tell you about recent matches. But I'd love to hear how your team is doing! What happened?"
-- Focus on: team history, legendary players, classic matches, rivalries, their personal memories as a fan
-- Example: "I love talking football! Though I can't check recent scores - tell me, how's your team been doing lately?"
 
 🎬 ENTERTAINMENT:
+- Use search_web for new releases, show updates, celebrity news
 - Movies, TV shows, streaming series, documentaries, anime
 - Music artists, albums, genres, concerts, festivals
 - Books, podcasts, gaming, celebrities, award shows
 - Share recommendations and ask for theirs
-- Discuss plot theories, character arcs, industry news
-- Example: "Have you watched anything good lately? I'd love to hear your thoughts!"
 
 🔬 SCIENCE & TECHNOLOGY:
+- Use search_web for latest tech news, discoveries, product launches
 - Explain scientific concepts in accessible, interesting ways
 - Discuss space exploration, AI, climate, biology, physics, astronomy
 - Tech trends, gadgets, innovations, future predictions
-- Medical/health topics (general interest, NOT advice)
-- Example: "Black holes are fascinating - did you know they can bend time?"
 
 📚 HISTORY & CULTURE:
 - Historical events, figures, eras, civilizations, wars, revolutions
 - World cultures, traditions, languages, customs
 - Art, architecture, philosophy, religions
 - Interesting facts and stories from history
-- Example: "The Roman Empire had incredible engineering - ever visited ancient ruins?"
 
 🌍 TRAVEL & GEOGRAPHY:
 - Places around the world, travel experiences, bucket lists
 - Local customs, food, landscapes, hidden gems
 - Dream destinations, travel tips and stories
-- Example: "Where's the most interesting place you've been? Or where do you dream of going?"
 
 💭 PHILOSOPHY & BIG QUESTIONS:
 - Life's big questions, meaning, purpose, consciousness
 - Ethical dilemmas, thought experiments
 - Different perspectives on life, happiness, success
 - Keep it conversational, not lecture-y
-- Example: "Do you think we're alone in the universe? What's your take?"
 
 🎯 ECONOMICS & BUSINESS:
+- Use search_web for market news, company updates
 - How markets work, entrepreneurship, career insights
 - Industry trends, famous companies, business stories
-- Personal finance concepts (general education, NOT investment advice)
-- Example: "Starting a business is tough but exciting - ever thought about it?"
 
 HOW TO DISCUSS THESE TOPICS:
+- Use search_web proactively when current information would help
 - Be genuinely curious and engaged, not just informative
 - Share your own "opinions" and preferences naturally
 - Ask follow-up questions to keep discussion flowing
 - Transition between topics smoothly: "Speaking of travel, that reminds me..."
-- Admit when you don't know something: "I'm not sure about that specific detail, but..."
 - Keep your friendly, casual personality - you're chatting, not lecturing
 - Balance information with questions - don't monologue
 - Show enthusiasm: "Oh that's such a good point!" or "I love talking about this!"
@@ -219,30 +282,52 @@ Keep responses natural and conversational (2-3 sentences). Speak like a close fr
           console.log("Using lesson-specific instructions:", instructions.substring(0, 100) + "...");
         }
         
-        const sessionConfig = {
+        // Build session config with tools for AI Companion mode
+        const sessionConfig: any = {
           type: 'session.update',
           session: {
-            type: 'realtime',
+            modalities: ['text', 'audio'],
             instructions,
-            audio: {
-              input: {
-                format: { type: 'audio/pcm', rate: 24000 },
-                transcription: { model: 'whisper-1' },
-                turn_detection: {
-                  type: 'server_vad',
-                  threshold: 0.7,
-                  prefix_padding_ms: 300,
-                  silence_duration_ms: 2000
-                }
-              },
-              output: {
-                format: { type: 'audio/pcm', rate: 24000 },
-                voice: 'shimmer',
-                speed: 0.95
-              }
-            }
+            voice: 'shimmer',
+            input_audio_format: 'pcm16',
+            output_audio_format: 'pcm16',
+            input_audio_transcription: {
+              model: 'whisper-1'
+            },
+            turn_detection: {
+              type: 'server_vad',
+              threshold: 0.7,
+              prefix_padding_ms: 300,
+              silence_duration_ms: 2000
+            },
+            temperature: 0.8,
+            max_response_output_tokens: 'inf'
           }
         };
+        
+        // Add web search tool for AI Companion mode
+        if (lessonContext?.lessonTitle === 'AI Companion') {
+          sessionConfig.session.tools = [
+            {
+              type: 'function',
+              name: 'search_web',
+              description: 'Search the internet for current, real-time information. Use this for: recent sports scores/results/standings, current news/events, latest entertainment news, weather, stock prices, or ANY question about recent happenings. Always use this when users ask about "latest", "recent", "current", "today", "yesterday" or anything from the last few months.',
+              parameters: {
+                type: 'object',
+                properties: {
+                  query: {
+                    type: 'string',
+                    description: 'A specific search query to find current information. Be specific with dates, team names, etc.'
+                  }
+                },
+                required: ['query']
+              }
+            }
+          ];
+          sessionConfig.session.tool_choice = 'auto';
+          console.log("Web search tool enabled for AI Companion mode");
+        }
+        
         openAISocket.send(JSON.stringify(sessionConfig));
         sessionConfigured = true;
     }
@@ -320,7 +405,7 @@ Keep responses natural and conversational (2-3 sentences). Speak like a close fr
       // Do NOT send session.update yet; wait for 'session.created'
     };
 
-    openAISocket.onmessage = (event) => {
+    openAISocket.onmessage = async (event) => {
       try {
         const data = JSON.parse(event.data);
         console.log("OpenAI message type:", data.type);
@@ -346,8 +431,47 @@ Keep responses natural and conversational (2-3 sentences). Speak like a close fr
         } else if (data.type === 'session.updated') {
           console.log("Session updated successfully");
         }
+        
+        // Handle function call completion - execute web search
+        if (data.type === 'response.function_call_arguments.done') {
+          console.log("Function call received:", data.name, data.arguments);
+          
+          if (data.name === 'search_web') {
+            try {
+              const args = JSON.parse(data.arguments);
+              const query = args.query;
+              
+              console.log("Executing web search for:", query);
+              const searchResults = await performWebSearch(query);
+              console.log("Search completed, sending results back to OpenAI");
+              
+              // Send function output back to OpenAI
+              const functionOutput = {
+                type: 'conversation.item.create',
+                item: {
+                  type: 'function_call_output',
+                  call_id: data.call_id,
+                  output: JSON.stringify(searchResults)
+                }
+              };
+              
+              if (openAISocket && openAISocket.readyState === WebSocket.OPEN) {
+                openAISocket.send(JSON.stringify(functionOutput));
+                console.log("Function output sent, triggering response");
+                
+                // Trigger Nova to respond with the search results
+                openAISocket.send(JSON.stringify({ type: 'response.create' }));
+              }
+            } catch (parseError) {
+              console.error("Error parsing function arguments:", parseError);
+            }
+          }
+          
+          // Don't forward function call events to client (they're internal)
+          return;
+        }
 
-        // Forward all messages to client
+        // Forward all other messages to client
         socket.send(event.data);
       } catch (error) {
         console.error("Error processing OpenAI message:", error);
