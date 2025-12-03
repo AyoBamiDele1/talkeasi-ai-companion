@@ -298,6 +298,72 @@ export type Database = {
         }
         Relationships: []
       }
+      mood_logs: {
+        Row: {
+          conversation_id: string | null
+          created_at: string
+          id: string
+          mood_after: number | null
+          mood_before: number | null
+          notes: string | null
+          user_id: string
+        }
+        Insert: {
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          mood_after?: number | null
+          mood_before?: number | null
+          notes?: string | null
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          mood_after?: number | null
+          mood_before?: number | null
+          notes?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notification_preferences: {
+        Row: {
+          created_at: string
+          id: string
+          mia_checkins: boolean | null
+          milestone_celebrations: boolean | null
+          preferred_time: string | null
+          streak_reminders: boolean | null
+          timezone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mia_checkins?: boolean | null
+          milestone_celebrations?: boolean | null
+          preferred_time?: string | null
+          streak_reminders?: boolean | null
+          timezone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mia_checkins?: boolean | null
+          milestone_celebrations?: boolean | null
+          preferred_time?: string | null
+          streak_reminders?: boolean | null
+          timezone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       payment_rate_limits: {
         Row: {
           created_at: string
@@ -379,6 +445,7 @@ export type Database = {
           created_at: string
           current_streak: number | null
           display_name: string | null
+          first_conversation_at: string | null
           id: string
           last_activity_date: string | null
           learning_goals: string[] | null
@@ -394,6 +461,7 @@ export type Database = {
           created_at?: string
           current_streak?: number | null
           display_name?: string | null
+          first_conversation_at?: string | null
           id?: string
           last_activity_date?: string | null
           learning_goals?: string[] | null
@@ -409,6 +477,7 @@ export type Database = {
           created_at?: string
           current_streak?: number | null
           display_name?: string | null
+          first_conversation_at?: string | null
           id?: string
           last_activity_date?: string | null
           learning_goals?: string[] | null
@@ -417,6 +486,33 @@ export type Database = {
           native_language?: string | null
           streak_updated_at?: string | null
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          p256dh: string
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          p256dh: string
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          p256dh?: string
           user_id?: string
         }
         Relationships: []
@@ -504,6 +600,69 @@ export type Database = {
         }
         Relationships: []
       }
+      user_memories: {
+        Row: {
+          content: string
+          context: string | null
+          created_at: string
+          id: string
+          importance: number | null
+          last_referenced: string | null
+          memory_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          context?: string | null
+          created_at?: string
+          id?: string
+          importance?: number | null
+          last_referenced?: string | null
+          memory_type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          context?: string | null
+          created_at?: string
+          id?: string
+          importance?: number | null
+          last_referenced?: string | null
+          memory_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_milestones: {
+        Row: {
+          celebrated: boolean | null
+          created_at: string
+          id: string
+          milestone_type: string
+          unlocked_at: string
+          user_id: string
+        }
+        Insert: {
+          celebrated?: boolean | null
+          created_at?: string
+          id?: string
+          milestone_type: string
+          unlocked_at?: string
+          user_id: string
+        }
+        Update: {
+          celebrated?: boolean | null
+          created_at?: string
+          id?: string
+          milestone_type?: string
+          unlocked_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_progress: {
         Row: {
           accuracy_score: number | null
@@ -579,6 +738,13 @@ export type Database = {
         Returns: {
           current_streak: number
           longest_streak: number
+        }[]
+      }
+      check_milestones: {
+        Args: { target_user_id: string }
+        Returns: {
+          is_new: boolean
+          milestone_type: string
         }[]
       }
       check_user_achievements: {

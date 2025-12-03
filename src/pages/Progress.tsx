@@ -1,13 +1,27 @@
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Clock, MessageSquare, Flame, Coins } from "lucide-react";
+import { Clock, MessageSquare, Flame, Coins, TrendingUp } from "lucide-react";
 import { useCompanionProgress } from "@/hooks/useCompanionProgress";
+import { useMoodTracking } from "@/hooks/useMoodTracking";
 import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
+import StreakCalendar from "@/components/StreakCalendar";
 
 const Progress = () => {
   const { data: stats, isLoading } = useCompanionProgress();
+  const { getMoodStats } = useMoodTracking();
+  const [moodStats, setMoodStats] = useState<any>(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    loadMoodStats();
+  }, []);
+
+  const loadMoodStats = async () => {
+    const data = await getMoodStats();
+    setMoodStats(data);
+  };
 
   if (isLoading) {
     return (
@@ -27,6 +41,7 @@ const Progress = () => {
           </p>
         </div>
         <div className="flex-1 flex flex-col items-center justify-center text-center">
+          <div className="text-6xl mb-4">💞</div>
           <p className="text-muted-foreground mb-6">
             Have your first conversation to see your progress here!
           </p>
@@ -122,7 +137,48 @@ const Progress = () => {
         </Card>
       </div>
 
-      {/* Weekly Activity */}
+      {/* Streak Calendar */}
+      <div className="mb-6">
+        <StreakCalendar
+          weeklyActivity={stats.weeklyActivity}
+          currentStreak={stats.currentStreak}
+          longestStreak={stats.longestStreak}
+        />
+      </div>
+
+      {/* Mood Impact - Only show if user has mood data */}
+      {moodStats && moodStats.totalConversations >= 3 && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-primary" />
+              Mood Impact
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-primary mb-1">
+                {moodStats.improvementPercentage > 0 ? '+' : ''}{moodStats.improvementPercentage}%
+              </div>
+              <p className="text-sm text-muted-foreground">
+                average mood improvement after talking with Mia
+              </p>
+              <div className="flex justify-center gap-6 mt-4 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Before: </span>
+                  <span className="font-medium">{moodStats.avgMoodBefore}/5</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">After: </span>
+                  <span className="font-medium">{moodStats.avgMoodAfter}/5</span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Weekly Activity Bar Chart */}
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className="text-base">Weekly Activity</CardTitle>
