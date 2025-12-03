@@ -238,6 +238,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   const [userCredits, setUserCredits] = useState<number>(0);
   const [isAISpeaking, setIsAISpeaking] = useState(false);
   const [currentTranscript, setCurrentTranscript] = useState('');
+  const [userMemories, setUserMemories] = useState<Array<{ content: string; memory_type: string; importance: number }>>([]);
   
   const audioRecorderRef = useRef<AudioRecorder>(new AudioRecorder());
   const realtimeChatRef = useRef<RealtimeChat | null>(null);
@@ -309,6 +310,31 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       }
     };
   }, []);
+
+  const fetchUserMemories = async () => {
+    if (!user) return [];
+    
+    try {
+      const { data, error } = await supabase
+        .from('user_memories')
+        .select('content, memory_type, importance')
+        .eq('user_id', user.id)
+        .order('importance', { ascending: false })
+        .order('created_at', { ascending: false })
+        .limit(10);
+      
+      if (error) {
+        console.error('Error fetching user memories:', error);
+        return [];
+      }
+      
+      console.log('[DEBUG] Fetched user memories:', data?.length || 0);
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching user memories:', error);
+      return [];
+    }
+  };
 
   const fetchUserCredits = async () => {
     if (!user) return;
@@ -617,6 +643,11 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       // Pre-request microphone permission immediately for faster UX
       await navigator.mediaDevices.getUserMedia({ audio: true });
       
+      // Fetch user memories for personalized conversation
+      const memories = await fetchUserMemories();
+      setUserMemories(memories);
+      console.log('[DEBUG] Loaded memories for session:', memories.length);
+      
       const chat = new RealtimeChat(
         (message) => {
           handleRealtimeMessage(message);
@@ -626,7 +657,8 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
           lessonTitle: lessonTitle,
           lessonContent: lessonContent,
           coveredScenarios: coveredScenarios,
-          model: 'gpt-4o-mini-realtime-preview'
+          model: 'gpt-4o-mini-realtime-preview',
+          userMemories: memories
         }
       );
 
@@ -677,6 +709,11 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       // Pre-request microphone permission immediately for faster UX
       await navigator.mediaDevices.getUserMedia({ audio: true });
       
+      // Fetch user memories for personalized conversation
+      const memories = await fetchUserMemories();
+      setUserMemories(memories);
+      console.log('[DEBUG] Loaded memories for session:', memories.length);
+      
       const chat = new RealtimeChat(
         (message) => {
           handleRealtimeMessage(message);
@@ -686,7 +723,8 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
           lessonTitle: lessonTitle,
           lessonContent: lessonContent,
           coveredScenarios: coveredScenarios,
-          model: 'gpt-4o-realtime-preview-2024-12-17'
+          model: 'gpt-4o-realtime-preview-2024-12-17',
+          userMemories: memories
         }
       );
 
@@ -771,6 +809,9 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   const endSession = async () => {
     console.log('[DEBUG] Ending session');
     
+    // Capture messages before clearing state
+    const conversationMessages = [...messages];
+    
     try {
       if (isRecording) {
         await audioRecorderRef.current.stop();
@@ -819,6 +860,29 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
             title: "Session Complete",
             description: `${Math.ceil(durationMinutes)} minute session ended. Credits deducted.`,
           });
+        }
+        
+        // Extract memories from conversation if there were meaningful exchanges
+        if (conversationMessages.length >= 4) {
+          console.log('[DEBUG] Extracting memories from conversation with', conversationMessages.length, 'messages');
+          try {
+            const conversationHistory = conversationMessages.map(m => ({
+              role: m.role,
+              content: m.content
+            }));
+            
+            const { error: memoryError } = await supabase.functions.invoke('extract-memories', {
+              body: { conversationHistory }
+            });
+            
+            if (memoryError) {
+              console.error('[DEBUG] Error extracting memories:', memoryError);
+            } else {
+              console.log('[DEBUG] Memories extracted successfully');
+            }
+          } catch (memError) {
+            console.error('[DEBUG] Memory extraction failed:', memError);
+          }
         }
       } catch (error) {
         console.error('[DEBUG] Error in credit deduction:', error);
