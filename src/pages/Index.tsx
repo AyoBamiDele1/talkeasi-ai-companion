@@ -34,7 +34,7 @@ const Index = () => {
             </div>
 
             <p className="text-muted-foreground mb-2 md:mb-4">
-              Whether you're stressed, bored, need advice, or just want to vent.
+              Stressed? Bored? Need advice? Just want to vent?
             </p>
             <p className="text-sm text-muted-foreground/80 mb-4 md:mb-6">
               Get suggestions • Share your day • Work through problems
