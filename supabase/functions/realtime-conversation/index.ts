@@ -90,6 +90,10 @@ serve(async (req) => {
             
             // Check if we have memories for this user
             const userMemories = lessonContext.userMemories || [];
+            console.log("User memories received:", userMemories.length, "memories");
+            if (userMemories.length > 0) {
+              console.log("Memory contents:", userMemories.map((m: any) => m.content?.substring(0, 50)));
+            }
             const memoriesContext = userMemories.length > 0 
               ? `\n\nWHAT YOU REMEMBER ABOUT THIS USER:\n${userMemories.map((m: any) => `- ${m.content}`).join('\n')}\n\nUSE THESE NATURALLY IN CONVERSATION - reference them when relevant, ask follow-ups about things they've shared.`
               : '';
@@ -283,39 +287,23 @@ Keep responses natural and conversational (2-3 sentences). Speak like a close fr
         }
         
         // Build session config with tools for AI Companion mode
-        // Using the updated OpenAI Realtime API format (December 2024)
+        // Using the standard OpenAI Realtime API format
         const sessionConfig: any = {
           type: 'session.update',
           session: {
-            type: 'realtime',
-            output_modalities: ['text', 'audio'],
+            modalities: ['text', 'audio'],
             instructions,
-            temperature: 0.8,
-            max_output_tokens: 'inf',
-            audio: {
-              input: {
-                format: {
-                  type: 'audio/pcm',
-                  rate: 24000
-                },
-                transcription: {
-                  model: 'whisper-1'
-                },
-                turn_detection: {
-                  type: 'server_vad',
-                  threshold: 0.7,
-                  prefix_padding_ms: 300,
-                  silence_duration_ms: 2000
-                }
-              },
-              output: {
-                format: {
-                  type: 'audio/pcm',
-                  rate: 24000
-                },
-                voice: 'shimmer',
-                speed: 1.0
-              }
+            voice: 'shimmer',
+            input_audio_format: 'pcm16',
+            output_audio_format: 'pcm16',
+            input_audio_transcription: {
+              model: 'whisper-1'
+            },
+            turn_detection: {
+              type: 'server_vad',
+              threshold: 0.7,
+              prefix_padding_ms: 300,
+              silence_duration_ms: 2000
             }
           }
         };
