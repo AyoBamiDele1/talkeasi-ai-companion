@@ -23,20 +23,21 @@ const Index = () => {
           <div className="text-center mb-6 md:mb-8">
             <div className="mb-4 md:mb-6">
               <div className="inline-block p-3 md:p-4 bg-primary/10 rounded-full mb-3 md:mb-4">
-                <span className="text-3xl md:text-4xl">💞</span>
+                <span className="text-3xl md:text-4xl">💬</span>
               </div>
               <h1 className="text-3xl md:text-5xl font-bold text-foreground mb-2 md:mb-3">
                 TalkEasi
               </h1>
               <p className="text-base md:text-xl text-muted-foreground">
-                Meet Mia, Your AI Friend
+                Meet Nova, Your AI Friend
               </p>
             </div>
 
-            <p className="text-muted-foreground mb-4 md:mb-6">
-              Talk when you're lonely. Mia is always here for you.
-              <br className="hidden md:block" />
-              She's always ready to listen.
+            <p className="text-muted-foreground mb-2 md:mb-4">
+              Whether you're stressed, bored, need advice, or just want to vent.
+            </p>
+            <p className="text-sm text-muted-foreground/80 mb-4 md:mb-6">
+              Get suggestions • Share your day • Work through problems
             </p>
           </div>
 

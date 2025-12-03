@@ -17,7 +17,7 @@ export const getTimeBasedGreeting = (): string => {
 export const speakGreeting = async (userName: string): Promise<void> => {
   try {
     const greeting = getTimeBasedGreeting();
-    const message = `${greeting}, ${userName}! It's Mia. Welcome back!`;
+    const message = `${greeting}, ${userName}! It's Nova. Welcome back!`;
     
     console.log('Speaking greeting:', message);
     
@@ -25,25 +25,24 @@ export const speakGreeting = async (userName: string): Promise<void> => {
     if ('speechSynthesis' in window) {
       const utterance = new SpeechSynthesisUtterance(message);
       utterance.rate = 0.95; // Slightly slower for more natural speech
-      utterance.pitch = 1.1; // Slightly higher pitch for female voice
+      utterance.pitch = 1.1; // Slightly higher pitch for warm voice
       utterance.volume = 1.0;
       utterance.lang = 'en-US';
       
-      // Select a female voice if available
+      // Select a warm voice if available
       const voices = speechSynthesis.getVoices();
-      const femaleVoice = voices.find(voice => 
+      const preferredVoice = voices.find(voice => 
         voice.lang.startsWith('en') && 
-        (voice.name.toLowerCase().includes('female') || 
-         voice.name.toLowerCase().includes('samantha') ||
+        (voice.name.toLowerCase().includes('samantha') ||
          voice.name.toLowerCase().includes('victoria') ||
          voice.name.toLowerCase().includes('karen') ||
          voice.name.toLowerCase().includes('moira') ||
          voice.name.toLowerCase().includes('susan'))
       );
       
-      if (femaleVoice) {
-        utterance.voice = femaleVoice;
-        console.log('Using voice:', femaleVoice.name);
+      if (preferredVoice) {
+        utterance.voice = preferredVoice;
+        console.log('Using voice:', preferredVoice.name);
       }
       
       utterance.onerror = (error) => {
@@ -91,4 +90,3 @@ export const getUserDisplayName = async (userId: string): Promise<string> => {
     return 'friend';
   }
 };
-

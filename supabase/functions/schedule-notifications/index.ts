@@ -20,7 +20,7 @@ serve(async (req) => {
     const today = new Date().toISOString().split('T')[0];
     const results = {
       streak_reminders: 0,
-      mia_checkins: 0,
+      nova_checkins: 0,
       errors: 0
     };
 
@@ -44,7 +44,7 @@ serve(async (req) => {
               user_id: user.user_id,
               notification_type: 'streak_reminder',
               title: "🔥 Don't lose your streak!",
-              body: `Your ${user.current_streak}-day streak is at risk! Talk to Mia today to keep it going.`,
+              body: `Your ${user.current_streak}-day streak is at risk! Talk to Nova today to keep it going.`,
               data: { url: '/lesson/9b25e5bb-3702-448f-aae7-39c0b44fb558' }
             }
           });
@@ -56,7 +56,7 @@ serve(async (req) => {
       }
     }
 
-    // 2. Find users who haven't talked in 2+ days for Mia check-in
+    // 2. Find users who haven't talked in 2+ days for Nova check-in
     const twoDaysAgo = new Date();
     twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
     const twoDaysAgoStr = twoDaysAgo.toISOString().split('T')[0];
@@ -73,10 +73,10 @@ serve(async (req) => {
       console.log(`Found ${inactiveUsers.length} inactive users for check-in`);
       
       const checkinMessages = [
-        "Hey, it's Mia 💕 I've been thinking about you. How are you doing?",
-        "Hi! It's been a few days. Mia is here whenever you want to talk 💞",
-        "Just checking in! Mia misses chatting with you 🌟",
-        "Hey friend! Mia is thinking about you. Everything okay? 💕"
+        "Hey, it's Nova 💬 I've been thinking about you. How are you doing?",
+        "Hi! It's been a few days. Nova is here whenever you want to talk 💬",
+        "Just checking in! Nova misses chatting with you 🌟",
+        "Hey friend! Nova is thinking about you. Everything okay? 💬"
       ];
       
       for (const user of inactiveUsers) {
@@ -86,13 +86,13 @@ serve(async (req) => {
           await supabase.functions.invoke('send-notification', {
             body: {
               user_id: user.user_id,
-              notification_type: 'mia_checkin',
-              title: "Mia is thinking about you 💕",
+              notification_type: 'nova_checkin',
+              title: "Nova is thinking about you 💬",
               body: message,
               data: { url: '/home' }
             }
           });
-          results.mia_checkins++;
+          results.nova_checkins++;
         } catch (error) {
           console.error(`Failed to send check-in to ${user.user_id}:`, error);
           results.errors++;

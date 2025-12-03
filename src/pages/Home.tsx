@@ -57,7 +57,7 @@ const Home = () => {
     if (!stats?.conversationCount || stats.conversationCount === 0) {
       return {
         greeting: `${timeGreeting}, ${userName}! 👋`,
-        subtitle: "Mia can't wait to meet you!"
+        subtitle: "Nova can't wait to meet you!"
       };
     }
 
@@ -73,8 +73,8 @@ const Home = () => {
     // Returning after gap (2+ days)
     if (daysSinceLastChat >= 2) {
       return {
-        greeting: `${timeGreeting}, ${userName}! 💕`,
-        subtitle: `It's been ${daysSinceLastChat} days - Mia missed you!`
+        greeting: `${timeGreeting}, ${userName}! 💬`,
+        subtitle: `It's been ${daysSinceLastChat} days - Nova missed you!`
       };
     }
 
@@ -82,14 +82,14 @@ const Home = () => {
     if (stats.currentStreak >= 3) {
       return {
         greeting: `${timeGreeting}, ${userName}! 🔥`,
-        subtitle: `${stats.currentStreak} day streak! Mia loves your consistency!`
+        subtitle: `${stats.currentStreak} day streak! Nova loves your consistency!`
       };
     }
 
     // Regular return
     return {
-      greeting: `Welcome back, ${userName}! 💞`,
-      subtitle: "Mia is here for you."
+      greeting: `Welcome back, ${userName}! 💬`,
+      subtitle: "Nova is here for you."
     };
   };
 
@@ -140,11 +140,11 @@ const Home = () => {
         {/* Card 1: AI Companion Mode */}
         <Card className="hover:shadow-lg transition-shadow">
           <CardContent className="p-6 text-center">
-            <div className="w-16 h-16 bg-pink-100 dark:bg-pink-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-4xl">💞</span>
+            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-4xl">💬</span>
             </div>
-            <h2 className="text-xl font-bold mb-2">Talk to Mia</h2>
-            <p className="text-sm text-muted-foreground mb-1">Your AI friend Mia is here to listen and talk.</p>
+            <h2 className="text-xl font-bold mb-2">Talk to Nova</h2>
+            <p className="text-sm text-muted-foreground mb-1">Your AI friend Nova is here to listen, chat, and help.</p>
             
             <Button className="w-full mt-4" onClick={() => navigate('/lesson/9b25e5bb-3702-448f-aae7-39c0b44fb558')}>
               Start Talking
