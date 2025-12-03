@@ -152,7 +152,7 @@ const ProfileNotificationSettings = ({ onBack }: ProfileNotificationSettingsProp
       setIsSubscribed(true);
       toast({
         title: "Notifications enabled",
-        description: "You'll now receive updates from Mia!"
+        description: "You'll now receive updates from Nova!"
       });
     } catch (error) {
       console.error('Error enabling notifications:', error);
@@ -253,8 +253,8 @@ const ProfileNotificationSettings = ({ onBack }: ProfileNotificationSettingsProp
 
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-foreground">Mia's Check-ins</p>
-              <p className="text-xs text-muted-foreground">When Mia is thinking about you</p>
+              <p className="text-sm font-medium text-foreground">Nova's Check-ins</p>
+              <p className="text-xs text-muted-foreground">When Nova is thinking about you</p>
             </div>
             <Switch
               checked={preferences.mia_checkins}

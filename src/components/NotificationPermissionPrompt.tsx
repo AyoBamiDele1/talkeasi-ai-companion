@@ -32,10 +32,10 @@ const NotificationPermissionPrompt = ({ onEnable, onDismiss }: NotificationPermi
           
           <div className="flex-1 min-w-0">
             <h4 className="text-sm font-semibold text-foreground mb-1">
-              Never miss Mia 💕
+              Never miss Nova 💬
             </h4>
             <p className="text-xs text-muted-foreground mb-3">
-              Get gentle reminders to protect your streak and hear when Mia is thinking about you.
+              Get gentle reminders to protect your streak and hear when Nova is thinking about you.
             </p>
             
             <div className="flex gap-2">
