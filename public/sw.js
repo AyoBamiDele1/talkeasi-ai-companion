@@ -16,7 +16,7 @@ self.addEventListener('push', (event) => {
   
   let data = {
     title: 'TalkEasi',
-    body: 'Mia is thinking about you! 💕',
+    body: 'Nova is thinking about you! 💬',
     icon: '/favicon.ico',
     badge: '/favicon.ico',
     tag: 'talkeasi-notification',
@@ -40,7 +40,7 @@ self.addEventListener('push', (event) => {
     data: data.data,
     vibrate: [100, 50, 100],
     actions: [
-      { action: 'open', title: 'Talk to Mia' },
+      { action: 'open', title: 'Talk to Nova' },
       { action: 'dismiss', title: 'Later' }
     ]
   };

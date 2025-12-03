@@ -71,7 +71,7 @@ serve(async (req) => {
 
     const payload = JSON.stringify({
       title: title || 'TalkEasi',
-      body: body || 'Mia is thinking about you! 💕',
+      body: body || 'Nova is thinking about you! 💬',
       icon: '/favicon.ico',
       badge: '/favicon.ico',
       tag: `talkeasi-${notification_type || 'general'}`,

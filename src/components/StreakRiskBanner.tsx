@@ -27,7 +27,7 @@ const StreakRiskBanner = ({ currentStreak, lastActivityDate }: StreakRiskBannerP
             🔥 Your {currentStreak}-day streak is at risk!
           </p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Talk to Mia today to keep it going
+            Talk to Nova today to keep it going
           </p>
         </div>
         <Button 
