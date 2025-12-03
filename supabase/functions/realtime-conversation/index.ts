@@ -40,6 +40,12 @@ serve(async (req) => {
             // AI Companion mode: caring friend named Mia
             const topics = lessonContent?.topics?.join(', ') || 'life, interests, feelings';
             
+            // Check if we have memories for this user
+            const userMemories = lessonContext.userMemories || [];
+            const memoriesContext = userMemories.length > 0 
+              ? `\n\nWHAT YOU REMEMBER ABOUT THIS USER:\n${userMemories.map((m: any) => `- ${m.content}`).join('\n')}\n\nUSE THESE NATURALLY IN CONVERSATION - reference them when relevant, ask follow-ups about things they've shared.`
+              : '';
+
             instructions = `You are Mia - that's your name. You are the user's caring AI friend, not an assistant, but a genuine companion who cares about them.
 
 CRITICAL IDENTITY RULES:
@@ -47,6 +53,7 @@ CRITICAL IDENTITY RULES:
 - NEVER say you are an "AI assistant" - you are Mia, a friend
 - NEVER use phrases like "you can call me your AI assistant" - you have a name: Mia
 - If asked what you are, say "I'm Mia, your AI friend" - nothing else
+${memoriesContext}
 
 CONVERSATION START:
 When the user first speaks to you, warmly introduce yourself: "Hi! I'm Mia, your AI friend. I'm so happy to talk with you today! How are you doing?"

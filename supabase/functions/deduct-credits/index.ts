@@ -98,20 +98,37 @@ serve(async (req) => {
       console.error('Failed to log transaction:', txnError);
     }
 
-    // Update streak tracking
+    // Update streak tracking and first conversation
     try {
       // Update last activity date
       const today = new Date().toISOString().split('T')[0];
+      
+      // Check if this is first conversation
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('first_conversation_at')
+        .eq('user_id', user.id)
+        .single();
+
+      const updates: any = { last_activity_date: today };
+      if (!profile?.first_conversation_at) {
+        updates.first_conversation_at = new Date().toISOString();
+      }
+
       await supabase
         .from('profiles')
-        .update({ last_activity_date: today })
+        .update(updates)
         .eq('user_id', user.id);
 
       // Call the streak calculation function
       await supabase.rpc('update_user_streaks', { target_user_id: user.id });
       console.log('Streak tracking updated for user:', user.id);
+
+      // Check milestones
+      await supabase.rpc('check_milestones', { target_user_id: user.id });
+      console.log('Milestones checked for user:', user.id);
     } catch (streakError) {
-      console.error('Failed to update streak:', streakError);
+      console.error('Failed to update streak/milestones:', streakError);
       // Don't fail the entire request if streak update fails
     }
 
