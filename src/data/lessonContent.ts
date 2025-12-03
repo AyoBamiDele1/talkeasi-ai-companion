@@ -40,7 +40,7 @@ export const lessonContentDatabase: Record<string, LessonContentStructure> = {
     ],
     key_phrases: [],
     conversation_starters: [
-      "Hey, it's Mia! How are you really doing today?",
+      "Hey, it's Nova! How are you really doing today?",
       "Hi! What's been on your mind lately?",
       "Tell me about your day - I'd love to hear about it",
       "You seem like you might have a lot going on. Want to talk about it?",

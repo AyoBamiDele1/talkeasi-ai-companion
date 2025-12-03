@@ -148,7 +148,7 @@ const LessonSession = () => {
     
     switch (lessonData.title) {
       case 'AI Companion':
-        return "Hey! It's Mia. I'm here for you. How are you feeling today?";
+        return "Hey! It's Nova. I'm here for you. How are you feeling today?";
       
       case 'Friendly Chat':
         return "Hey! What's on your mind today?";
