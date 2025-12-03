@@ -144,7 +144,7 @@ const Home = () => {
               <span className="text-4xl">💬</span>
             </div>
             <h2 className="text-xl font-bold mb-2">Talk to Nova</h2>
-            <p className="text-sm text-muted-foreground mb-1">Your AI friend Nova is here to listen, chat, and help.</p>
+            <p className="text-sm text-muted-foreground mb-1">Your AI friend Nova is here to listen, talk, and help.</p>
             
             <Button className="w-full mt-4" onClick={() => navigate('/lesson/9b25e5bb-3702-448f-aae7-39c0b44fb558')}>
               Start Talking
