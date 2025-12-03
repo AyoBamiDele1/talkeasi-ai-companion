@@ -283,9 +283,11 @@ Keep responses natural and conversational (2-3 sentences). Speak like a close fr
         }
         
         // Build session config with tools for AI Companion mode
+        // IMPORTANT: session.type: 'realtime' is required by OpenAI API
         const sessionConfig: any = {
           type: 'session.update',
           session: {
+            type: 'realtime',  // Required field!
             modalities: ['text', 'audio'],
             instructions,
             voice: 'shimmer',
