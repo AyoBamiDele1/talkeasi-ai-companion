@@ -301,7 +301,7 @@ Keep responses natural and conversational (2-3 sentences). Speak like a close fr
           {
             type: 'function',
             name: 'search_web',
-            description: 'IMPORTANT: Use this tool IMMEDIATELY for ANY question about current events, recent news, sports scores, or anything from the last 2 years. You MUST use this tool - do NOT say your knowledge is limited or cut off. If the user asks about recent events, ALWAYS call this function first.',
+            description: 'Search the internet for current, real-time information. CRITICAL: You MUST call this function for ANY question about: recent sports scores, current news, events from 2024 or later, latest updates. NEVER say your knowledge is cut off - USE THIS TOOL INSTEAD.',
             parameters: {
               type: 'object',
               properties: {
@@ -315,11 +315,25 @@ Keep responses natural and conversational (2-3 sentences). Speak like a close fr
           }
         ] : [];
         
-        const sessionConfig: any = {
+        // Build the final instructions with search reminder
+        const finalInstructions = instructions + (tools.length > 0 ? `
+
+CRITICAL REMINDER: You have a search_web tool! 
+- For ANY question about current events, news, sports, or recent happenings from 2024 onwards - CALL search_web FIRST
+- NEVER say "my knowledge is cut off" or "I don't have access to current information" - JUST USE THE TOOL
+- When in doubt about current info, SEARCH!` : '');
+        
+        console.log("Instructions length:", finalInstructions.length);
+        console.log("Instructions preview:", finalInstructions.substring(0, 200));
+        console.log("User memories being injected:", lessonContext.userMemories?.length || 0);
+        
+        // Session config - MUST include 'type: realtime' inside session object per OpenAI docs
+        const sessionConfig = {
           type: 'session.update',
           session: {
+            type: 'realtime',  // REQUIRED - this was the missing parameter!
             modalities: ['text', 'audio'],
-            instructions: instructions + (tools.length > 0 ? '\n\nIMPORTANT: You have a search_web tool. For ANY question about current events, news, sports scores, or recent happenings - USE IT IMMEDIATELY. Never say your knowledge is limited or cut off - just search!' : ''),
+            instructions: finalInstructions,
             voice: 'shimmer',
             input_audio_format: 'pcm16',
             output_audio_format: 'pcm16',
@@ -331,20 +345,18 @@ Keep responses natural and conversational (2-3 sentences). Speak like a close fr
               threshold: 0.7,
               prefix_padding_ms: 300,
               silence_duration_ms: 2000
-            },
-            temperature: 0.8,
-            max_response_output_tokens: 'inf'
+            }
           }
         };
         
         // Add tools if available
         if (tools.length > 0) {
-          sessionConfig.session.tools = tools;
-          sessionConfig.session.tool_choice = 'auto';
+          (sessionConfig.session as any).tools = tools;
+          (sessionConfig.session as any).tool_choice = 'auto';
           console.log("Web search tool enabled for AI Companion mode");
         }
         
-        console.log("Sending session.update config:", JSON.stringify(sessionConfig, null, 2).substring(0, 500));
+        console.log("Sending session.update to OpenAI");
         openAISocket.send(JSON.stringify(sessionConfig));
         sessionConfigured = true;
     }
