@@ -297,11 +297,29 @@ Keep responses natural and conversational (2-3 sentences). Speak like a close fr
         
         // Build session config with tools for AI Companion mode
         // Using the standard OpenAI Realtime API format
+        const tools = lessonContext?.lessonTitle === 'AI Companion' ? [
+          {
+            type: 'function',
+            name: 'search_web',
+            description: 'IMPORTANT: Use this tool IMMEDIATELY for ANY question about current events, recent news, sports scores, or anything from the last 2 years. You MUST use this tool - do NOT say your knowledge is limited or cut off. If the user asks about recent events, ALWAYS call this function first.',
+            parameters: {
+              type: 'object',
+              properties: {
+                query: {
+                  type: 'string',
+                  description: 'A specific search query. Include dates, team names, etc. for best results.'
+                }
+              },
+              required: ['query']
+            }
+          }
+        ] : [];
+        
         const sessionConfig: any = {
           type: 'session.update',
           session: {
             modalities: ['text', 'audio'],
-            instructions,
+            instructions: instructions + (tools.length > 0 ? '\n\nIMPORTANT: You have a search_web tool. For ANY question about current events, news, sports scores, or recent happenings - USE IT IMMEDIATELY. Never say your knowledge is limited or cut off - just search!' : ''),
             voice: 'shimmer',
             input_audio_format: 'pcm16',
             output_audio_format: 'pcm16',
@@ -313,33 +331,20 @@ Keep responses natural and conversational (2-3 sentences). Speak like a close fr
               threshold: 0.7,
               prefix_padding_ms: 300,
               silence_duration_ms: 2000
-            }
+            },
+            temperature: 0.8,
+            max_response_output_tokens: 'inf'
           }
         };
         
-        // Add web search tool for AI Companion mode
-        if (lessonContext?.lessonTitle === 'AI Companion') {
-          sessionConfig.session.tools = [
-            {
-              type: 'function',
-              name: 'search_web',
-              description: 'Search the internet for current, real-time information. Use this for: recent sports scores/results/standings, current news/events, latest entertainment news, weather, stock prices, or ANY question about recent happenings. Always use this when users ask about "latest", "recent", "current", "today", "yesterday" or anything from the last few months.',
-              parameters: {
-                type: 'object',
-                properties: {
-                  query: {
-                    type: 'string',
-                    description: 'A specific search query to find current information. Be specific with dates, team names, etc.'
-                  }
-                },
-                required: ['query']
-              }
-            }
-          ];
+        // Add tools if available
+        if (tools.length > 0) {
+          sessionConfig.session.tools = tools;
           sessionConfig.session.tool_choice = 'auto';
           console.log("Web search tool enabled for AI Companion mode");
         }
         
+        console.log("Sending session.update config:", JSON.stringify(sessionConfig, null, 2).substring(0, 500));
         openAISocket.send(JSON.stringify(sessionConfig));
         sessionConfigured = true;
     }
