@@ -6,46 +6,55 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Web search function using Tavily
+// Web search function using Serper (Google Search) - 70% cheaper than Tavily
 async function performWebSearch(query: string): Promise<any> {
-  const tavilyKey = Deno.env.get('TAVILY_API_KEY');
+  const serperKey = Deno.env.get('SERPER_API_KEY');
   
-  if (!tavilyKey) {
-    console.error('TAVILY_API_KEY not configured');
+  if (!serperKey) {
+    console.error('SERPER_API_KEY not configured');
     return { error: 'Search not configured', fallback: true };
   }
   
   try {
     console.log("Performing web search for:", query);
-    const response = await fetch('https://api.tavily.com/search', {
+    
+    // Detect if query is about recent events/news for better endpoint selection
+    const isNewsQuery = /today|yesterday|latest|recent|just|now|breaking|this week|news/i.test(query);
+    const endpoint = isNewsQuery 
+      ? 'https://google.serper.dev/news' 
+      : 'https://google.serper.dev/search';
+    
+    console.log("Using endpoint:", endpoint, "for query type:", isNewsQuery ? "news" : "general");
+    
+    const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
+        'X-API-KEY': serperKey,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        api_key: tavilyKey,
-        query: query,
-        search_depth: 'basic',
-        include_answer: true,
-        max_results: 5
+        q: query,
+        num: 5
       })
     });
     
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Tavily search error:', errorText);
+      console.error('Serper search error:', errorText);
       return { error: 'Search failed', fallback: true };
     }
     
     const data = await response.json();
-    console.log("Search results received:", data.results?.length || 0, "results");
+    const results = isNewsQuery ? data.news : data.organic;
+    console.log("Search results received:", results?.length || 0, "results");
     
+    // Map Serper response to match existing format
     return {
-      answer: data.answer,
-      results: data.results?.slice(0, 5).map((r: any) => ({
+      answer: data.answerBox?.snippet || data.knowledgeGraph?.description || null,
+      results: results?.slice(0, 5).map((r: any) => ({
         title: r.title,
-        content: r.content?.substring(0, 300),
-        url: r.url
+        content: (r.snippet || r.description)?.substring(0, 300),
+        url: r.link
       }))
     };
   } catch (error) {
