@@ -327,24 +327,38 @@ CRITICAL REMINDER: You have a search_web tool!
         console.log("Instructions preview:", finalInstructions.substring(0, 200));
         console.log("User memories being injected:", lessonContext.userMemories?.length || 0);
         
-        // Session config - correct OpenAI Realtime API format
-        // NOTE: Do NOT include 'type' inside session object - that's not a valid parameter
+        // Session config - NEW OpenAI Realtime API format (Dec 2024+)
+        // CRITICAL: Must include type: 'realtime' inside session object
+        // Uses new nested 'audio' object structure instead of flat parameters
         const sessionConfig: any = {
           type: 'session.update',
           session: {
-            modalities: ['text', 'audio'],
+            type: 'realtime',  // REQUIRED - specifies realtime session type
             instructions: finalInstructions,
-            voice: 'shimmer',
-            input_audio_format: 'pcm16',
-            output_audio_format: 'pcm16',
-            input_audio_transcription: {
-              model: 'whisper-1'
-            },
-            turn_detection: {
-              type: 'server_vad',
-              threshold: 0.7,
-              prefix_padding_ms: 300,
-              silence_duration_ms: 2000
+            output_modalities: ['audio', 'text'],  // New parameter name
+            audio: {
+              input: {
+                format: {
+                  type: 'audio/pcm',
+                  rate: 24000
+                },
+                transcription: {
+                  model: 'whisper-1'
+                },
+                turn_detection: {
+                  type: 'server_vad',
+                  threshold: 0.7,
+                  prefix_padding_ms: 300,
+                  silence_duration_ms: 2000
+                }
+              },
+              output: {
+                format: {
+                  type: 'audio/pcm',
+                  rate: 24000
+                },
+                voice: 'shimmer'
+              }
             }
           }
         };
@@ -358,8 +372,10 @@ CRITICAL REMINDER: You have a search_web tool!
         }
         
         console.log("=== SENDING SESSION UPDATE ===");
+        console.log("Session config:", JSON.stringify(sessionConfig, null, 2));
         console.log("Instructions length:", finalInstructions.length);
         console.log("Memories injected:", lessonContext.userMemories?.length || 0);
+        console.log("Memory contents:", JSON.stringify(lessonContext.userMemories?.slice(0, 3)));
         console.log("Tools count:", tools.length);
         
         openAISocket.send(JSON.stringify(sessionConfig));
