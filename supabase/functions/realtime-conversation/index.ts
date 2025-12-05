@@ -327,11 +327,11 @@ CRITICAL REMINDER: You have a search_web tool!
         console.log("Instructions preview:", finalInstructions.substring(0, 200));
         console.log("User memories being injected:", lessonContext.userMemories?.length || 0);
         
-        // Session config - MUST include 'type: realtime' inside session object per OpenAI docs
-        const sessionConfig = {
+        // Session config - correct OpenAI Realtime API format
+        // NOTE: Do NOT include 'type' inside session object - that's not a valid parameter
+        const sessionConfig: any = {
           type: 'session.update',
           session: {
-            type: 'realtime',  // REQUIRED - this was the missing parameter!
             modalities: ['text', 'audio'],
             instructions: finalInstructions,
             voice: 'shimmer',
@@ -351,14 +351,20 @@ CRITICAL REMINDER: You have a search_web tool!
         
         // Add tools if available
         if (tools.length > 0) {
-          (sessionConfig.session as any).tools = tools;
-          (sessionConfig.session as any).tool_choice = 'auto';
+          sessionConfig.session.tools = tools;
+          sessionConfig.session.tool_choice = 'auto';
           console.log("Web search tool enabled for AI Companion mode");
+          console.log("Tools configured:", JSON.stringify(tools.map((t: any) => t.name)));
         }
         
-        console.log("Sending session.update to OpenAI");
+        console.log("=== SENDING SESSION UPDATE ===");
+        console.log("Instructions length:", finalInstructions.length);
+        console.log("Memories injected:", lessonContext.userMemories?.length || 0);
+        console.log("Tools count:", tools.length);
+        
         openAISocket.send(JSON.stringify(sessionConfig));
         sessionConfigured = true;
+        console.log("Session update sent successfully");
     }
   };
 
