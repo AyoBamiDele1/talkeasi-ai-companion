@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { ArrowLeft, CreditCard, Zap, Clock, Check, Crown, Loader2, Info, Lightbulb } from "lucide-react";
+import { ArrowLeft, CreditCard, Zap, Clock, Check, Crown, Loader2, Info, Lightbulb, Banknote } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -12,8 +12,11 @@ import { useToast } from "@/hooks/use-toast";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useUserLocation } from "@/hooks/useUserLocation";
 import { Separator } from "@/components/ui/separator";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FEATURES } from "@/config/features";
+import { useSearchParams } from "react-router-dom";
+
+type PaymentProvider = 'stripe' | 'paystack';
 
 interface ProfileSubscriptionProps {
   onBack: () => void;
@@ -76,6 +79,41 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
   } = useUserLocation();
   const [processingPayment, setProcessingPayment] = useState<string | null>(null);
   const [processingSubscription, setProcessingSubscription] = useState(false);
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [pendingPackage, setPendingPackage] = useState<string | null>(null);
+  const [pendingType, setPendingType] = useState<'credits' | 'subscription'>('credits');
+  const [searchParams] = useSearchParams();
+
+  // Handle Paystack callback verification
+  useEffect(() => {
+    const provider = searchParams.get('provider');
+    const reference = searchParams.get('reference');
+    
+    if (provider === 'paystack' && reference) {
+      verifyPaystackPayment(reference);
+    }
+  }, [searchParams]);
+
+  const verifyPaystackPayment = async (reference: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('paystack-verify', {
+        body: { reference }
+      });
+
+      if (error) throw error;
+
+      if (data?.success) {
+        toast({
+          title: "Payment Successful!",
+          description: `${data.credits} credits have been added to your account.`
+        });
+        refetchCredits();
+        refetchSubscription();
+      }
+    } catch (error) {
+      console.error('Error verifying Paystack payment:', error);
+    }
+  };
 
   const { data: creditBalance, refetch: refetchCredits } = useQuery({
     queryKey: ['user-credits', user?.id],
@@ -106,7 +144,23 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
     return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
   };
 
-  const handlePurchaseCredits = async (packageKey: string) => {
+  const openPaymentDialog = (packageKey: string, type: 'credits' | 'subscription') => {
+    setPendingPackage(packageKey);
+    setPendingType(type);
+    setShowPaymentDialog(true);
+  };
+
+  const handlePaymentWithProvider = async (provider: PaymentProvider) => {
+    setShowPaymentDialog(false);
+    
+    if (pendingType === 'credits' && pendingPackage) {
+      await handlePurchaseCredits(pendingPackage, provider);
+    } else if (pendingType === 'subscription') {
+      await handleSubscribe(provider);
+    }
+  };
+
+  const handlePurchaseCredits = async (packageKey: string, provider: PaymentProvider = 'stripe') => {
     if (!user || processingPayment) return;
 
     const pkg = CREDIT_PACKAGES[packageKey];
@@ -122,17 +176,29 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
     setProcessingPayment(packageKey);
 
     try {
-      const { data, error } = await supabase.functions.invoke('create-payment', {
-        body: { 
-          priceId: pkg.priceId,
-          currency: currency
+      if (provider === 'paystack') {
+        const { data, error } = await supabase.functions.invoke('paystack-payment', {
+          body: { packageKey }
+        });
+
+        if (error) throw error;
+
+        if (data?.url) {
+          window.location.href = data.url;
         }
-      });
+      } else {
+        const { data, error } = await supabase.functions.invoke('create-payment', {
+          body: { 
+            priceId: pkg.priceId,
+            currency: currency
+          }
+        });
 
-      if (error) throw error;
+        if (error) throw error;
 
-      if (data?.url) {
-        window.open(data.url, '_blank');
+        if (data?.url) {
+          window.open(data.url, '_blank');
+        }
       }
     } catch (error) {
       console.error('Error creating payment:', error);
@@ -146,23 +212,35 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
     }
   };
 
-  const handleSubscribe = async () => {
+  const handleSubscribe = async (provider: PaymentProvider = 'stripe') => {
     if (!user || processingSubscription) return;
 
     setProcessingSubscription(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { 
-          priceId: PRO_PLAN.priceId,
-          currency: currency
+      if (provider === 'paystack') {
+        const { data, error } = await supabase.functions.invoke('paystack-subscription', {
+          body: {}
+        });
+
+        if (error) throw error;
+
+        if (data?.url) {
+          window.location.href = data.url;
         }
-      });
+      } else {
+        const { data, error } = await supabase.functions.invoke('create-checkout', {
+          body: { 
+            priceId: PRO_PLAN.priceId,
+            currency: currency
+          }
+        });
 
-      if (error) throw error;
+        if (error) throw error;
 
-      if (data?.url) {
-        window.open(data.url, '_blank');
+        if (data?.url) {
+          window.open(data.url, '_blank');
+        }
       }
     } catch (error) {
       console.error('Error creating checkout:', error);
@@ -307,7 +385,7 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
                 </p>
               </div>
               <Button 
-                onClick={() => handlePurchaseCredits('bronze')} 
+                onClick={() => openPaymentDialog('bronze', 'credits')} 
                 className="w-full"
                 disabled={processingPayment !== null}
               >
@@ -347,7 +425,7 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
                 </p>
               </div>
               <Button 
-                onClick={() => handlePurchaseCredits('silver')} 
+                onClick={() => openPaymentDialog('silver', 'credits')} 
                 className="w-full"
                 disabled={processingPayment !== null}
               >
@@ -384,7 +462,7 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
                 </p>
               </div>
               <Button 
-                onClick={() => handlePurchaseCredits('gold')} 
+                onClick={() => openPaymentDialog('gold', 'credits')} 
                 className="w-full"
                 disabled={processingPayment !== null}
               >
@@ -447,7 +525,7 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
                 </div>
 
                 <Button 
-                  onClick={handleSubscribe} 
+                  onClick={() => openPaymentDialog('pro', 'subscription')} 
                   className="w-full" 
                   size="lg"
                   disabled={processingSubscription}
@@ -565,6 +643,47 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
             )}
           </div>
         </div>
+
+        {/* Payment Method Selection Dialog */}
+        <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Choose Payment Method</DialogTitle>
+              <DialogDescription>
+                Select how you'd like to pay for your {pendingType === 'subscription' ? 'subscription' : 'credits'}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <Button
+                variant="outline"
+                className="h-auto py-4 flex flex-col items-center gap-2"
+                onClick={() => handlePaymentWithProvider('paystack')}
+              >
+                <Banknote className="w-8 h-8 text-green-600" />
+                <div className="text-center">
+                  <p className="font-semibold">Paystack</p>
+                  <p className="text-xs text-muted-foreground">Pay in Naira (₦) - Bank Transfer, Card, USSD</p>
+                </div>
+              </Button>
+              <Button
+                variant="outline"
+                className="h-auto py-4 flex flex-col items-center gap-2"
+                onClick={() => handlePaymentWithProvider('stripe')}
+              >
+                <CreditCard className="w-8 h-8 text-blue-600" />
+                <div className="text-center">
+                  <p className="font-semibold">Stripe</p>
+                  <p className="text-xs text-muted-foreground">Pay in USD/GBP - International Cards</p>
+                </div>
+              </Button>
+            </div>
+            <DialogFooter>
+              <Button variant="ghost" onClick={() => setShowPaymentDialog(false)}>
+                Cancel
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

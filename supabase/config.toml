@@ -35,3 +35,12 @@ verify_jwt = true
 
 [functions.process-payment-webhook]
 verify_jwt = false
+
+[functions.paystack-payment]
+verify_jwt = true
+
+[functions.paystack-subscription]
+verify_jwt = true
+
+[functions.paystack-verify]
+verify_jwt = false
