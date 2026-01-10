@@ -327,39 +327,27 @@ CRITICAL REMINDER: You have a search_web tool!
         console.log("Instructions preview:", finalInstructions.substring(0, 200));
         console.log("User memories being injected:", lessonContext.userMemories?.length || 0);
         
-        // Session config - NEW OpenAI Realtime API format (Dec 2024+)
-        // CRITICAL: Must include type: 'realtime' inside session object
-        // Uses new nested 'audio' object structure instead of flat parameters
+        // Session config - CORRECT OpenAI Realtime API format
+        // Uses flat parameters as documented in OpenAI API reference
         const sessionConfig: any = {
           type: 'session.update',
           session: {
-            type: 'realtime',  // REQUIRED - specifies realtime session type
+            modalities: ['text', 'audio'],
             instructions: finalInstructions,
-            output_modalities: ['audio', 'text'],  // New parameter name
-            audio: {
-              input: {
-                format: {
-                  type: 'audio/pcm',
-                  rate: 24000
-                },
-                transcription: {
-                  model: 'whisper-1'
-                },
-                turn_detection: {
-                  type: 'server_vad',
-                  threshold: 0.7,
-                  prefix_padding_ms: 300,
-                  silence_duration_ms: 2000
-                }
-              },
-              output: {
-                format: {
-                  type: 'audio/pcm',
-                  rate: 24000
-                },
-                voice: 'shimmer'
-              }
-            }
+            voice: 'shimmer',
+            input_audio_format: 'pcm16',
+            output_audio_format: 'pcm16',
+            input_audio_transcription: {
+              model: 'whisper-1'
+            },
+            turn_detection: {
+              type: 'server_vad',
+              threshold: 0.5,
+              prefix_padding_ms: 300,
+              silence_duration_ms: 1000
+            },
+            temperature: 0.8,
+            max_response_output_tokens: 4096
           }
         };
         
