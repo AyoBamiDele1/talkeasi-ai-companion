@@ -11,12 +11,12 @@ const logStep = (step: string, details?: any) => {
   console.log(`[PAYSTACK-VERIFY] ${step}${detailsStr}`);
 };
 
-// Credit package mappings
+// Credit package mappings (1 credit = 1 minute)
 const PACKAGE_CREDITS: Record<string, number> = {
-  "bronze": 50,
-  "silver": 100,
-  "gold": 200,
-  "pro": 600
+  "snack": 60,
+  "buddy": 200,
+  "bestie": 500,
+  "pro": 1000  // Super Fan
 };
 
 serve(async (req) => {
