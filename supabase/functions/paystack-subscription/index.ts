@@ -11,11 +11,11 @@ const logStep = (step: string, details?: any) => {
   console.log(`[PAYSTACK-SUBSCRIPTION] ${step}${detailsStr}`);
 };
 
-// Pro Plan: ₦7,500/month = 750000 kobo
+// Super Fan: ₦9,500/month = 950000 kobo
 const PRO_PLAN = {
-  amountKobo: 750000,
-  credits: 600,
-  name: "Pro Plan - 600 Credits/month"
+  amountKobo: 950000,
+  credits: 1000,
+  name: "Super Fan - 1,000 Credits/month (16.6 Hours)"
 };
 
 serve(async (req) => {

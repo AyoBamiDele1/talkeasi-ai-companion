@@ -28,12 +28,11 @@ serve(async (req) => {
 
     const { amount, description, metadata, mode, duration_minutes } = await req.json();
 
-    // Calculate credits based on mode and duration if provided
+    // Calculate credits: 1 credit = 1 minute (simplified pricing)
     let creditsToDeduct = amount;
-    if (mode && duration_minutes) {
-      const creditsPerMinute = mode === 'premium' ? 20 : 3;
-      creditsToDeduct = Math.ceil(duration_minutes * creditsPerMinute);
-      console.log(`Deducting credits: ${duration_minutes} min × ${creditsPerMinute} credits/min = ${creditsToDeduct} credits (${mode} mode)`);
+    if (duration_minutes) {
+      creditsToDeduct = Math.ceil(duration_minutes);
+      console.log(`Deducting credits: ${duration_minutes} min = ${creditsToDeduct} credits (1 credit/min)`);
     }
 
     if (!creditsToDeduct || creditsToDeduct <= 0) {
@@ -74,12 +73,11 @@ serve(async (req) => {
       throw new Error('Failed to update balance');
     }
 
-    // Log transaction with enhanced metadata
+    // Log transaction with enhanced metadata (1 credit = 1 minute)
     const enrichedMetadata = {
       ...metadata,
-      mode: mode || 'unknown',
       duration_minutes: duration_minutes || 0,
-      credits_per_minute: mode === 'premium' ? 20 : 3,
+      credits_per_minute: 1,
       calculated_at: new Date().toISOString()
     };
 

@@ -11,11 +11,11 @@ const logStep = (step: string, details?: any) => {
   console.log(`[PAYSTACK-PAYMENT] ${step}${detailsStr}`);
 };
 
-// Paystack plan codes for credit packages (NGN)
+// Credit packages with relationship-based naming (NGN)
 const CREDIT_PACKAGES: Record<string, { credits: number; amountKobo: number; name: string }> = {
-  "bronze": { credits: 50, amountKobo: 100000, name: "Bronze Pack - 50 Credits" },    // ₦1,000
-  "silver": { credits: 100, amountKobo: 150000, name: "Silver Pack - 100 Credits" },  // ₦1,500
-  "gold": { credits: 200, amountKobo: 250000, name: "Gold Pack - 200 Credits" }       // ₦2,500
+  "snack": { credits: 60, amountKobo: 70000, name: "Snack Pack - 60 Credits (1 Hour)" },      // ₦700
+  "buddy": { credits: 200, amountKobo: 195000, name: "Buddy Pack - 200 Credits (3.3 Hours)" }, // ₦1,950
+  "bestie": { credits: 500, amountKobo: 450000, name: "Bestie Pack - 500 Credits (8.3 Hours)" } // ₦4,500
 };
 
 serve(async (req) => {

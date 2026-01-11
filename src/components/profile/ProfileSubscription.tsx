@@ -22,7 +22,7 @@ interface ProfileSubscriptionProps {
   onBack: () => void;
 }
 
-// Map price IDs to packages with Bronze/Silver/Gold tiers
+// Credit packages with relationship-based naming
 const CREDIT_PACKAGES: Record<string, { 
   credits: number; 
   priceId: string; 
@@ -30,40 +30,47 @@ const CREDIT_PACKAGES: Record<string, {
   priceUSD: number;
   priceGBP: number;
   name: string;
+  talkTime: string;
   badge?: string;
 }> = {
-  "bronze": {
-    name: "Bronze Pack",
-    credits: 50,
+  "snack": {
+    name: "Snack Pack",
+    credits: 60,
+    talkTime: "1 Hour",
     priceId: "price_1SWMK92dz9WA913sD8RjAHqP",
-    priceNGN: 1000,
+    priceNGN: 700,
     priceUSD: 1.99,
-    priceGBP: 1.60
+    priceGBP: 1.60,
+    badge: "Best Value"
   },
-  "silver": {
-    name: "Silver Pack",
-    credits: 100,
+  "buddy": {
+    name: "Buddy Pack",
+    credits: 200,
+    talkTime: "3.3 Hours",
     priceId: "price_1SWMKP2dz9WA913sbt0ftTUf",
-    priceNGN: 1500,
-    priceUSD: 2.99,
-    priceGBP: 2.40,
+    priceNGN: 1950,
+    priceUSD: 4.99,
+    priceGBP: 4.00,
     badge: "Popular"
   },
-  "gold": {
-    name: "Gold Pack",
-    credits: 200,
+  "bestie": {
+    name: "Bestie Pack",
+    credits: 500,
+    talkTime: "8.3 Hours",
     priceId: "price_1SWMKe2dz9WA913sV9VkYNyE",
-    priceNGN: 2500,
-    priceUSD: 4.99,
-    priceGBP: 4.00
+    priceNGN: 4500,
+    priceUSD: 8.99,
+    priceGBP: 7.00
   }
 };
 
 const PRO_PLAN = {
+  name: "Super Fan",
   priceId: "price_1SWMKu2dz9WA913sJSKAHETl",
   productId: "prod_TTIwjh5O9HkYuf",
-  credits: 600,
-  priceNGN: 7500,
+  credits: 1000,
+  talkTime: "16.6 Hours",
+  priceNGN: 9500,
   priceUSD: 9.99,
   priceGBP: 8.00
 };
@@ -131,9 +138,9 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
     enabled: !!user
   });
 
-  const calculateEstimatedTime = (credits: number, mode: 'standard' | 'premium') => {
-    const creditsPerMinute = mode === 'standard' ? 3 : 20;
-    const minutes = credits / creditsPerMinute;
+  // 1 credit = 1 minute (simplified)
+  const calculateEstimatedTime = (credits: number) => {
+    const minutes = credits;
     
     if (minutes < 60) {
       return `${Math.floor(minutes)} mins`;
@@ -310,7 +317,7 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Crown className="w-5 h-5 text-primary" />
-                  <CardTitle className="text-lg">Pro Subscriber</CardTitle>
+                  <CardTitle className="text-lg">Super Fan Subscriber</CardTitle>
                 </div>
                 <Badge variant="default" className="bg-primary">Active</Badge>
               </div>
@@ -320,7 +327,7 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground mb-4">
-                You get {PRO_PLAN.credits} credits every month as part of your Pro plan
+                You get {PRO_PLAN.credits} credits ({PRO_PLAN.talkTime}) every month as a Super Fan
               </p>
               <Button onClick={handleManageSubscription} variant="outline" size="sm">
                 Manage Subscription
@@ -346,12 +353,13 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
               
               <div className="space-y-1">
                 <div className="flex items-center gap-1.5">
-                  <Zap className="w-4 h-4 text-primary" />
-                  <p className="text-xs font-medium">Standard Mode</p>
+                  <Clock className="w-4 h-4 text-primary" />
+                  <p className="text-xs font-medium">Talk Time Remaining</p>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  ~{calculateEstimatedTime(creditBalance || 0, 'standard')}
+                  ~{calculateEstimatedTime(creditBalance || 0)}
                 </p>
+                <p className="text-xs text-muted-foreground/70">1 credit = 1 minute</p>
               </div>
 
               <Button onClick={handleRefreshStatus} variant="outline" size="sm" className="w-full">
@@ -364,32 +372,33 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
         {/* Buy Credits */}
         <h2 className="text-xl font-semibold text-foreground mb-4">Buy Credits</h2>
         <div className="grid gap-4 sm:grid-cols-3">
-          <Card>
+          {/* Snack Pack */}
+          <Card className="border-primary/50 relative overflow-hidden">
+            {CREDIT_PACKAGES.snack.badge && (
+              <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-bl-lg font-medium">
+                {CREDIT_PACKAGES.snack.badge}
+              </div>
+            )}
             <CardHeader>
-              <CardTitle className="text-lg">{CREDIT_PACKAGES.bronze.name}</CardTitle>
+              <CardTitle className="text-lg">{CREDIT_PACKAGES.snack.name}</CardTitle>
               <CardDescription className="text-sm text-muted-foreground mb-2">
-                {CREDIT_PACKAGES.bronze.credits} Credits
+                {CREDIT_PACKAGES.snack.credits} Credits • {CREDIT_PACKAGES.snack.talkTime}
               </CardDescription>
               <CardDescription className="text-lg font-semibold">
                 {formatPrice(
-                  CREDIT_PACKAGES.bronze.priceNGN,
-                  CREDIT_PACKAGES.bronze.priceUSD,
-                  CREDIT_PACKAGES.bronze.priceGBP
+                  CREDIT_PACKAGES.snack.priceNGN,
+                  CREDIT_PACKAGES.snack.priceUSD,
+                  CREDIT_PACKAGES.snack.priceGBP
                 )}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="space-y-1">
-                <p className="text-base text-muted-foreground">
-                  ~{calculateEstimatedTime(CREDIT_PACKAGES.bronze.credits, 'standard')}
-                </p>
-              </div>
               <Button 
-                onClick={() => openPaymentDialog('bronze', 'credits')} 
+                onClick={() => openPaymentDialog('snack', 'credits')} 
                 className="w-full"
                 disabled={processingPayment !== null}
               >
-                {processingPayment === 'bronze' ? (
+                {processingPayment === 'snack' ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
                     Processing...
@@ -401,35 +410,33 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
             </CardContent>
           </Card>
 
-          <Card className="border-primary/50">
+          {/* Buddy Pack */}
+          <Card className="relative overflow-hidden">
+            {CREDIT_PACKAGES.buddy.badge && (
+              <Badge variant="secondary" className="absolute top-3 right-3 text-xs">
+                {CREDIT_PACKAGES.buddy.badge}
+              </Badge>
+            )}
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg">{CREDIT_PACKAGES.silver.name}</CardTitle>
-                <Badge variant="secondary" className="text-xs">{CREDIT_PACKAGES.silver.badge}</Badge>
-              </div>
+              <CardTitle className="text-lg">{CREDIT_PACKAGES.buddy.name}</CardTitle>
               <CardDescription className="text-sm text-muted-foreground mb-2">
-                {CREDIT_PACKAGES.silver.credits} Credits
+                {CREDIT_PACKAGES.buddy.credits} Credits • {CREDIT_PACKAGES.buddy.talkTime}
               </CardDescription>
               <CardDescription className="text-lg font-semibold">
                 {formatPrice(
-                  CREDIT_PACKAGES.silver.priceNGN,
-                  CREDIT_PACKAGES.silver.priceUSD,
-                  CREDIT_PACKAGES.silver.priceGBP
+                  CREDIT_PACKAGES.buddy.priceNGN,
+                  CREDIT_PACKAGES.buddy.priceUSD,
+                  CREDIT_PACKAGES.buddy.priceGBP
                 )}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="space-y-1">
-                <p className="text-base text-muted-foreground">
-                  ~{calculateEstimatedTime(CREDIT_PACKAGES.silver.credits, 'standard')}
-                </p>
-              </div>
               <Button 
-                onClick={() => openPaymentDialog('silver', 'credits')} 
+                onClick={() => openPaymentDialog('buddy', 'credits')} 
                 className="w-full"
                 disabled={processingPayment !== null}
               >
-                {processingPayment === 'silver' ? (
+                {processingPayment === 'buddy' ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
                     Processing...
@@ -441,32 +448,28 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
             </CardContent>
           </Card>
 
+          {/* Bestie Pack */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">{CREDIT_PACKAGES.gold.name}</CardTitle>
+              <CardTitle className="text-lg">{CREDIT_PACKAGES.bestie.name}</CardTitle>
               <CardDescription className="text-sm text-muted-foreground mb-2">
-                {CREDIT_PACKAGES.gold.credits} Credits
+                {CREDIT_PACKAGES.bestie.credits} Credits • {CREDIT_PACKAGES.bestie.talkTime}
               </CardDescription>
               <CardDescription className="text-lg font-semibold">
                 {formatPrice(
-                  CREDIT_PACKAGES.gold.priceNGN,
-                  CREDIT_PACKAGES.gold.priceUSD,
-                  CREDIT_PACKAGES.gold.priceGBP
+                  CREDIT_PACKAGES.bestie.priceNGN,
+                  CREDIT_PACKAGES.bestie.priceUSD,
+                  CREDIT_PACKAGES.bestie.priceGBP
                 )}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="space-y-1">
-                <p className="text-base text-muted-foreground">
-                  ~{calculateEstimatedTime(CREDIT_PACKAGES.gold.credits, 'standard')}
-                </p>
-              </div>
               <Button 
-                onClick={() => openPaymentDialog('gold', 'credits')} 
+                onClick={() => openPaymentDialog('bestie', 'credits')} 
                 className="w-full"
                 disabled={processingPayment !== null}
               >
-                {processingPayment === 'gold' ? (
+                {processingPayment === 'bestie' ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
                     Processing...
@@ -481,20 +484,20 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
 
         <Separator className="my-6" />
 
-        {/* Pro Subscription */}
+        {/* Super Fan Subscription */}
         {!isSubscribed && (
           <>
-            <h2 className="text-xl font-semibold text-foreground mb-4">Pro Subscription</h2>
-            <Card className="mb-6 border-primary/50">
+            <h2 className="text-xl font-semibold text-foreground mb-4">Monthly Subscription</h2>
+            <Card className="mb-6 border-primary/50 bg-gradient-to-br from-primary/5 to-primary/10">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Crown className="w-5 h-5 text-primary" />
-                    <CardTitle>Pro Plan</CardTitle>
+                    <CardTitle>{PRO_PLAN.name}</CardTitle>
                   </div>
-                  <Badge variant="secondary">Most Popular</Badge>
+                  <Badge variant="secondary">Best Value</Badge>
                 </div>
-                <CardDescription>Best value for regular users</CardDescription>
+                <CardDescription>Perfect for daily conversations</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
@@ -510,7 +513,7 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
                     <div>
                       <p className="font-medium">{PRO_PLAN.credits} Credits per Month</p>
                       <p className="text-sm text-muted-foreground">
-                        ~{calculateEstimatedTime(PRO_PLAN.credits, 'standard')} of conversation
+                        {PRO_PLAN.talkTime} of conversation time
                       </p>
                     </div>
                   </div>
@@ -536,7 +539,7 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
                       Processing...
                     </>
                   ) : (
-                    "Subscribe Now"
+                    "Become a Super Fan"
                   )}
                 </Button>
               </CardContent>
@@ -546,38 +549,38 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
 
         <Separator className="my-6" />
 
-        {/* Voice Modes & Features */}
+        {/* Credit Usage Info */}
         <div>
           <div className="mb-4">
             <h3 className="text-lg font-semibold flex items-center gap-2">
               <Clock className="w-5 h-5 text-primary" />
-              Voice Mode & Features
+              How Credits Work
             </h3>
             <p className="text-sm text-muted-foreground mt-1">
-              Credits are deducted based on your conversation time.
+              Simple pricing: 1 credit = 1 minute of talk time
             </p>
           </div>
 
           <div className="grid grid-cols-1 gap-4">
-            {/* Standard Mode Card */}
-            <Card className="border-2">
+            {/* Nova Live Mode Card */}
+            <Card className="border-2 border-primary/30">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2">
                     <Zap className="w-5 h-5 text-primary" />
-                    Standard Mode
+                    Nova Live
                   </CardTitle>
-                  <Badge variant="secondary" className="text-xs whitespace-nowrap">3 credits/min</Badge>
+                  <Badge variant="default" className="text-xs whitespace-nowrap bg-primary">1 credit/min</Badge>
                 </div>
               </CardHeader>
               <CardContent>
                 <CardDescription className="mb-4">
-                  Simple and reliable tap-to-talk conversations
+                  Real-time AI voice conversations with Nova
                 </CardDescription>
                 <ul className="space-y-2">
                   <li className="flex items-start gap-2">
                     <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                    <span className="text-sm">Tap-to-talk interface</span>
+                    <span className="text-sm">Natural conversation flow</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
@@ -585,64 +588,18 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
                   </li>
                   <li className="flex items-start gap-2">
                     <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                    <span className="text-sm">Reliable performance</span>
+                    <span className="text-sm">Remembers your conversations</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                    <span className="text-sm">Perfect for practice conversations</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                    <span className="text-sm">More affordable option</span>
+                    <span className="text-sm">Perfect for practice & fun chats</span>
                   </li>
                 </ul>
               </CardContent>
             </Card>
-
-            {/* Premium Mode Card - Hidden (owner controls via feature flag) */}
-            {FEATURES.PREMIUM_MODE_ENABLED && (
-              <Card className="border-2 border-primary/50 bg-gradient-to-br from-background to-muted/30">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Crown className="w-5 h-5 text-primary" />
-                    Premium Mode
-                  </CardTitle>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="default">20 credits/min</Badge>
-                    <Badge variant="secondary">Premium</Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription className="mb-4">
-                    Ultra-realistic instant voice chat experience
-                  </CardDescription>
-                  <ul className="space-y-2">
-                    <li className="flex items-start gap-2">
-                      <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                      <span className="text-sm">Ultra-realistic AI voice</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                      <span className="text-sm">Instant real-time responses</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                      <span className="text-sm">Natural conversation flow</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                      <span className="text-sm">Professional-grade voice quality</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                      <span className="text-sm">Best for immersive practice</span>
-                    </li>
-                  </ul>
-                </CardContent>
-              </Card>
-            )}
           </div>
         </div>
+
 
         {/* Payment Method Selection Dialog */}
         <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
