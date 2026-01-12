@@ -1063,16 +1063,14 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
               ? (
                 <>
                   <Lightbulb className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                  <span>{isTrialMode ? "Tap to start your free 2-minute trial" : "Tap the button below to start talking"}</span>
+                  <span>{isTrialMode ? "Tap to start your free 2-minute trial" : "Tap Nova Live to start talking"}</span>
                 </>
               )
               : isHandsFreeMode
-                  ? (currentMode === 'premium' 
-                    ? "Premium Mode: Highest quality AI" 
-                    : currentMode === 'tap'
+                  ? (currentMode === 'tap'
                       ? "Trial Mode: Just speak naturally!"
-                      : "Standard Mode: Natural conversation flow")
-                  : "Connected to AI... Start Talking!"}
+                      : "Nova Live: Natural conversation flow")
+                  : "Connected to Nova... Start Talking!"}
           </p>
         </div>
 
@@ -1082,34 +1080,17 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
             <Button
               size="lg"
               variant="default"
-              className="w-full h-auto py-3 flex-col items-start"
+              className="w-full h-auto py-3 flex-col items-start bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
               onClick={startHandsFreeSession}
               disabled={isConnecting}
             >
               <div className="flex items-center w-full mb-1">
                 <Phone className="w-5 h-5 mr-2" />
-                <span className="font-semibold text-lg">Standard Mode</span>
-                <Badge variant="secondary" className="ml-auto bg-background/20">3 credits/min</Badge>
+                <span className="font-semibold text-lg">Nova Live</span>
+                <Badge variant="secondary" className="ml-auto bg-background/20">1 credit/min</Badge>
               </div>
               <p className="text-xs opacity-90 text-left">Natural conversation flow with instant responses</p>
             </Button>
-
-            {FEATURES.PREMIUM_MODE_ENABLED && (
-              <Button
-                size="lg"
-                variant="default"
-                className="w-full h-auto py-3 flex-col items-start"
-                onClick={startPremiumSession}
-                disabled={isConnecting}
-              >
-                <div className="flex items-center w-full mb-1">
-                  <Phone className="w-5 h-5 mr-2" />
-                  <span className="font-semibold text-lg">Premium Mode</span>
-                  <Badge variant="secondary" className="ml-auto bg-background/20">20 credits/min</Badge>
-                </div>
-                <p className="text-xs opacity-90 text-left">Highest quality AI responses</p>
-              </Button>
-            )}
           </div>
         )}
         
