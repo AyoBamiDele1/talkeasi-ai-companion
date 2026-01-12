@@ -163,9 +163,9 @@ const Home = () => {
       <div className="flex-1 flex flex-col items-center justify-center">
         <div className="text-center mb-8">
           <NovaOrb 
-            size="lg"
+            size="sm"
             onClick={() => navigate('/lesson/9b25e5bb-3702-448f-aae7-39c0b44fb558')}
-            className="mx-auto mb-6"
+            className="mx-auto mb-4"
           />
           <h2 className="text-2xl font-bold mb-2">Talk to Nova</h2>
           <p className="text-muted-foreground mb-4">
