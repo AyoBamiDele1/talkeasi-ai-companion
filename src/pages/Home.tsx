@@ -8,9 +8,12 @@ import { FEATURES } from "@/config/features";
 import { useCompanionProgress } from "@/hooks/useCompanionProgress";
 import { useMilestones } from "@/hooks/useMilestones";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { useRealtimeCredits } from "@/hooks/useRealtimeCredits";
 import MilestoneCelebrationModal from "@/components/MilestoneCelebrationModal";
 import StreakRiskBanner from "@/components/StreakRiskBanner";
 import NotificationPermissionPrompt from "@/components/NotificationPermissionPrompt";
+import NovaOrb from "@/components/NovaOrb";
+import { Clock, Coins } from "lucide-react";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -20,6 +23,7 @@ const Home = () => {
   const { data: stats } = useCompanionProgress();
   const { pendingMilestone, checkMilestones, celebrateMilestone, dismissMilestone } = useMilestones();
   const { showPrompt, subscribe, dismissPrompt, isSupported } = usePushNotifications();
+  const { credits, formattedTime } = useRealtimeCredits();
 
   useEffect(() => {
     if (user) {
@@ -132,45 +136,69 @@ const Home = () => {
         </p>
       </div>
 
-      {/* Cards Container - Centered in remaining space */}
-      <div className="flex-1 flex items-center">
-        {/* Two Mode Cards - Stack on mobile, side-by-side on desktop */}
-        <div className={`grid grid-cols-1 ${FEATURES.ENGLISH_LESSONS_ENABLED ? 'md:grid-cols-2' : ''} gap-4 max-w-4xl mx-auto w-full`}>
-        
-        {/* Card 1: AI Companion Mode */}
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardContent className="p-6 text-center">
-            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-4xl">💬</span>
-            </div>
-            <h2 className="text-xl font-bold mb-2">Talk to Nova</h2>
-            <p className="text-sm text-muted-foreground mb-1">Your AI friend Nova is here to listen, talk, and help.</p>
-            
-            <Button className="w-full mt-4" onClick={() => navigate('/lesson/9b25e5bb-3702-448f-aae7-39c0b44fb558')}>
-              Start Talking
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Card 2: English Practice Mode */}
-        {FEATURES.ENGLISH_LESSONS_ENABLED && (
-          <Card className="hover:shadow-lg transition-shadow">
-            <CardContent className="p-6 text-center">
-              <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-4xl">🎓</span>
+      {/* Credit Balance Display */}
+      {user && credits > 0 && (
+        <div className="mb-6 p-4 rounded-xl bg-card border border-border">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <Coins className="w-5 h-5 text-primary" />
               </div>
-              <h2 className="text-xl font-bold mb-2">English Lessons</h2>
-              <p className="text-sm text-muted-foreground mb-1">
-                Practice your English with real-time AI feedback.
-              </p>
-              
-              <Button className="w-full mt-4" onClick={() => navigate('/home')}>
-                Start Practicing
-              </Button>
+              <div>
+                <p className="text-sm font-medium text-foreground">{credits} Credits</p>
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Clock className="w-3 h-3" />
+                  <span>~{formattedTime} of talk time</span>
+                </div>
+              </div>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => navigate('/profile?view=subscription')}>
+              Top Up
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Nova Orb - Main CTA */}
+      <div className="flex-1 flex flex-col items-center justify-center">
+        <div className="text-center mb-8">
+          <NovaOrb 
+            size="lg"
+            onClick={() => navigate('/lesson/9b25e5bb-3702-448f-aae7-39c0b44fb558')}
+            className="mx-auto mb-6"
+          />
+          <h2 className="text-2xl font-bold mb-2">Talk to Nova</h2>
+          <p className="text-muted-foreground mb-4">
+            Your AI friend is here to listen, talk, and help.
+          </p>
+          <Button 
+            size="lg"
+            className="px-8"
+            onClick={() => navigate('/lesson/9b25e5bb-3702-448f-aae7-39c0b44fb558')}
+          >
+            Start Talking
+          </Button>
+        </div>
+
+        {/* English Lessons Card - Secondary */}
+        {FEATURES.ENGLISH_LESSONS_ENABLED && (
+          <Card className="hover:shadow-lg transition-shadow max-w-sm w-full">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-accent/10 rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-2xl">🎓</span>
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold">English Lessons</h3>
+                  <p className="text-xs text-muted-foreground">Practice with AI feedback</p>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => navigate('/home')}>
+                  Start
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}
-        </div>
       </div>
     </div>
   );
