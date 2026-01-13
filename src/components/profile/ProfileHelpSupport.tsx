@@ -1,7 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, HelpCircle, BookOpen, MessageSquare, Mail, Phone, ExternalLink, ChevronRight, MessageCircle } from "lucide-react";
+import { ArrowLeft, HelpCircle, BookOpen, Mail, Phone, ExternalLink, ChevronRight, MessageCircle } from "lucide-react";
+import NovaIcon from "@/components/NovaIcon";
 interface ProfileHelpSupportProps {
   onBack: () => void;
 }
@@ -29,7 +30,7 @@ const ProfileHelpSupport = ({
     available: "24/7",
     onClick: () => window.location.href = "mailto:novadelatech1@gmail.com"
   }, {
-    icon: MessageSquare,
+    icon: MessageCircle,
     title: "Live Chat (WhatsApp)",
     description: "Chat with us instantly",
     action: "Start conversation",
@@ -48,7 +49,7 @@ const ProfileHelpSupport = ({
   }, {
     title: "Community Forum",
     description: "Connect with other learners",
-    icon: MessageSquare
+    icon: MessageCircle
   }, {
     title: "Feature Requests",
     description: "Suggest new features",
