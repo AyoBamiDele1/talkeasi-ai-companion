@@ -13,6 +13,7 @@ import MilestoneCelebrationModal from "@/components/MilestoneCelebrationModal";
 import StreakRiskBanner from "@/components/StreakRiskBanner";
 import NotificationPermissionPrompt from "@/components/NotificationPermissionPrompt";
 import NovaOrb from "@/components/NovaOrb";
+import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { Clock, Coins } from "lucide-react";
 
 const Home = () => {
@@ -200,6 +201,9 @@ const Home = () => {
           </Card>
         )}
       </div>
+
+      {/* PWA Install Prompt */}
+      <PWAInstallPrompt />
     </div>
   );
 };
