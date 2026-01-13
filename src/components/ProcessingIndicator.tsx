@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, Mic, MessageSquare, Volume2 } from 'lucide-react';
+import { Loader2, Mic, Volume2 } from 'lucide-react';
+import NovaIcon from './NovaIcon';
 
 interface ProcessingIndicatorProps {
   stage: 'transcribing' | 'thinking' | 'generating' | 'speaking' | null;
@@ -20,8 +21,8 @@ const ProcessingIndicator: React.FC<ProcessingIndicatorProps> = ({ stage, curren
         };
       case 'thinking':
         return {
-          icon: <MessageSquare className="w-4 h-4 text-accent" />,
-          text: 'AI is thinking...',
+          icon: <NovaIcon size="sm" className="animate-pulse" />,
+          text: 'Nova is thinking...',
           color: 'border-accent/20 bg-accent/5'
         };
       case 'generating':
