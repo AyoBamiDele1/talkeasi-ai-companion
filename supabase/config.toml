@@ -9,6 +9,9 @@ verify_jwt = false
 [functions.realtime-conversation]
 verify_jwt = false
 
+[functions.gemini-realtime]
+verify_jwt = false
+
 [functions.openai-conversation]
 verify_jwt = false
 
@@ -43,4 +46,13 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.paystack-verify]
+verify_jwt = false
+
+[functions.extract-memories]
+verify_jwt = false
+
+[functions.schedule-notifications]
+verify_jwt = false
+
+[functions.send-notification]
 verify_jwt = false

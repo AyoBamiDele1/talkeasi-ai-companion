@@ -1,3 +1,5 @@
+// Realtime Audio utilities for Gemini (primary) and OpenAI (fallback)
+
 export class AudioRecorder {
   private stream: MediaStream | null = null;
   private audioContext: AudioContext | null = null;
@@ -12,15 +14,14 @@ export class AudioRecorder {
         audio: {
           sampleRate: 24000,
           channelCount: 1,
-          echoCancellation: true, // Critical for preventing feedback
+          echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
-          // Additional browser-specific constraints
           googEchoCancellation: true,
           googNoiseSuppression: true,
           googAutoGainControl: true,
           googHighpassFilter: true,
-        } as any // Cast to any to allow browser-specific properties
+        } as any
       });
       
       this.audioContext = new AudioContext({
@@ -28,7 +29,6 @@ export class AudioRecorder {
       });
       
       this.source = this.audioContext.createMediaStreamSource(this.stream);
-      // Use larger buffer for smoother audio capture
       this.processor = this.audioContext.createScriptProcessor(8192, 1, 1);
       
       this.processor.onaudioprocess = (e) => {
@@ -93,7 +93,6 @@ class AudioQueue {
 
   constructor(audioContext: AudioContext) {
     this.audioContext = audioContext;
-    // Create gain node for consistent volume
     this.gainNode = audioContext.createGain();
     this.gainNode.gain.value = 1.0;
     this.gainNode.connect(audioContext.destination);
@@ -117,7 +116,6 @@ class AudioQueue {
     const audioData = this.queue.shift()!;
 
     try {
-      // Ensure audio context is running
       if (this.audioContext.state === 'suspended') {
         console.log('Resuming suspended audio context');
         await this.audioContext.resume();
@@ -135,7 +133,6 @@ class AudioQueue {
       
       this.currentSource = source;
       
-      // Schedule playback for seamless streaming
       const currentTime = this.audioContext.currentTime;
       const startTime = Math.max(currentTime, this.nextStartTime);
       this.nextStartTime = startTime + audioBuffer.duration;
@@ -158,13 +155,11 @@ class AudioQueue {
   }
 
   private createWavFromPCM(pcmData: Uint8Array): Uint8Array {
-    // Convert bytes to 16-bit samples
     const int16Data = new Int16Array(pcmData.length / 2);
     for (let i = 0; i < pcmData.length; i += 2) {
       int16Data[i / 2] = (pcmData[i + 1] << 8) | pcmData[i];
     }
     
-    // Create WAV header
     const wavHeader = new ArrayBuffer(44);
     const view = new DataView(wavHeader);
     
@@ -174,14 +169,12 @@ class AudioQueue {
       }
     };
 
-    // WAV header parameters
     const sampleRate = 24000;
     const numChannels = 1;
     const bitsPerSample = 16;
     const blockAlign = (numChannels * bitsPerSample) / 8;
     const byteRate = sampleRate * blockAlign;
 
-    // Write WAV header
     writeString(view, 0, 'RIFF');
     view.setUint32(4, 36 + int16Data.byteLength, true);
     writeString(view, 8, 'WAVE');
@@ -196,7 +189,6 @@ class AudioQueue {
     writeString(view, 36, 'data');
     view.setUint32(40, int16Data.byteLength, true);
 
-    // Combine header and data
     const wavArray = new Uint8Array(wavHeader.byteLength + int16Data.byteLength);
     wavArray.set(new Uint8Array(wavHeader), 0);
     wavArray.set(new Uint8Array(int16Data.buffer), wavHeader.byteLength);
@@ -206,23 +198,19 @@ class AudioQueue {
 
   clear() {
     console.log('Clearing audio queue - stopping all playback');
-    // Stop current playback immediately
     if (this.currentSource) {
       try {
-        this.currentSource.stop(0); // Stop immediately, not at scheduled time
+        this.currentSource.stop(0);
         this.currentSource.disconnect();
       } catch (e) {
-        // Ignore if already stopped
         console.log('Audio source already stopped:', e);
       }
       this.currentSource = null;
     }
-    // Clear the queue
     this.queue = [];
     this.isPlaying = false;
     this.nextStartTime = 0;
     
-    // CRITICAL: Suspend audio context to kill ALL scheduled audio
     if (this.audioContext.state === 'running') {
       this.audioContext.suspend().then(() => {
         console.log('Audio context suspended to stop all playback');
@@ -243,6 +231,26 @@ export const playAudioData = async (audioContext: AudioContext, audioData: Uint8
   await audioQueueInstance.addToQueue(audioData);
 };
 
+// Provider type for tracking which AI is being used
+export type AIProvider = 'gemini' | 'openai';
+
+// Persistent state for connection attempts
+let geminiFailCount = 0;
+const MAX_GEMINI_FAILURES = 3;
+
+export const resetConnectionAttempts = () => {
+  geminiFailCount = 0;
+};
+
+export const shouldUseGemini = (): boolean => {
+  return geminiFailCount < MAX_GEMINI_FAILURES;
+};
+
+export const recordGeminiFailure = () => {
+  geminiFailCount++;
+  console.log(`Gemini failure recorded. Count: ${geminiFailCount}/${MAX_GEMINI_FAILURES}`);
+};
+
 export class RealtimeChat {
   private ws: WebSocket | null = null;
   private audioContext: AudioContext | null = null;
@@ -250,6 +258,8 @@ export class RealtimeChat {
   private isConnected = false;
   private lessonContextToSend: any = null;
   private keepaliveInterval: ReturnType<typeof setInterval> | null = null;
+  private currentProvider: AIProvider = 'gemini';
+  private onProviderChange?: (provider: AIProvider) => void;
 
   constructor(
     private onMessage: (message: any) => void,
@@ -259,19 +269,21 @@ export class RealtimeChat {
       coveredScenarios?: string[];
       model?: string;
       userMemories?: Array<{ content: string; memory_type: string; importance: number }>;
-    }
+      userCountry?: string;
+      isNigerian?: boolean;
+    },
+    onProviderChange?: (provider: AIProvider) => void
   ) {
     if (lessonContext) {
       this.lessonContextToSend = lessonContext;
     }
+    this.onProviderChange = onProviderChange;
   }
 
   private startKeepalive() {
-    // Send a keepalive ping every 25 seconds to prevent WebSocket timeout
     this.keepaliveInterval = setInterval(() => {
       if (this.ws && this.ws.readyState === WebSocket.OPEN) {
         console.log('[Keepalive] Sending ping to maintain connection');
-        // Send empty input_audio_buffer.commit as a lightweight keepalive
         this.ws.send(JSON.stringify({ type: 'input_audio_buffer.clear' }));
       }
     }, 25000);
@@ -284,15 +296,48 @@ export class RealtimeChat {
     }
   }
 
+  getProvider(): AIProvider {
+    return this.currentProvider;
+  }
+
   async connect(): Promise<void> {
+    // Determine which provider to use
+    const useGemini = shouldUseGemini();
+    this.currentProvider = useGemini ? 'gemini' : 'openai';
+    
+    console.log(`Connecting to ${this.currentProvider} realtime API...`);
+    this.onProviderChange?.(this.currentProvider);
+
     return new Promise((resolve, reject) => {
       try {
-        // Use the full WebSocket URL for the edge function
-        console.log('Connecting to WebSocket...');
-        this.ws = new WebSocket(`wss://qcxjjhgfgyfhwacxppcp.functions.supabase.co/realtime-conversation`);
+        const endpoint = useGemini
+          ? `wss://qcxjjhgfgyfhwacxppcp.functions.supabase.co/gemini-realtime`
+          : `wss://qcxjjhgfgyfhwacxppcp.functions.supabase.co/realtime-conversation`;
+        
+        console.log('Connecting to WebSocket:', endpoint);
+        this.ws = new WebSocket(endpoint);
+        
+        // Set connection timeout
+        const connectionTimeout = setTimeout(() => {
+          if (this.ws && this.ws.readyState !== WebSocket.OPEN) {
+            console.log('Connection timeout, closing socket');
+            this.ws.close();
+            
+            if (useGemini) {
+              recordGeminiFailure();
+              // Retry with OpenAI
+              this.currentProvider = 'openai';
+              this.onProviderChange?.('openai');
+              this.connectToOpenAI().then(resolve).catch(reject);
+            } else {
+              reject(new Error('Failed to connect to voice service'));
+            }
+          }
+        }, 10000);
         
         this.ws.onopen = () => {
-          console.log('WebSocket connected successfully');
+          clearTimeout(connectionTimeout);
+          console.log(`${this.currentProvider} WebSocket connected successfully`);
           this.isConnected = true;
           resolve();
         };
@@ -302,20 +347,28 @@ export class RealtimeChat {
             const data = JSON.parse(event.data);
             console.log('Received message:', data.type);
 
-            // Handle errors from the server
+            // Handle errors - check for fallback signal from Gemini
             if (data.error) {
               console.error('Server error:', data.error);
+              
+              // If Gemini signals fallback, switch to OpenAI
+              if (data.fallback && this.currentProvider === 'gemini') {
+                console.log('Gemini requested fallback to OpenAI');
+                recordGeminiFailure();
+                this.disconnect();
+                await this.connectToOpenAI();
+                return;
+              }
+              
               this.onMessage({ type: 'error', error: data.error });
               return;
             }
 
             if (data.type === 'connection_established') {
-              console.log('Connection established, sending lesson context and starting audio...');
+              console.log(`Connection established with ${data.provider || this.currentProvider}`);
               
-              // Start keepalive to prevent WebSocket timeout
               this.startKeepalive();
               
-              // Send lesson context if available
               if (this.lessonContextToSend && this.ws) {
                 console.log('Sending lesson context:', this.lessonContextToSend.lessonTitle);
                 this.ws.send(JSON.stringify({
@@ -324,21 +377,16 @@ export class RealtimeChat {
                 }));
               }
               
-              // Start audio recording
               await this.startAudioRecording();
             } else if (data.type === 'response.audio.delta' || data.type === 'response.output_audio.delta') {
-              // Play audio chunk (supports both legacy and new event types)
               if (data.delta) {
                 console.log('Received audio delta');
                 await this.handleAudioDelta(data.delta);
               }
             } else if (data.type === 'response.audio_transcript.delta' || data.type === 'response.output_audio_transcript.delta') {
-              // Handle transcript (supports both legacy and new event types)
               console.log('Transcript delta:', data.delta);
-              // Forward transcript events to the UI as well
               this.onMessage(data);
             } else {
-              // Forward to message handler
               this.onMessage(data);
             }
           } catch (error) {
@@ -347,8 +395,15 @@ export class RealtimeChat {
         };
 
         this.ws.onerror = (error) => {
+          clearTimeout(connectionTimeout);
           console.error('WebSocket error:', error);
-          reject(new Error('Failed to connect to voice service'));
+          
+          if (useGemini && !this.isConnected) {
+            recordGeminiFailure();
+            this.connectToOpenAI().then(resolve).catch(reject);
+          } else {
+            reject(new Error('Failed to connect to voice service'));
+          }
         };
 
         this.ws.onclose = (event) => {
@@ -363,11 +418,81 @@ export class RealtimeChat {
     });
   }
 
+  private async connectToOpenAI(): Promise<void> {
+    console.log('Falling back to OpenAI realtime API...');
+    this.currentProvider = 'openai';
+    this.onProviderChange?.('openai');
+    
+    return new Promise((resolve, reject) => {
+      try {
+        this.ws = new WebSocket(`wss://qcxjjhgfgyfhwacxppcp.functions.supabase.co/realtime-conversation`);
+        
+        this.ws.onopen = () => {
+          console.log('OpenAI WebSocket connected successfully (fallback)');
+          this.isConnected = true;
+          resolve();
+        };
+
+        this.ws.onmessage = async (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            console.log('Received message (OpenAI):', data.type);
+
+            if (data.error) {
+              console.error('Server error:', data.error);
+              this.onMessage({ type: 'error', error: data.error });
+              return;
+            }
+
+            if (data.type === 'connection_established') {
+              console.log('Connection established with OpenAI');
+              
+              this.startKeepalive();
+              
+              if (this.lessonContextToSend && this.ws) {
+                console.log('Sending lesson context:', this.lessonContextToSend.lessonTitle);
+                this.ws.send(JSON.stringify({
+                  type: 'lesson_init',
+                  payload: this.lessonContextToSend
+                }));
+              }
+              
+              await this.startAudioRecording();
+            } else if (data.type === 'response.audio.delta' || data.type === 'response.output_audio.delta') {
+              if (data.delta) {
+                await this.handleAudioDelta(data.delta);
+              }
+            } else if (data.type === 'response.audio_transcript.delta' || data.type === 'response.output_audio_transcript.delta') {
+              this.onMessage(data);
+            } else {
+              this.onMessage(data);
+            }
+          } catch (error) {
+            console.error('Error processing message:', error);
+          }
+        };
+
+        this.ws.onerror = (error) => {
+          console.error('OpenAI WebSocket error:', error);
+          reject(new Error('Failed to connect to OpenAI voice service'));
+        };
+
+        this.ws.onclose = (event) => {
+          console.log('OpenAI WebSocket closed:', event.code, event.reason);
+          this.isConnected = false;
+          this.cleanup();
+        };
+      } catch (error) {
+        console.error('Error creating OpenAI WebSocket:', error);
+        reject(error);
+      }
+    });
+  }
+
   private async startAudioRecording() {
     try {
       this.audioContext = new AudioContext({ sampleRate: 24000 });
       
-      // CRITICAL: Resume audio context for browser autoplay policy
       if (this.audioContext.state === 'suspended') {
         await this.audioContext.resume();
         console.log('Audio context resumed');
@@ -401,7 +526,6 @@ export class RealtimeChat {
     }
 
     try {
-      // Convert base64 to Uint8Array
       const binaryString = atob(delta);
       const bytes = new Uint8Array(binaryString.length);
       for (let i = 0; i < binaryString.length; i++) {
@@ -440,7 +564,6 @@ export class RealtimeChat {
 
   private cleanup() {
     console.log('Running cleanup - stopping all audio and closing context');
-    // Stop keepalive first
     this.stopKeepalive();
     
     if (this.recorder) {
@@ -449,11 +572,9 @@ export class RealtimeChat {
     }
     if (audioQueueInstance) {
       audioQueueInstance.clear();
-      // CRITICAL: Null out the singleton to force fresh instance next time
       audioQueueInstance = null;
     }
     if (this.audioContext) {
-      // Close audio context to completely kill all audio
       this.audioContext.close().then(() => {
         console.log('Audio context closed');
       }).catch(e => {
@@ -467,16 +588,13 @@ export class RealtimeChat {
     console.log('Disconnecting RealtimeChat and clearing audio queue');
     this.isConnected = false;
     
-    // Stop keepalive immediately
     this.stopKeepalive();
     
-    // CRITICAL: Close WebSocket FIRST to prevent new audio chunks
     if (this.ws) {
       this.ws.close();
       this.ws = null;
     }
     
-    // Then cleanup everything else
     this.cleanup();
   }
 }
