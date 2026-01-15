@@ -14,7 +14,9 @@ import StreakRiskBanner from "@/components/StreakRiskBanner";
 import NotificationPermissionPrompt from "@/components/NotificationPermissionPrompt";
 import NovaOrb from "@/components/NovaOrb";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
-import { Clock, Coins } from "lucide-react";
+import GiftCreditsModal from "@/components/GiftCreditsModal";
+import ClaimGiftModal from "@/components/ClaimGiftModal";
+import { Clock, Coins, Gift } from "lucide-react";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -24,7 +26,9 @@ const Home = () => {
   const { data: stats } = useCompanionProgress();
   const { pendingMilestone, checkMilestones, celebrateMilestone, dismissMilestone } = useMilestones();
   const { showPrompt, subscribe, dismissPrompt, isSupported } = usePushNotifications();
-  const { credits, formattedTime } = useRealtimeCredits();
+  const { credits, formattedTime, refetch: refetchCredits } = useRealtimeCredits();
+  const [showGiftModal, setShowGiftModal] = useState(false);
+  const [showClaimModal, setShowClaimModal] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -153,8 +157,32 @@ const Home = () => {
                 </div>
               </div>
             </div>
-            <Button variant="outline" size="sm" onClick={() => navigate('/profile?view=subscription')}>
-              Top Up
+            <div className="flex gap-2">
+              <Button variant="ghost" size="sm" onClick={() => setShowGiftModal(true)} title="Gift credits">
+                <Gift className="w-4 h-4" />
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => navigate('/profile?view=subscription')}>
+                Top Up
+              </Button>
+            </div>
+          </div>
+          <div className="mt-3 pt-3 border-t border-border flex gap-2">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="flex-1 text-xs"
+              onClick={() => setShowGiftModal(true)}
+            >
+              <Gift className="w-3 h-3 mr-1" />
+              Gift a Friend
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="flex-1 text-xs"
+              onClick={() => setShowClaimModal(true)}
+            >
+              Claim Gift
             </Button>
           </div>
         </div>
@@ -204,6 +232,19 @@ const Home = () => {
 
       {/* PWA Install Prompt */}
       <PWAInstallPrompt />
+
+      {/* Gift Modals */}
+      <GiftCreditsModal
+        isOpen={showGiftModal}
+        onClose={() => setShowGiftModal(false)}
+        userCredits={credits}
+        onGiftSent={refetchCredits}
+      />
+      <ClaimGiftModal
+        isOpen={showClaimModal}
+        onClose={() => setShowClaimModal(false)}
+        onGiftClaimed={refetchCredits}
+      />
     </div>
   );
 };
