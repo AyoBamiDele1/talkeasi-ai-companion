@@ -249,8 +249,11 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   const queryClient = useQueryClient();
   const messageIdCounter = useRef(0);
   const idleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const audioInactivityTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastAudioInputRef = useRef<number>(Date.now());
   
   const IDLE_TIMEOUT_MS = lessonContext?.includes('Friendly Chat') || lessonContext?.includes('free_form') ? 600000 : 180000;
+  const AUDIO_INACTIVITY_TIMEOUT_MS = 120000; // 2 minutes of no audio input
 
   // Defensive effect: Prevent hands-free state in trial mode
   useEffect(() => {
@@ -916,11 +919,50 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     }
   };
 
+  // Track last audio input and auto-disconnect after 2 minutes of silence
+  const resetAudioInactivityTimer = () => {
+    lastAudioInputRef.current = Date.now();
+    
+    if (audioInactivityTimeoutRef.current) {
+      clearTimeout(audioInactivityTimeoutRef.current);
+    }
+    
+    if (isSessionActive && isHandsFreeMode) {
+      audioInactivityTimeoutRef.current = setTimeout(() => {
+        console.log('[DEBUG] Session auto-ended due to no audio input for 2 minutes');
+        toast({
+          title: "Session Ended",
+          description: "Auto-disconnected after 2 minutes of no audio input to save credits",
+        });
+        endSession();
+      }, AUDIO_INACTIVITY_TIMEOUT_MS);
+    }
+  };
+
+  // Start audio inactivity timer when session starts
+  useEffect(() => {
+    if (isSessionActive && isHandsFreeMode) {
+      resetAudioInactivityTimer();
+    }
+    
+    return () => {
+      if (audioInactivityTimeoutRef.current) {
+        clearTimeout(audioInactivityTimeoutRef.current);
+      }
+    };
+  }, [isSessionActive, isHandsFreeMode]);
+
   const handleRealtimeMessage = async (message: any) => {
     console.log('Realtime message:', message);
 
     // Reset idle timer on any activity
     resetIdleTimer();
+    
+    // Reset audio inactivity timer when user speaks
+    if (message.type === 'conversation.item.input_audio_transcription.completed' || 
+        message.type === 'input_audio_buffer.speech_started') {
+      resetAudioInactivityTimer();
+    }
 
     // Surface errors from the voice service
     if (message.type === 'error') {

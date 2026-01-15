@@ -124,6 +124,48 @@ export type Database = {
           },
         ]
       }
+      credit_gifts: {
+        Row: {
+          claimed_at: string | null
+          created_at: string
+          credits_amount: number
+          expires_at: string
+          gift_code: string
+          id: string
+          message: string | null
+          recipient_email: string
+          recipient_id: string | null
+          sender_id: string
+          status: string
+        }
+        Insert: {
+          claimed_at?: string | null
+          created_at?: string
+          credits_amount: number
+          expires_at?: string
+          gift_code?: string
+          id?: string
+          message?: string | null
+          recipient_email: string
+          recipient_id?: string | null
+          sender_id: string
+          status?: string
+        }
+        Update: {
+          claimed_at?: string | null
+          created_at?: string
+          credits_amount?: number
+          expires_at?: string
+          gift_code?: string
+          id?: string
+          message?: string | null
+          recipient_email?: string
+          recipient_id?: string | null
+          sender_id?: string
+          status?: string
+        }
+        Relationships: []
+      }
       credit_packages: {
         Row: {
           billing_interval: string | null
