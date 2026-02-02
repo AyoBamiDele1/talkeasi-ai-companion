@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { Home, BookOpen, TrendingUp, User } from "lucide-react";
+import { Home, BookOpen, TrendingUp, User, Gift } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { FEATURES } from "@/config/features";
@@ -15,6 +15,7 @@ const BottomNavigation = () => {
   const allNavItems = [
     { icon: Home, label: "Home", path: "/home" },
     { icon: BookOpen, label: "Lessons", path: "/lessons" },
+    { icon: Gift, label: "Gift", path: "/gifts" },
     { icon: TrendingUp, label: "Progress", path: "/progress" },
     { icon: User, label: "Profile", path: "/profile" }
   ];
@@ -26,7 +27,7 @@ const BottomNavigation = () => {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border z-40">
-      <div className={`grid ${navItems.length === 3 ? 'grid-cols-3' : 'grid-cols-4'} max-w-md mx-auto`}>
+      <div className={`grid ${navItems.length === 3 ? 'grid-cols-3' : navItems.length === 4 ? 'grid-cols-4' : 'grid-cols-5'} max-w-md mx-auto`}>
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (

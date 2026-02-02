@@ -16,6 +16,7 @@ import BottomNavigation from "./components/BottomNavigation";
 const LessonSession = lazy(() => import("./pages/LessonSession"));
 const Progress = lazy(() => import("./pages/Progress"));
 const Profile = lazy(() => import("./pages/Profile"));
+const Gifts = lazy(() => import("./pages/Gifts"));
 const Trial = lazy(() => import("./pages/Trial"));
 const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
 const PaymentCanceled = lazy(() => import("./pages/PaymentCanceled"));
@@ -50,6 +51,11 @@ const App = () => (
                 <Route path="/profile" element={
                   <ProtectedRoute>
                     <Profile />
+                  </ProtectedRoute>
+                } />
+                <Route path="/gifts" element={
+                  <ProtectedRoute>
+                    <Gifts />
                   </ProtectedRoute>
                 } />
                 <Route path="/lesson/:lessonId" element={
