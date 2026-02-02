@@ -171,7 +171,7 @@ const Profile = () => {
           <div className="flex items-center space-x-4 mb-4">
             <Avatar className="w-16 h-16">
               {profile?.avatar_url && <AvatarImage src={profile.avatar_url} alt="Profile picture" />}
-              <AvatarFallback className="text-lg font-semibold">
+              <AvatarFallback className="text-lg font-semibold bg-gradient-to-br from-primary via-accent to-[hsl(280,70%,50%)] text-white">
                 {profile?.display_name ? profile.display_name.split(' ').map(n => n[0]).join('').toUpperCase() : user?.email?.slice(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>

@@ -24,7 +24,7 @@ const Index = () => {
           <div className="text-center mb-6 md:mb-8">
             <div className="mb-4 md:mb-6">
               <div className="flex justify-center mb-3 md:mb-4">
-                <NovaOrb size="md" />
+                <NovaOrb size="sm" />
               </div>
               <h1 className="text-3xl md:text-5xl font-bold text-foreground mb-2 md:mb-3">
                 TalkEasi

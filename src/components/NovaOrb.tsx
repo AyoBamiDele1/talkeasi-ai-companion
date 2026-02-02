@@ -5,7 +5,7 @@ interface NovaOrbProps {
   isActive?: boolean;
   isListening?: boolean;
   isSpeaking?: boolean;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'xs' | 'sm' | 'md' | 'lg';
   onClick?: () => void;
   className?: string;
 }
@@ -19,8 +19,9 @@ const NovaOrb: React.FC<NovaOrbProps> = ({
   className
 }) => {
   const sizeClasses = {
-    sm: 'w-16 h-16',
-    md: 'w-24 h-24',
+    xs: 'w-8 h-8',
+    sm: 'w-12 h-12',
+    md: 'w-16 h-16',
     lg: 'w-32 h-32'
   };
 
@@ -49,11 +50,11 @@ const NovaOrb: React.FC<NovaOrbProps> = ({
         <>
           <div className={cn(
             "absolute rounded-full bg-primary/40 animate-ping",
-            size === 'lg' ? 'w-36 h-36' : size === 'md' ? 'w-28 h-28' : 'w-20 h-20'
+            size === 'lg' ? 'w-36 h-36' : size === 'md' ? 'w-20 h-20' : size === 'sm' ? 'w-16 h-16' : 'w-10 h-10'
           )} />
           <div className={cn(
             "absolute rounded-full bg-accent/30 animate-ping animation-delay-200",
-            size === 'lg' ? 'w-40 h-40' : size === 'md' ? 'w-32 h-32' : 'w-24 h-24'
+            size === 'lg' ? 'w-40 h-40' : size === 'md' ? 'w-24 h-24' : size === 'sm' ? 'w-18 h-18' : 'w-12 h-12'
           )} style={{ animationDelay: '0.2s' }} />
         </>
       )}
@@ -62,7 +63,7 @@ const NovaOrb: React.FC<NovaOrbProps> = ({
       {isSpeaking && (
         <div className={cn(
           "absolute rounded-full border-2 border-accent/50 animate-[ping_1.5s_ease-in-out_infinite]",
-          size === 'lg' ? 'w-40 h-40' : size === 'md' ? 'w-32 h-32' : 'w-24 h-24'
+          size === 'lg' ? 'w-40 h-40' : size === 'md' ? 'w-24 h-24' : size === 'sm' ? 'w-18 h-18' : 'w-12 h-12'
         )} />
       )}
       
@@ -92,13 +93,13 @@ const NovaOrb: React.FC<NovaOrbProps> = ({
         {/* Center highlight */}
         <div className={cn(
           "absolute rounded-full bg-white/40 blur-sm",
-          size === 'lg' ? 'w-8 h-8 top-4 left-6' : size === 'md' ? 'w-6 h-6 top-3 left-5' : 'w-4 h-4 top-2 left-4'
+          size === 'lg' ? 'w-8 h-8 top-4 left-6' : size === 'md' ? 'w-4 h-4 top-2 left-4' : size === 'sm' ? 'w-3 h-3 top-1.5 left-3' : 'w-2 h-2 top-1 left-2'
         )} />
         
         {/* Nova text or icon */}
         <span className={cn(
           "relative z-10 font-bold text-white/90 select-none",
-          size === 'lg' ? 'text-2xl' : size === 'md' ? 'text-xl' : 'text-base'
+          size === 'lg' ? 'text-2xl' : size === 'md' ? 'text-base' : size === 'sm' ? 'text-sm' : 'text-xs'
         )}>
           ✦
         </span>
