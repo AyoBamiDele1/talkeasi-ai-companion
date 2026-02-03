@@ -833,14 +833,14 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
 
     if (sessionStartTime && !isTrialMode) {
       const durationMs = Date.now() - sessionStartTime;
-      const durationMinutes = durationMs / 60000; // Keep decimals for accurate calculation
+      const durationMinutes = Math.round(durationMs / 60000); // Round to integer for database compatibility
 
       try {
         const { error } = await supabase.functions.invoke('deduct-credits', {
           body: {
             mode: currentMode === 'premium' ? 'premium' : 'standard',
             duration_minutes: durationMinutes,
-            description: `${currentMode === 'premium' ? 'Premium' : 'Standard'} Mode session - ${Math.ceil(durationMinutes)} min`,
+            description: `${currentMode === 'premium' ? 'Premium' : 'Standard'} Mode session - ${durationMinutes} min`,
             metadata: {
               sessionDuration: durationMinutes,
               mode: currentMode,
@@ -862,7 +862,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
           queryClient.invalidateQueries({ queryKey: ['companion-progress'] });
           toast({
             title: "Session Complete",
-            description: `${Math.ceil(durationMinutes)} minute session ended. Credits deducted.`,
+            description: `${durationMinutes} minute session ended. Credits deducted.`,
           });
         }
         

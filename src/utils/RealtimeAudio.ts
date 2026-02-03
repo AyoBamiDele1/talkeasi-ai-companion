@@ -1,4 +1,4 @@
-// Realtime Audio utilities for Gemini (primary) and OpenAI (fallback)
+// Realtime Audio utilities for Gemini ONLY
 
 export class AudioRecorder {
   private stream: MediaStream | null = null;
@@ -235,25 +235,8 @@ export const playAudioData = async (audioContext: AudioContext, audioData: Uint8
   await audioQueueInstance.addToQueue(audioData);
 };
 
-// Provider type for tracking which AI is being used
-export type AIProvider = 'gemini' | 'openai';
-
-// Persistent state for connection attempts
-let geminiFailCount = 0;
-const MAX_GEMINI_FAILURES = 3;
-
-export const resetConnectionAttempts = () => {
-  geminiFailCount = 0;
-};
-
-export const shouldUseGemini = (): boolean => {
-  return geminiFailCount < MAX_GEMINI_FAILURES;
-};
-
-export const recordGeminiFailure = () => {
-  geminiFailCount++;
-  console.log(`Gemini failure recorded. Count: ${geminiFailCount}/${MAX_GEMINI_FAILURES}`);
-};
+// Provider type - Gemini only now
+export type AIProvider = 'gemini';
 
 export class RealtimeChat {
   private ws: WebSocket | null = null;
@@ -262,7 +245,6 @@ export class RealtimeChat {
   private isConnected = false;
   private lessonContextToSend: any = null;
   private keepaliveInterval: ReturnType<typeof setInterval> | null = null;
-  private currentProvider: AIProvider = 'gemini';
   private onProviderChange?: (provider: AIProvider) => void;
 
   constructor(
@@ -301,22 +283,16 @@ export class RealtimeChat {
   }
 
   getProvider(): AIProvider {
-    return this.currentProvider;
+    return 'gemini';
   }
 
   async connect(): Promise<void> {
-    // Determine which provider to use
-    const useGemini = shouldUseGemini();
-    this.currentProvider = useGemini ? 'gemini' : 'openai';
-    
-    console.log(`[RealtimeChat] Connecting to ${this.currentProvider} realtime API...`);
-    this.onProviderChange?.(this.currentProvider);
+    console.log('[RealtimeChat] Connecting to Gemini realtime API...');
+    this.onProviderChange?.('gemini');
 
     return new Promise((resolve, reject) => {
       try {
-        const endpoint = useGemini
-          ? `wss://qcxjjhgfgyfhwacxppcp.functions.supabase.co/gemini-realtime`
-          : `wss://qcxjjhgfgyfhwacxppcp.functions.supabase.co/realtime-conversation`;
+        const endpoint = `wss://qcxjjhgfgyfhwacxppcp.functions.supabase.co/gemini-realtime`;
         
         console.log('[RealtimeChat] Connecting to WebSocket:', endpoint);
         this.ws = new WebSocket(endpoint);
@@ -326,22 +302,13 @@ export class RealtimeChat {
           if (this.ws && this.ws.readyState !== WebSocket.OPEN) {
             console.log('[RealtimeChat] Connection timeout, closing socket');
             this.ws.close();
-            
-            if (useGemini) {
-              recordGeminiFailure();
-              // Retry with OpenAI
-              this.currentProvider = 'openai';
-              this.onProviderChange?.('openai');
-              this.connectToOpenAI().then(resolve).catch(reject);
-            } else {
-              reject(new Error('Failed to connect to voice service'));
-            }
+            reject(new Error('Failed to connect to Gemini voice service'));
           }
-        }, 10000);
+        }, 15000);
         
         this.ws.onopen = () => {
           clearTimeout(connectionTimeout);
-          console.log(`[RealtimeChat] ${this.currentProvider} WebSocket OPEN`);
+          console.log('[RealtimeChat] Gemini WebSocket OPEN');
           this.isConnected = true;
           resolve();
         };
@@ -351,25 +318,14 @@ export class RealtimeChat {
             const data = JSON.parse(event.data);
             console.log('[RealtimeChat] onmessage:', data.type, JSON.stringify(data).substring(0, 200));
 
-            // Handle errors - check for fallback signal from Gemini
             if (data.error) {
               console.error('[RealtimeChat] Server error:', data.error);
-              
-              // If Gemini signals fallback, switch to OpenAI
-              if (data.fallback && this.currentProvider === 'gemini') {
-                console.log('[RealtimeChat] Gemini requested fallback to OpenAI');
-                recordGeminiFailure();
-                this.disconnect();
-                await this.connectToOpenAI();
-                return;
-              }
-              
               this.onMessage({ type: 'error', error: data.error });
               return;
             }
 
             if (data.type === 'connection_established') {
-              console.log(`Connection established with ${data.provider || this.currentProvider}`);
+              console.log('Connection established with Gemini');
               
               this.startKeepalive();
               
@@ -401,94 +357,16 @@ export class RealtimeChat {
         this.ws.onerror = (error) => {
           clearTimeout(connectionTimeout);
           console.error('[RealtimeChat] WebSocket onerror:', error);
-          
-          if (useGemini && !this.isConnected) {
-            recordGeminiFailure();
-            this.connectToOpenAI().then(resolve).catch(reject);
-          } else {
-            reject(new Error('Failed to connect to voice service'));
-          }
+          reject(new Error('Failed to connect to Gemini voice service'));
         };
 
         this.ws.onclose = (event) => {
           console.log('[RealtimeChat] WebSocket onclose:', event.code, event.reason);
-          console.log('WebSocket closed:', event.code, event.reason);
           this.isConnected = false;
           this.cleanup();
         };
       } catch (error) {
         console.error('Error creating WebSocket:', error);
-        reject(error);
-      }
-    });
-  }
-
-  private async connectToOpenAI(): Promise<void> {
-    console.log('Falling back to OpenAI realtime API...');
-    this.currentProvider = 'openai';
-    this.onProviderChange?.('openai');
-    
-    return new Promise((resolve, reject) => {
-      try {
-        this.ws = new WebSocket(`wss://qcxjjhgfgyfhwacxppcp.functions.supabase.co/realtime-conversation`);
-        
-        this.ws.onopen = () => {
-          console.log('OpenAI WebSocket connected successfully (fallback)');
-          this.isConnected = true;
-          resolve();
-        };
-
-        this.ws.onmessage = async (event) => {
-          try {
-            const data = JSON.parse(event.data);
-            console.log('Received message (OpenAI):', data.type);
-
-            if (data.error) {
-              console.error('Server error:', data.error);
-              this.onMessage({ type: 'error', error: data.error });
-              return;
-            }
-
-            if (data.type === 'connection_established') {
-              console.log('Connection established with OpenAI');
-              
-              this.startKeepalive();
-              
-              if (this.lessonContextToSend && this.ws) {
-                console.log('Sending lesson context:', this.lessonContextToSend.lessonTitle);
-                this.ws.send(JSON.stringify({
-                  type: 'lesson_init',
-                  payload: this.lessonContextToSend
-                }));
-              }
-              
-              await this.startAudioRecording();
-            } else if (data.type === 'response.audio.delta' || data.type === 'response.output_audio.delta') {
-              if (data.delta) {
-                await this.handleAudioDelta(data.delta);
-              }
-            } else if (data.type === 'response.audio_transcript.delta' || data.type === 'response.output_audio_transcript.delta') {
-              this.onMessage(data);
-            } else {
-              this.onMessage(data);
-            }
-          } catch (error) {
-            console.error('Error processing message:', error);
-          }
-        };
-
-        this.ws.onerror = (error) => {
-          console.error('OpenAI WebSocket error:', error);
-          reject(new Error('Failed to connect to OpenAI voice service'));
-        };
-
-        this.ws.onclose = (event) => {
-          console.log('OpenAI WebSocket closed:', event.code, event.reason);
-          this.isConnected = false;
-          this.cleanup();
-        };
-      } catch (error) {
-        console.error('Error creating OpenAI WebSocket:', error);
         reject(error);
       }
     });
