@@ -10,9 +10,10 @@ export class AudioRecorder {
 
   async start() {
     try {
+      console.log('[AudioRecorder] Requesting microphone with 16kHz, mono...');
       this.stream = await navigator.mediaDevices.getUserMedia({
         audio: {
-          sampleRate: 24000,
+          sampleRate: 16000,
           channelCount: 1,
           echoCancellation: true,
           noiseSuppression: true,
@@ -24,9 +25,12 @@ export class AudioRecorder {
         } as any
       });
       
+      console.log('[AudioRecorder] Microphone access granted');
+      
       this.audioContext = new AudioContext({
-        sampleRate: 24000,
+        sampleRate: 16000,
       });
+      console.log('[AudioRecorder] AudioContext created with sample rate:', this.audioContext.sampleRate);
       
       this.source = this.audioContext.createMediaStreamSource(this.stream);
       this.processor = this.audioContext.createScriptProcessor(8192, 1, 1);
@@ -305,7 +309,7 @@ export class RealtimeChat {
     const useGemini = shouldUseGemini();
     this.currentProvider = useGemini ? 'gemini' : 'openai';
     
-    console.log(`Connecting to ${this.currentProvider} realtime API...`);
+    console.log(`[RealtimeChat] Connecting to ${this.currentProvider} realtime API...`);
     this.onProviderChange?.(this.currentProvider);
 
     return new Promise((resolve, reject) => {
@@ -314,13 +318,13 @@ export class RealtimeChat {
           ? `wss://qcxjjhgfgyfhwacxppcp.functions.supabase.co/gemini-realtime`
           : `wss://qcxjjhgfgyfhwacxppcp.functions.supabase.co/realtime-conversation`;
         
-        console.log('Connecting to WebSocket:', endpoint);
+        console.log('[RealtimeChat] Connecting to WebSocket:', endpoint);
         this.ws = new WebSocket(endpoint);
         
         // Set connection timeout
         const connectionTimeout = setTimeout(() => {
           if (this.ws && this.ws.readyState !== WebSocket.OPEN) {
-            console.log('Connection timeout, closing socket');
+            console.log('[RealtimeChat] Connection timeout, closing socket');
             this.ws.close();
             
             if (useGemini) {
@@ -337,7 +341,7 @@ export class RealtimeChat {
         
         this.ws.onopen = () => {
           clearTimeout(connectionTimeout);
-          console.log(`${this.currentProvider} WebSocket connected successfully`);
+          console.log(`[RealtimeChat] ${this.currentProvider} WebSocket OPEN`);
           this.isConnected = true;
           resolve();
         };
@@ -345,15 +349,15 @@ export class RealtimeChat {
         this.ws.onmessage = async (event) => {
           try {
             const data = JSON.parse(event.data);
-            console.log('Received message:', data.type);
+            console.log('[RealtimeChat] onmessage:', data.type, JSON.stringify(data).substring(0, 200));
 
             // Handle errors - check for fallback signal from Gemini
             if (data.error) {
-              console.error('Server error:', data.error);
+              console.error('[RealtimeChat] Server error:', data.error);
               
               // If Gemini signals fallback, switch to OpenAI
               if (data.fallback && this.currentProvider === 'gemini') {
-                console.log('Gemini requested fallback to OpenAI');
+                console.log('[RealtimeChat] Gemini requested fallback to OpenAI');
                 recordGeminiFailure();
                 this.disconnect();
                 await this.connectToOpenAI();
@@ -396,7 +400,7 @@ export class RealtimeChat {
 
         this.ws.onerror = (error) => {
           clearTimeout(connectionTimeout);
-          console.error('WebSocket error:', error);
+          console.error('[RealtimeChat] WebSocket onerror:', error);
           
           if (useGemini && !this.isConnected) {
             recordGeminiFailure();
@@ -407,6 +411,7 @@ export class RealtimeChat {
         };
 
         this.ws.onclose = (event) => {
+          console.log('[RealtimeChat] WebSocket onclose:', event.code, event.reason);
           console.log('WebSocket closed:', event.code, event.reason);
           this.isConnected = false;
           this.cleanup();

@@ -186,9 +186,10 @@ serve(async (req) => {
     const systemInstruction = buildSystemInstruction(lessonContext);
     
     // Gemini Multimodal Live API setup message
+    // Using gemini-2.0-flash-live-001 which supports bidiGenerateContent
     const setupMessage = {
       setup: {
-        model: "models/gemini-live-2.5-flash-native-audio",
+        model: "models/gemini-2.0-flash-live-001",
         generationConfig: {
           responseModalities: ["AUDIO"],
           speechConfig: {
@@ -197,6 +198,19 @@ serve(async (req) => {
                 voiceName: "Aoede" // Warm, friendly female voice
               }
             }
+          }
+        },
+        realtimeInputConfig: {
+          speechConfig: {
+            encoding: "LINEAR16",
+            sampleRateHertz: 16000
+          },
+          automaticActivityDetection: {
+            disabled: false,
+            startOfSpeechSensitivity: "START_SENSITIVITY_HIGH",
+            endOfSpeechSensitivity: "END_SENSITIVITY_HIGH", 
+            prefixPaddingMs: 300,
+            silenceDurationMs: 500 // Lower for faster response
           }
         },
         systemInstruction: {
@@ -221,7 +235,7 @@ serve(async (req) => {
       }
     };
     
-    console.log("Sending Gemini setup message");
+    console.log("Sending Gemini setup message:", JSON.stringify(setupMessage, null, 2));
     geminiSocket.send(JSON.stringify(setupMessage));
     sessionConfigured = true;
   };
@@ -237,11 +251,12 @@ serve(async (req) => {
     }
 
     try {
-      // Connect to Gemini Multimodal Live API
+      // Connect to Gemini Multimodal Live API using v1beta endpoint
       console.log("Connecting to Gemini Multimodal Live API...");
       
-      const geminiWsUrl = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${geminiApiKey}`;
+      const geminiWsUrl = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${geminiApiKey}`;
       
+      console.log("Gemini WebSocket URL:", geminiWsUrl.replace(geminiApiKey, 'REDACTED'));
       geminiSocket = new WebSocket(geminiWsUrl);
 
       geminiSocket.onopen = () => {
