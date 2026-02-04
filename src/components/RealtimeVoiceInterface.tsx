@@ -624,7 +624,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   };
 
   const startHandsFreeSession = async () => {
-    console.log('[DEBUG] Starting Standard Mode session with gpt-4o-mini-realtime-preview');
+    console.log('[DEBUG] Starting Standard Mode session with Gemini realtime');
     
     if (userCredits < 3) {
       toast({
@@ -660,7 +660,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
           lessonTitle: lessonTitle,
           lessonContent: lessonContent,
           coveredScenarios: coveredScenarios,
-          model: 'gpt-4o-mini-realtime-preview',
+          model: 'gemini-2.0-flash-live-001',
           userMemories: memories
         }
       );
@@ -690,7 +690,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   };
 
   const startPremiumSession = async () => {
-    console.log('[DEBUG] Starting Premium Mode session with gpt-4o-realtime-preview-2024-12-17');
+    console.log('[DEBUG] Starting Premium Mode session with Gemini realtime');
     
     if (userCredits < 20) {
       toast({
@@ -726,7 +726,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
           lessonTitle: lessonTitle,
           lessonContent: lessonContent,
           coveredScenarios: coveredScenarios,
-          model: 'gpt-4o-realtime-preview-2024-12-17',
+          model: 'gemini-2.0-flash-live-001',
           userMemories: memories
         }
       );
@@ -756,7 +756,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   };
 
   const startTapToTalkSession = async () => {
-    console.log('[DEBUG] Starting Trial Mode session with gpt-4o-mini-realtime-preview');
+    console.log('[DEBUG] Starting Trial Mode session with Gemini realtime');
     
     setIsConnecting(true);
     setCurrentMode('tap');
@@ -779,7 +779,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
           lessonTitle: 'AI Companion',
           lessonContent: lessonContent,
           coveredScenarios: coveredScenarios,
-          model: 'gpt-4o-mini-realtime-preview'
+          model: 'gemini-2.0-flash-live-001'
         }
       );
 
@@ -833,7 +833,8 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
 
     if (sessionStartTime && !isTrialMode) {
       const durationMs = Date.now() - sessionStartTime;
-      const durationMinutes = Math.round(durationMs / 60000); // Round to integer for database compatibility
+      // Ensure at least 1 credit is charged (avoid "Invalid amount" from the edge function)
+      const durationMinutes = Math.max(1, Math.round(durationMs / 60000));
 
       try {
         const { error } = await supabase.functions.invoke('deduct-credits', {

@@ -201,16 +201,12 @@ serve(async (req) => {
           }
         },
         realtimeInputConfig: {
-          speechConfig: {
-            encoding: "LINEAR16",
-            sampleRateHertz: 16000
-          },
           automaticActivityDetection: {
             disabled: false,
             startOfSpeechSensitivity: "START_SENSITIVITY_HIGH",
             endOfSpeechSensitivity: "END_SENSITIVITY_HIGH", 
             prefixPaddingMs: 300,
-            silenceDurationMs: 500 // Lower for faster response
+            silenceDurationMs: 500
           }
         },
         systemInstruction: {
