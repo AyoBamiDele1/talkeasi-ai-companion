@@ -187,9 +187,19 @@ serve(async (req) => {
     
     // Gemini Multimodal Live API setup message
    // Using gemini-2.0-flash-live-001 which is supported by v1beta BidiGenerateContent
+    // NOTE: The v1beta Live WebSocket requires a model that supports BidiGenerateContent.
+    // We allow overriding via GEMINI_MODEL to quickly test/fallback without code changes.
+    const modelFromEnv = Deno.env.get('GEMINI_MODEL');
+    // IMPORTANT: For the v1beta Live WebSocket, model naming can be strict.
+    // In practice we've seen better compatibility using the *bare* model name
+    // (without the "models/" prefix) for Live models.
+    const model = modelFromEnv && modelFromEnv.trim().length > 0
+      ? modelFromEnv.trim()
+      : "gemini-2.0-flash-live-001";
+
     const setupMessage = {
       setup: {
-       model: "models/gemini-2.0-flash-live-001",
+       model,
         generationConfig: {
           responseModalities: ["AUDIO"],
           speechConfig: {
@@ -231,6 +241,7 @@ serve(async (req) => {
       }
     };
     
+    console.log("Sending Gemini setup message (model):", model);
     console.log("Sending Gemini setup message:", JSON.stringify(setupMessage, null, 2));
     geminiSocket.send(JSON.stringify(setupMessage));
     sessionConfigured = true;

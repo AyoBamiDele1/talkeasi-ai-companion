@@ -15,7 +15,8 @@ const NovaOrb: React.FC<NovaOrbProps> = ({
   isActive = false,
   isListening = false,
   isSpeaking = false,
-  isConnected = true, // Default to true for backward compatibility with static usage
+  // Default to false so the orb only animates when a realtime WebSocket is actually OPEN.
+  isConnected = false,
   size = 'lg',
   onClick,
   className
