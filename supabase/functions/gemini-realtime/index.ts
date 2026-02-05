@@ -186,10 +186,10 @@ serve(async (req) => {
     const systemInstruction = buildSystemInstruction(lessonContext);
     
     // Gemini Multimodal Live API setup message
-    // Using gemini-live-2.5-flash-native-audio for improved voice quality
+   // Using gemini-2.0-flash-live-001 which is supported by v1beta BidiGenerateContent
     const setupMessage = {
       setup: {
-        model: "models/gemini-live-2.5-flash-native-audio",
+       model: "models/gemini-2.0-flash-live-001",
         generationConfig: {
           responseModalities: ["AUDIO"],
           speechConfig: {
