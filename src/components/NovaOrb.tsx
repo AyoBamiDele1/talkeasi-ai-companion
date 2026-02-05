@@ -5,6 +5,7 @@ interface NovaOrbProps {
   isActive?: boolean;
   isListening?: boolean;
   isSpeaking?: boolean;
+  isConnected?: boolean; // WebSocket OPEN state
   size?: 'xs' | 'sm' | 'md' | 'lg';
   onClick?: () => void;
   className?: string;
@@ -14,6 +15,7 @@ const NovaOrb: React.FC<NovaOrbProps> = ({
   isActive = false,
   isListening = false,
   isSpeaking = false,
+  isConnected = true, // Default to true for backward compatibility with static usage
   size = 'lg',
   onClick,
   className
@@ -74,13 +76,17 @@ const NovaOrb: React.FC<NovaOrbProps> = ({
           "bg-gradient-to-br from-[hsl(var(--primary))] via-[hsl(var(--accent))] to-[hsl(280,70%,50%)]",
           "shadow-[0_0_40px_rgba(236,72,153,0.4),0_0_80px_rgba(139,92,246,0.3)]",
           sizeClasses[size],
-          isActive && "scale-105",
-          !isActive && "hover:scale-105"
+          isConnected && isActive && "scale-105",
+          !isConnected && "opacity-70",
+          isConnected && !isActive && "hover:scale-105"
         )}
         style={{
-          animation: isActive 
-            ? 'novaBreathing 3s ease-in-out infinite' 
-            : 'novaBreathingSlow 4s ease-in-out infinite'
+          // Only animate when WebSocket is OPEN (connected)
+          animation: isConnected 
+            ? (isActive 
+                ? 'novaBreathing 3s ease-in-out infinite' 
+                : 'novaBreathingSlow 4s ease-in-out infinite')
+            : 'none'
         }}
       >
         {/* Inner glow */}

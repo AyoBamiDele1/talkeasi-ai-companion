@@ -1,5 +1,10 @@
 // Realtime Audio utilities for Gemini ONLY
 
+// Audio constraints for Gemini: 16-bit PCM Mono at 16,000Hz, little-endian
+const AUDIO_SAMPLE_RATE = 16000;
+const AUDIO_CHUNK_TARGET_MS = 40; // Target 40ms chunks to avoid disconnection
+const MAX_CHUNK_BYTES = Math.floor((AUDIO_SAMPLE_RATE * AUDIO_CHUNK_TARGET_MS / 1000) * 2); // ~1280 bytes
+
 export class AudioRecorder {
   private stream: MediaStream | null = null;
   private audioContext: AudioContext | null = null;
@@ -10,10 +15,10 @@ export class AudioRecorder {
 
   async start() {
     try {
-      console.log('[AudioRecorder] Requesting microphone with 16kHz, mono...');
+      console.log(`[AudioRecorder] Requesting microphone with ${AUDIO_SAMPLE_RATE}Hz, mono, 16-bit PCM...`);
       this.stream = await navigator.mediaDevices.getUserMedia({
         audio: {
-          sampleRate: 16000,
+          sampleRate: AUDIO_SAMPLE_RATE,
           channelCount: 1,
           echoCancellation: true,
           noiseSuppression: true,
@@ -28,12 +33,13 @@ export class AudioRecorder {
       console.log('[AudioRecorder] Microphone access granted');
       
       this.audioContext = new AudioContext({
-        sampleRate: 16000,
+        sampleRate: AUDIO_SAMPLE_RATE,
       });
       console.log('[AudioRecorder] AudioContext created with sample rate:', this.audioContext.sampleRate);
       
       this.source = this.audioContext.createMediaStreamSource(this.stream);
-      this.processor = this.audioContext.createScriptProcessor(8192, 1, 1);
+      // Use smaller buffer size (512 samples = 32ms at 16kHz) for lower latency
+      this.processor = this.audioContext.createScriptProcessor(512, 1, 1);
       
       this.processor.onaudioprocess = (e) => {
         const inputData = e.inputBuffer.getChannelData(0);
@@ -68,14 +74,29 @@ export class AudioRecorder {
   }
 }
 
+// Encode audio for Gemini API with explicit little-endian 16-bit PCM
 export const encodeAudioForAPI = (float32Array: Float32Array): string => {
-  const int16Array = new Int16Array(float32Array.length);
+  // Convert Float32 (-1 to 1) to Int16 (-32768 to 32767) with explicit little-endian byte order
+  const byteLength = float32Array.length * 2;
+  const buffer = new ArrayBuffer(byteLength);
+  const view = new DataView(buffer);
+  
   for (let i = 0; i < float32Array.length; i++) {
     const s = Math.max(-1, Math.min(1, float32Array[i]));
-    int16Array[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+    const int16Value = s < 0 ? Math.floor(s * 0x8000) : Math.floor(s * 0x7FFF);
+    // Explicitly write as little-endian
+    view.setInt16(i * 2, int16Value, true); // true = little-endian
   }
   
-  const uint8Array = new Uint8Array(int16Array.buffer);
+  const uint8Array = new Uint8Array(buffer);
+  
+  // Log chunk size for monitoring
+  if (byteLength > MAX_CHUNK_BYTES) {
+    console.warn(`[AudioEncoder] Chunk size ${byteLength} bytes exceeds target ${MAX_CHUNK_BYTES} bytes (${AUDIO_CHUNK_TARGET_MS}ms)`);
+  } else {
+    console.log(`[AudioEncoder] Chunk: ${byteLength} bytes (${Math.round(byteLength / 2 / AUDIO_SAMPLE_RATE * 1000)}ms)`);
+  }
+  
   let binary = '';
   const chunkSize = 0x8000;
   
@@ -246,6 +267,7 @@ export class RealtimeChat {
   private lessonContextToSend: any = null;
   private keepaliveInterval: ReturnType<typeof setInterval> | null = null;
   private onProviderChange?: (provider: AIProvider) => void;
+  private onConnectionStateChange?: (isConnected: boolean) => void;
 
   constructor(
     private onMessage: (message: any) => void,
@@ -258,12 +280,19 @@ export class RealtimeChat {
       userCountry?: string;
       isNigerian?: boolean;
     },
-    onProviderChange?: (provider: AIProvider) => void
+    onProviderChange?: (provider: AIProvider) => void,
+    onConnectionStateChange?: (isConnected: boolean) => void
   ) {
     if (lessonContext) {
       this.lessonContextToSend = lessonContext;
     }
     this.onProviderChange = onProviderChange;
+    this.onConnectionStateChange = onConnectionStateChange;
+  }
+
+  // Expose connection state for UI feedback
+  getIsConnected(): boolean {
+    return this.isConnected;
   }
 
   private startKeepalive() {
@@ -310,6 +339,7 @@ export class RealtimeChat {
           clearTimeout(connectionTimeout);
           console.log('[RealtimeChat] Gemini WebSocket OPEN');
           this.isConnected = true;
+          this.onConnectionStateChange?.(true);
           resolve();
         };
 
@@ -363,6 +393,7 @@ export class RealtimeChat {
         this.ws.onclose = (event) => {
           console.log('[RealtimeChat] WebSocket onclose:', event.code, event.reason);
           this.isConnected = false;
+          this.onConnectionStateChange?.(false);
           this.cleanup();
         };
       } catch (error) {
