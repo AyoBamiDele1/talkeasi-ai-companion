@@ -186,16 +186,13 @@ serve(async (req) => {
     const systemInstruction = buildSystemInstruction(lessonContext);
     
     // Gemini Multimodal Live API setup message
-   // Using gemini-2.0-flash-live-001 which is supported by v1beta BidiGenerateContent
-    // NOTE: The v1beta Live WebSocket requires a model that supports BidiGenerateContent.
+    // Using gemini-2.0-flash-exp which supports v1beta BidiGenerateContent
+    // NOTE: gemini-2.0-flash-live-001 was deprecated - use gemini-2.0-flash-exp instead
     // We allow overriding via GEMINI_MODEL to quickly test/fallback without code changes.
     const modelFromEnv = Deno.env.get('GEMINI_MODEL');
-    // IMPORTANT: For the v1beta Live WebSocket, model naming can be strict.
-    // In practice we've seen better compatibility using the *bare* model name
-    // (without the "models/" prefix) for Live models.
     const model = modelFromEnv && modelFromEnv.trim().length > 0
       ? modelFromEnv.trim()
-      : "gemini-2.0-flash-live-001";
+      : "gemini-2.0-flash-exp";
 
     const setupMessage = {
       setup: {
