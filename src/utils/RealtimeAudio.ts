@@ -1,9 +1,35 @@
 // Realtime Audio utilities for Gemini ONLY
 
 // Audio constraints for Gemini: 16-bit PCM Mono at 16,000Hz, little-endian
-const AUDIO_SAMPLE_RATE = 16000;
+const GEMINI_SAMPLE_RATE = 16000;
 const AUDIO_CHUNK_TARGET_MS = 40; // Target 40ms chunks to avoid disconnection
-const MAX_CHUNK_BYTES = Math.floor((AUDIO_SAMPLE_RATE * AUDIO_CHUNK_TARGET_MS / 1000) * 2); // ~1280 bytes
+const MAX_CHUNK_BYTES = Math.floor((GEMINI_SAMPLE_RATE * AUDIO_CHUNK_TARGET_MS / 1000) * 2); // ~1280 bytes
+
+/**
+ * Resample audio from the browser's native sample rate to Gemini's required 16kHz.
+ * Uses linear interpolation for quality resampling.
+ */
+function resampleTo16kHz(inputData: Float32Array, inputSampleRate: number): Float32Array {
+  if (inputSampleRate === GEMINI_SAMPLE_RATE) {
+    return inputData; // No resampling needed
+  }
+
+  const ratio = inputSampleRate / GEMINI_SAMPLE_RATE;
+  const outputLength = Math.floor(inputData.length / ratio);
+  const output = new Float32Array(outputLength);
+
+  for (let i = 0; i < outputLength; i++) {
+    const srcIndex = i * ratio;
+    const srcIndexFloor = Math.floor(srcIndex);
+    const srcIndexCeil = Math.min(srcIndexFloor + 1, inputData.length - 1);
+    const fraction = srcIndex - srcIndexFloor;
+
+    // Linear interpolation between two nearest samples
+    output[i] = inputData[srcIndexFloor] * (1 - fraction) + inputData[srcIndexCeil] * fraction;
+  }
+
+  return output;
+}
 
 export class AudioRecorder {
   private stream: MediaStream | null = null;
@@ -15,35 +41,36 @@ export class AudioRecorder {
 
   async start() {
     try {
-      console.log(`[AudioRecorder] Requesting microphone with ${AUDIO_SAMPLE_RATE}Hz, mono, 16-bit PCM...`);
+      console.log(`[AudioRecorder] Requesting microphone (target ${GEMINI_SAMPLE_RATE}Hz, mono, 16-bit PCM)...`);
       this.stream = await navigator.mediaDevices.getUserMedia({
         audio: {
-          sampleRate: AUDIO_SAMPLE_RATE,
           channelCount: 1,
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
-          googEchoCancellation: true,
-          googNoiseSuppression: true,
-          googAutoGainControl: true,
-          googHighpassFilter: true,
-        } as any
+        }
       });
       
       console.log('[AudioRecorder] Microphone access granted');
       
-      this.audioContext = new AudioContext({
-        sampleRate: AUDIO_SAMPLE_RATE,
-      });
-      console.log('[AudioRecorder] AudioContext created with sample rate:', this.audioContext.sampleRate);
+      // Use the browser's default sample rate — we'll resample in software
+      this.audioContext = new AudioContext();
+      const nativeSampleRate = this.audioContext.sampleRate;
+      console.log('[AudioRecorder] AudioContext created with native sample rate:', nativeSampleRate);
+      
+      if (nativeSampleRate !== GEMINI_SAMPLE_RATE) {
+        console.log(`[AudioRecorder] Will resample from ${nativeSampleRate}Hz → ${GEMINI_SAMPLE_RATE}Hz`);
+      }
       
       this.source = this.audioContext.createMediaStreamSource(this.stream);
-      // Use smaller buffer size (512 samples = 32ms at 16kHz) for lower latency
+      // Use smaller buffer size (512 samples) for lower latency
       this.processor = this.audioContext.createScriptProcessor(512, 1, 1);
       
       this.processor.onaudioprocess = (e) => {
         const inputData = e.inputBuffer.getChannelData(0);
-        this.onAudioData(new Float32Array(inputData));
+        // Resample from native rate to 16kHz before sending
+        const resampled = resampleTo16kHz(new Float32Array(inputData), nativeSampleRate);
+        this.onAudioData(resampled);
       };
       
       this.source.connect(this.processor);
@@ -89,13 +116,6 @@ export const encodeAudioForAPI = (float32Array: Float32Array): string => {
   }
   
   const uint8Array = new Uint8Array(buffer);
-  
-  // Log chunk size for monitoring
-  if (byteLength > MAX_CHUNK_BYTES) {
-    console.warn(`[AudioEncoder] Chunk size ${byteLength} bytes exceeds target ${MAX_CHUNK_BYTES} bytes (${AUDIO_CHUNK_TARGET_MS}ms)`);
-  } else {
-    console.log(`[AudioEncoder] Chunk: ${byteLength} bytes (${Math.round(byteLength / 2 / AUDIO_SAMPLE_RATE * 1000)}ms)`);
-  }
   
   let binary = '';
   const chunkSize = 0x8000;

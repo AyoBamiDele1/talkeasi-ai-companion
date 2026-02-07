@@ -196,9 +196,13 @@ serve(async (req) => {
 
     const setupMessage = {
       setup: {
-       model,
+        model,
+        // CRITICAL: responseModalities and systemInstruction must be at the top level of setup
+        responseModalities: ["AUDIO"],
+        systemInstruction: {
+          parts: [{ text: systemInstruction }]
+        },
         generationConfig: {
-          responseModalities: ["AUDIO"],
           speechConfig: {
             voiceConfig: {
               prebuiltVoiceConfig: {
@@ -215,9 +219,6 @@ serve(async (req) => {
             prefixPaddingMs: 300,
             silenceDurationMs: 500
           }
-        },
-        systemInstruction: {
-          parts: [{ text: systemInstruction }]
         },
         tools: lessonContext?.lessonTitle === 'AI Companion' ? [{
           functionDeclarations: [{
