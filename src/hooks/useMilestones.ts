@@ -20,6 +20,7 @@ export const useMilestones = () => {
       }
 
       // Find the first uncelebrated milestone
+      // Use Math.round() on any numeric values to prevent Supabase integer errors
       const uncelebrated = data?.find((m: { milestone_type: string; is_new: boolean }) => m.is_new);
       if (uncelebrated) {
         setPendingMilestone(uncelebrated.milestone_type);
