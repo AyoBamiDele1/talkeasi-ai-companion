@@ -196,17 +196,16 @@ serve(async (req) => {
 
     const setupMessage = {
       setup: {
-        model,
-        // CRITICAL: responseModalities and systemInstruction must be at the top level of setup
-        responseModalities: ["AUDIO"],
+        model: `models/${model}`,
         systemInstruction: {
           parts: [{ text: systemInstruction }]
         },
         generationConfig: {
+          responseModalities: ["AUDIO"],
           speechConfig: {
             voiceConfig: {
               prebuiltVoiceConfig: {
-                voiceName: "Aoede" // Warm, friendly female voice
+                voiceName: "Aoede"
               }
             }
           }
