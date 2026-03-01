@@ -186,13 +186,11 @@ serve(async (req) => {
     const systemInstruction = buildSystemInstruction(lessonContext);
     
     // Gemini Multimodal Live API setup message
-    // Using gemini-2.0-flash-exp which supports v1beta BidiGenerateContent
-    // NOTE: gemini-2.0-flash-live-001 was deprecated - use gemini-2.0-flash-exp instead
-    // We allow overriding via GEMINI_MODEL to quickly test/fallback without code changes.
+    // We allow overriding via GEMINI_MODEL env var for quick switching without code changes.
     const modelFromEnv = Deno.env.get('GEMINI_MODEL');
     const model = modelFromEnv && modelFromEnv.trim().length > 0
       ? modelFromEnv.trim()
-      : "gemini-2.0-flash-exp";
+      : "gemini-live-2.5-flash-native-audio";
 
     const setupMessage = {
       setup: {
