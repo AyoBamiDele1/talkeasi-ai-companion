@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { FEATURES } from "@/config/features";
+import { AI_COMPANION_ROUTE } from "@/config/companion";
 import { useCompanionProgress } from "@/hooks/useCompanionProgress";
 import { useMilestones } from "@/hooks/useMilestones";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
@@ -139,7 +140,7 @@ const Home = () => {
         <div className="text-center mb-8">
           <NovaOrb 
             size="sm"
-            onClick={() => navigate('/lesson/9b25e5bb-3702-448f-aae7-39c0b44fb558')}
+            onClick={() => navigate(AI_COMPANION_ROUTE)}
             className="mx-auto mb-4"
           />
           <h2 className="text-2xl font-bold mb-2">Talk to Nova</h2>
@@ -149,7 +150,7 @@ const Home = () => {
           <Button 
             size="lg"
             className="px-8"
-            onClick={() => navigate('/lesson/9b25e5bb-3702-448f-aae7-39c0b44fb558')}
+            onClick={() => navigate(AI_COMPANION_ROUTE)}
           >
             Start Talking
           </Button>
@@ -167,7 +168,7 @@ const Home = () => {
                   <h3 className="font-semibold">English Lessons</h3>
                   <p className="text-xs text-muted-foreground">Practice with AI feedback</p>
                 </div>
-                <Button variant="outline" size="sm" onClick={() => navigate('/home')}>
+                <Button variant="outline" size="sm" onClick={() => navigate('/lessons')}>
                   Start
                 </Button>
               </div>

@@ -1,6 +1,7 @@
 import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { AI_COMPANION_ROUTE } from "@/config/companion";
 
 interface StreakRiskBannerProps {
   currentStreak: number;
@@ -33,7 +34,7 @@ const StreakRiskBanner = ({ currentStreak, lastActivityDate }: StreakRiskBannerP
         <Button 
           size="sm" 
           variant="outline"
-          onClick={() => navigate('/lesson/9b25e5bb-3702-448f-aae7-39c0b44fb558')}
+          onClick={() => navigate(AI_COMPANION_ROUTE)}
           className="flex-shrink-0"
         >
           Talk Now

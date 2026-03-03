@@ -41,3 +41,7 @@ export const PROFESSIONAL_REFERRAL_TOPICS = [
   'legal advice', 'financial investments',
   'therapy', 'mental health treatment'
 ] as const;
+
+// The lesson ID for the AI Companion conversation entry point.
+export const AI_COMPANION_LESSON_ID = '9b25e5bb-3702-448f-aae7-39c0b44fb558';
+export const AI_COMPANION_ROUTE = `/lesson/${AI_COMPANION_LESSON_ID}`;
