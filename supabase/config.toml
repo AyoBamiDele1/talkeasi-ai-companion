@@ -1,19 +1,19 @@
 project_id = "qcxjjhgfgyfhwacxppcp"
 
 [functions.speech-to-text]
-verify_jwt = false
+verify_jwt = true
 
 [functions.text-to-speech]
-verify_jwt = false
+verify_jwt = true
 
 [functions.realtime-conversation]
-verify_jwt = false
+verify_jwt = true
 
 [functions.gemini-realtime]
-verify_jwt = false
+verify_jwt = true
 
 [functions.openai-conversation]
-verify_jwt = false
+verify_jwt = true
 
 [functions.deduct-credits]
 verify_jwt = true
