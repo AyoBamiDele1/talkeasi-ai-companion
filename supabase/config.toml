@@ -1,19 +1,19 @@
 project_id = "qcxjjhgfgyfhwacxppcp"
 
 [functions.speech-to-text]
-verify_jwt = false
+verify_jwt = true
 
 [functions.text-to-speech]
-verify_jwt = false
+verify_jwt = true
 
 [functions.realtime-conversation]
-verify_jwt = false
+verify_jwt = true
 
 [functions.gemini-realtime]
-verify_jwt = false
+verify_jwt = true
 
 [functions.openai-conversation]
-verify_jwt = false
+verify_jwt = true
 
 [functions.deduct-credits]
 verify_jwt = true
@@ -49,13 +49,13 @@ verify_jwt = true
 verify_jwt = false
 
 [functions.extract-memories]
-verify_jwt = false
+verify_jwt = true
 
 [functions.schedule-notifications]
-verify_jwt = false
+verify_jwt = true
 
 [functions.send-notification]
-verify_jwt = false
+verify_jwt = true
 
 [functions.gift-credits]
 verify_jwt = true
