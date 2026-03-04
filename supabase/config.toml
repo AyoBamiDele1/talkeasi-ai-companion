@@ -49,13 +49,13 @@ verify_jwt = true
 verify_jwt = false
 
 [functions.extract-memories]
-verify_jwt = false
+verify_jwt = true
 
 [functions.schedule-notifications]
-verify_jwt = false
+verify_jwt = true
 
 [functions.send-notification]
-verify_jwt = false
+verify_jwt = true
 
 [functions.gift-credits]
 verify_jwt = true
