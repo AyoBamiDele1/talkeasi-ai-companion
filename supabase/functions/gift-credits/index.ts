@@ -141,8 +141,8 @@ serve(async (req) => {
     } else if (action === 'claim') {
       const { gift_code } = body;
 
-      if (!gift_code) {
-        throw new Error("Missing gift code");
+      if (!gift_code || typeof gift_code !== 'string' || gift_code.length > 50 || !/^[a-f0-9]+$/i.test(gift_code)) {
+        throw new Error("Invalid gift code format");
       }
 
       // Find the gift
