@@ -20,6 +20,14 @@ serve(async (req) => {
       });
     }
 
+    // Input validation: limit audio payload to ~10MB base64
+    if (audio.length > 10 * 1024 * 1024) {
+      return new Response(JSON.stringify({ error: "Audio data too large (max 10MB)" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     if (!OPENAI_API_KEY) {
       return new Response(JSON.stringify({ error: "OPENAI_API_KEY is not configured" }), {

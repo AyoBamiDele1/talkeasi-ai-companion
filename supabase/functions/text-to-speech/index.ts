@@ -19,6 +19,23 @@ serve(async (req) => {
       });
     }
 
+    // Input validation: limit TTS text to 4096 chars (OpenAI limit)
+    if (text.length > 4096) {
+      return new Response(JSON.stringify({ error: "Text exceeds maximum length of 4096 characters" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Validate voice parameter
+    const allowedVoices = ["alloy", "echo", "fable", "onyx", "nova", "shimmer"];
+    if (voice && !allowedVoices.includes(voice)) {
+      return new Response(JSON.stringify({ error: "Invalid voice parameter" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     if (!OPENAI_API_KEY) {
       return new Response(JSON.stringify({ error: "OPENAI_API_KEY is not configured" }), {
