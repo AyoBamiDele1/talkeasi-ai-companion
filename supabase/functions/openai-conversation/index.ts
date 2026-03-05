@@ -12,10 +12,33 @@ serve(async (req) => {
   }
 
   try {
-    const { text, lessonContext, userCountry, lessonContent, conversationHistory } = await req.json();
+    const body = await req.json();
+    const { text, lessonContext, userCountry, lessonContent, conversationHistory } = body;
 
     if (!text || typeof text !== "string") {
       return new Response(JSON.stringify({ error: "Text is required" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Input validation: length limits
+    if (text.length > 5000) {
+      return new Response(JSON.stringify({ error: "Text exceeds maximum length of 5000 characters" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (lessonContext && (typeof lessonContext !== "string" || lessonContext.length > 2000)) {
+      return new Response(JSON.stringify({ error: "Invalid lessonContext" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (conversationHistory && (!Array.isArray(conversationHistory) || conversationHistory.length > 50)) {
+      return new Response(JSON.stringify({ error: "Conversation history too long (max 50 messages)" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

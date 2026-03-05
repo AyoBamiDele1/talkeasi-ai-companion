@@ -49,8 +49,17 @@ serve(async (req) => {
         throw new Error("Missing required fields: recipient_email and credits_amount");
       }
 
-      if (credits_amount < 5 || credits_amount > 500) {
-        throw new Error("Credits must be between 5 and 500");
+      // Input validation
+      if (typeof recipient_email !== 'string' || recipient_email.length > 255 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipient_email)) {
+        throw new Error("Invalid email address");
+      }
+
+      if (typeof credits_amount !== 'number' || !Number.isInteger(credits_amount) || credits_amount < 5 || credits_amount > 500) {
+        throw new Error("Credits must be an integer between 5 and 500");
+      }
+
+      if (message && (typeof message !== 'string' || message.length > 500)) {
+        throw new Error("Message must be under 500 characters");
       }
 
       // Check sender's balance
@@ -132,8 +141,8 @@ serve(async (req) => {
     } else if (action === 'claim') {
       const { gift_code } = body;
 
-      if (!gift_code) {
-        throw new Error("Missing gift code");
+      if (!gift_code || typeof gift_code !== 'string' || gift_code.length > 50 || !/^[a-f0-9]+$/i.test(gift_code)) {
+        throw new Error("Invalid gift code format");
       }
 
       // Find the gift
