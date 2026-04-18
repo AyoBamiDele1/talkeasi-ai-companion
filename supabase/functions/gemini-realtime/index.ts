@@ -190,7 +190,7 @@ serve(async (req) => {
     const modelFromEnv = Deno.env.get('GEMINI_MODEL');
     const model = modelFromEnv && modelFromEnv.trim().length > 0
       ? modelFromEnv.trim()
-      : "gemini-live-2.5-flash-native-audio";
+      : "gemini-2.5-flash-native-audio-preview-12-2025";
 
     const setupMessage = {
       setup: {
