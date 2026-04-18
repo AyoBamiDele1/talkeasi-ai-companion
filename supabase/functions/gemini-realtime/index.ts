@@ -207,7 +207,7 @@ serve(async (req) => {
     const modelFromEnv = Deno.env.get('GEMINI_MODEL');
     const model = modelFromEnv && modelFromEnv.trim().length > 0
       ? modelFromEnv.trim()
-      : "gemini-live-2.5-flash-native-audio";
+      : "gemini-2.0-flash-live-001";
 
     const setupMessage = {
       setup: {
@@ -387,9 +387,28 @@ serve(async (req) => {
       };
 
       geminiSocket.onclose = (event) => {
-        console.log(`[WS_HANDSHAKE] 🔌 Gemini WSS closed (code=${event.code}, reason="${event.reason}", uptime=${((Date.now() - handshakeStart) / 1000).toFixed(1)}s)`);
+        const uptimeSec = ((Date.now() - handshakeStart) / 1000).toFixed(1);
+        console.log(`[WS_HANDSHAKE] 🔌 Gemini WSS closed (code=${event.code}, reason="${event.reason}", uptime=${uptimeSec}s)`);
+
+        // Surface likely root cause for rejection codes
+        if (event.code === 1008 || event.code === 1011 || event.code === 1006) {
+          console.error(`[GEMINI_REJECTED] ❌ Google closed the WSS with code ${event.code}. Reason from Google: "${event.reason || '(empty — typical for tier/billing rejection)'}"`);
+          console.error(`[GEMINI_REJECTED] Likely causes:
+  1. GEMINI_API_KEY is on FREE tier — Live API requires a PAID key (https://aistudio.google.com/apikey)
+  2. Billing not enabled on the GCP project that owns the key
+  3. Model "${sessionConfigured ? 'see setup log above' : '(setup never sent)'}" not available to this key (try GEMINI_MODEL=gemini-2.0-flash-live-001)
+  4. Generative Language API not enabled in the GCP project`);
+        }
+
         logAudioStats(true);
-        socket.send(JSON.stringify({ type: 'gemini_disconnected', code: event.code }));
+        socket.send(JSON.stringify({
+          type: 'gemini_disconnected',
+          code: event.code,
+          reason: event.reason || null,
+          hint: (event.code === 1008 || event.code === 1011)
+            ? 'Google rejected the session — likely API key tier/billing issue. Check edge function logs for [GEMINI_REJECTED] details.'
+            : null
+        }));
       };
 
     } catch (error) {
