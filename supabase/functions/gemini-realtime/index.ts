@@ -312,10 +312,9 @@ serve(async (req) => {
                 // Audio response
                 if (part.inlineData) {
                   const audioData = part.inlineData.data;
-                  const mimeType = part.inlineData.mimeType;
-                  
-                  // Convert to format matching OpenAI's output for compatibility
-                  // Gemini outputs audio/pcm at 24kHz, same as OpenAI
+                  outboundAudioChunks++;
+                  outboundAudioBytes += audioData.length;
+                  logAudioStats();
                   socket.send(JSON.stringify({
                     type: 'response.audio.delta',
                     delta: audioData
