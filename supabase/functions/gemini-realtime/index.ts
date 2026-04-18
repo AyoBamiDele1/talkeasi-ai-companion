@@ -424,19 +424,23 @@ serve(async (req) => {
       return;
     }
 
-    // Handle audio input from client
+    // Handle audio input from client (16-bit PCM @ 16kHz, little-endian, base64)
     if (messageType === 'input_audio_buffer.append') {
       if (geminiSocket && geminiSocket.readyState === WebSocket.OPEN) {
-        // Convert OpenAI format to Gemini format
+        inboundAudioChunks++;
+        inboundAudioBytes += parsedData.audio?.length || 0;
+        logAudioStats();
         const geminiAudioMessage = {
           realtimeInput: {
             mediaChunks: [{
-              mimeType: "audio/pcm",
+              mimeType: "audio/pcm;rate=16000",
               data: parsedData.audio
             }]
           }
         };
         geminiSocket.send(JSON.stringify(geminiAudioMessage));
+      } else {
+        console.warn(`[AUDIO_BUFFER] ⚠️ Dropping audio chunk — Gemini socket not open (readyState=${geminiSocket?.readyState})`);
       }
       return;
     }
