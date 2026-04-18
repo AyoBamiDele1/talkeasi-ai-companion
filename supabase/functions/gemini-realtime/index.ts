@@ -271,18 +271,18 @@ serve(async (req) => {
 
     try {
       // Connect to Gemini Multimodal Live API using v1beta endpoint
-      console.log("Connecting to Gemini Multimodal Live API...");
+      console.log(`[WS_HANDSHAKE] 🔌 Initiating WSS connection to Gemini Live API at ${new Date(handshakeStart).toISOString()}`);
       
       const geminiWsUrl = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${geminiApiKey}`;
       
-      console.log("Gemini WebSocket URL:", geminiWsUrl.replace(geminiApiKey, 'REDACTED'));
+      console.log("[WS_HANDSHAKE] Gemini WebSocket URL:", geminiWsUrl.replace(geminiApiKey, 'REDACTED'));
       geminiSocket = new WebSocket(geminiWsUrl);
 
       geminiSocket.onopen = () => {
-        console.log("Connected to Gemini Multimodal Live API");
+        handshakeCompletedAt = Date.now();
+        console.log(`[WS_HANDSHAKE] ✅ WSS established in ${handshakeCompletedAt - handshakeStart}ms (readyState=${geminiSocket?.readyState})`);
         socket.send(JSON.stringify({ type: 'connection_established', provider: 'gemini' }));
         
-        // Configure session if we already have lesson context
         if (lessonContext) {
           configureSession();
         }
@@ -291,11 +291,11 @@ serve(async (req) => {
       geminiSocket.onmessage = async (event) => {
         try {
           const data = JSON.parse(event.data);
-          console.log("Gemini message type:", Object.keys(data)[0]);
 
           // Handle setup complete
           if (data.setupComplete) {
-            console.log("Gemini setup complete");
+            setupCompletedAt = Date.now();
+            console.log(`[WS_HANDSHAKE] ✅ Gemini setup complete in ${setupCompletedAt - handshakeStart}ms total — session ready for audio streaming`);
             socket.send(JSON.stringify({ type: 'session.created', provider: 'gemini' }));
             return;
           }
