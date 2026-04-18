@@ -377,7 +377,8 @@ serve(async (req) => {
       };
 
       geminiSocket.onerror = (error) => {
-        console.error("Gemini WebSocket error:", error);
+        console.error("[WS_HANDSHAKE] ❌ Gemini WebSocket error:", error);
+        logAudioStats(true);
         socket.send(JSON.stringify({ 
           type: 'error', 
           error: 'Gemini connection error',
@@ -386,7 +387,8 @@ serve(async (req) => {
       };
 
       geminiSocket.onclose = (event) => {
-        console.log("Gemini WebSocket closed:", event.code, event.reason);
+        console.log(`[WS_HANDSHAKE] 🔌 Gemini WSS closed (code=${event.code}, reason="${event.reason}", uptime=${((Date.now() - handshakeStart) / 1000).toFixed(1)}s)`);
+        logAudioStats(true);
         socket.send(JSON.stringify({ type: 'gemini_disconnected', code: event.code }));
       };
 
