@@ -177,6 +177,23 @@ serve(async (req) => {
   let audioStreamActive = false;
   let pendingFunctionCalls: Map<string, any> = new Map();
 
+  // === Debug telemetry ===
+  const handshakeStart = Date.now();
+  let handshakeCompletedAt: number | null = null;
+  let setupCompletedAt: number | null = null;
+  let inboundAudioChunks = 0;
+  let inboundAudioBytes = 0;
+  let outboundAudioChunks = 0;
+  let outboundAudioBytes = 0;
+  let lastAudioStatLog = Date.now();
+
+  const logAudioStats = (force = false) => {
+    const now = Date.now();
+    if (!force && now - lastAudioStatLog < 5000) return;
+    lastAudioStatLog = now;
+    console.log(`[AUDIO_BUFFER_STATS] client→gemini: ${inboundAudioChunks} chunks / ${inboundAudioBytes} bytes (16-bit PCM 16kHz LE) | gemini→client: ${outboundAudioChunks} chunks / ${outboundAudioBytes} bytes | uptime: ${((Date.now() - handshakeStart) / 1000).toFixed(1)}s`);
+  };
+
   // Configure Gemini session after receiving lesson context
   const configureSession = () => {
     if (!geminiSocket || sessionConfigured || !lessonContext) return;
