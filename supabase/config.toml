@@ -10,7 +10,7 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.gemini-realtime]
-verify_jwt = true
+verify_jwt = false
 
 [functions.openai-conversation]
 verify_jwt = true
