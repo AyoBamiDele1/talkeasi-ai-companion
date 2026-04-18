@@ -177,6 +177,23 @@ serve(async (req) => {
   let audioStreamActive = false;
   let pendingFunctionCalls: Map<string, any> = new Map();
 
+  // === Debug telemetry ===
+  const handshakeStart = Date.now();
+  let handshakeCompletedAt: number | null = null;
+  let setupCompletedAt: number | null = null;
+  let inboundAudioChunks = 0;
+  let inboundAudioBytes = 0;
+  let outboundAudioChunks = 0;
+  let outboundAudioBytes = 0;
+  let lastAudioStatLog = Date.now();
+
+  const logAudioStats = (force = false) => {
+    const now = Date.now();
+    if (!force && now - lastAudioStatLog < 5000) return;
+    lastAudioStatLog = now;
+    console.log(`[AUDIO_BUFFER_STATS] client→gemini: ${inboundAudioChunks} chunks / ${inboundAudioBytes} bytes (16-bit PCM 16kHz LE) | gemini→client: ${outboundAudioChunks} chunks / ${outboundAudioBytes} bytes | uptime: ${((Date.now() - handshakeStart) / 1000).toFixed(1)}s`);
+  };
+
   // Configure Gemini session after receiving lesson context
   const configureSession = () => {
     if (!geminiSocket || sessionConfigured || !lessonContext) return;
@@ -190,7 +207,7 @@ serve(async (req) => {
     const modelFromEnv = Deno.env.get('GEMINI_MODEL');
     const model = modelFromEnv && modelFromEnv.trim().length > 0
       ? modelFromEnv.trim()
-      : "gemini-live-2.5-flash-native-audio";
+      : "gemini-2.5-flash-native-audio-preview-12-2025";
 
     const setupMessage = {
       setup: {
@@ -254,18 +271,18 @@ serve(async (req) => {
 
     try {
       // Connect to Gemini Multimodal Live API using v1beta endpoint
-      console.log("Connecting to Gemini Multimodal Live API...");
+      console.log(`[WS_HANDSHAKE] 🔌 Initiating WSS connection to Gemini Live API at ${new Date(handshakeStart).toISOString()}`);
       
       const geminiWsUrl = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${geminiApiKey}`;
       
-      console.log("Gemini WebSocket URL:", geminiWsUrl.replace(geminiApiKey, 'REDACTED'));
+      console.log("[WS_HANDSHAKE] Gemini WebSocket URL:", geminiWsUrl.replace(geminiApiKey, 'REDACTED'));
       geminiSocket = new WebSocket(geminiWsUrl);
 
       geminiSocket.onopen = () => {
-        console.log("Connected to Gemini Multimodal Live API");
+        handshakeCompletedAt = Date.now();
+        console.log(`[WS_HANDSHAKE] ✅ WSS established in ${handshakeCompletedAt - handshakeStart}ms (readyState=${geminiSocket?.readyState})`);
         socket.send(JSON.stringify({ type: 'connection_established', provider: 'gemini' }));
         
-        // Configure session if we already have lesson context
         if (lessonContext) {
           configureSession();
         }
@@ -274,11 +291,11 @@ serve(async (req) => {
       geminiSocket.onmessage = async (event) => {
         try {
           const data = JSON.parse(event.data);
-          console.log("Gemini message type:", Object.keys(data)[0]);
 
           // Handle setup complete
           if (data.setupComplete) {
-            console.log("Gemini setup complete");
+            setupCompletedAt = Date.now();
+            console.log(`[WS_HANDSHAKE] ✅ Gemini setup complete in ${setupCompletedAt - handshakeStart}ms total — session ready for audio streaming`);
             socket.send(JSON.stringify({ type: 'session.created', provider: 'gemini' }));
             return;
           }
@@ -295,10 +312,9 @@ serve(async (req) => {
                 // Audio response
                 if (part.inlineData) {
                   const audioData = part.inlineData.data;
-                  const mimeType = part.inlineData.mimeType;
-                  
-                  // Convert to format matching OpenAI's output for compatibility
-                  // Gemini outputs audio/pcm at 24kHz, same as OpenAI
+                  outboundAudioChunks++;
+                  outboundAudioBytes += audioData.length;
+                  logAudioStats();
                   socket.send(JSON.stringify({
                     type: 'response.audio.delta',
                     delta: audioData
@@ -361,7 +377,8 @@ serve(async (req) => {
       };
 
       geminiSocket.onerror = (error) => {
-        console.error("Gemini WebSocket error:", error);
+        console.error("[WS_HANDSHAKE] ❌ Gemini WebSocket error:", error);
+        logAudioStats(true);
         socket.send(JSON.stringify({ 
           type: 'error', 
           error: 'Gemini connection error',
@@ -370,7 +387,8 @@ serve(async (req) => {
       };
 
       geminiSocket.onclose = (event) => {
-        console.log("Gemini WebSocket closed:", event.code, event.reason);
+        console.log(`[WS_HANDSHAKE] 🔌 Gemini WSS closed (code=${event.code}, reason="${event.reason}", uptime=${((Date.now() - handshakeStart) / 1000).toFixed(1)}s)`);
+        logAudioStats(true);
         socket.send(JSON.stringify({ type: 'gemini_disconnected', code: event.code }));
       };
 
@@ -406,19 +424,23 @@ serve(async (req) => {
       return;
     }
 
-    // Handle audio input from client
+    // Handle audio input from client (16-bit PCM @ 16kHz, little-endian, base64)
     if (messageType === 'input_audio_buffer.append') {
       if (geminiSocket && geminiSocket.readyState === WebSocket.OPEN) {
-        // Convert OpenAI format to Gemini format
+        inboundAudioChunks++;
+        inboundAudioBytes += parsedData.audio?.length || 0;
+        logAudioStats();
         const geminiAudioMessage = {
           realtimeInput: {
             mediaChunks: [{
-              mimeType: "audio/pcm",
+              mimeType: "audio/pcm;rate=16000",
               data: parsedData.audio
             }]
           }
         };
         geminiSocket.send(JSON.stringify(geminiAudioMessage));
+      } else {
+        console.warn(`[AUDIO_BUFFER] ⚠️ Dropping audio chunk — Gemini socket not open (readyState=${geminiSocket?.readyState})`);
       }
       return;
     }
