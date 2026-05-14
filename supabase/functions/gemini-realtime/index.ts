@@ -455,6 +455,10 @@ serve(async (req) => {
 
     // Handle audio input from client (16-bit PCM @ 16kHz, little-endian, base64)
     if (messageType === 'input_audio_buffer.append') {
+      // GATE: drop audio while a tool call is being resolved (prevents 1008 policy crash)
+      if (pendingFunctionCalls.size > 0) {
+        return;
+      }
       if (geminiSocket && geminiSocket.readyState === WebSocket.OPEN) {
         inboundAudioChunks++;
         inboundAudioBytes += parsedData.audio?.length || 0;
