@@ -207,7 +207,7 @@ serve(async (req) => {
     const modelFromEnv = Deno.env.get('GEMINI_MODEL');
     const model = modelFromEnv && modelFromEnv.trim().length > 0
       ? modelFromEnv.trim()
-      : "gemini-2.0-flash-live-001";
+      : "gemini-3.1-flash-live-preview";
 
     const setupMessage = {
       setup: {
@@ -346,14 +346,19 @@ serve(async (req) => {
           // Handle tool calls
           if (data.toolCall) {
             const functionCalls = data.toolCall.functionCalls || [];
-            
+
+            // GATE: block mic audio until all tool responses are sent
+            for (const call of functionCalls) {
+              pendingFunctionCalls.set(call.id, call);
+            }
+            console.log(`[TOOL_GATE] 🚧 Pausing mic stream — ${pendingFunctionCalls.size} tool call(s) pending`);
+
             for (const call of functionCalls) {
               if (call.name === 'search_web') {
                 console.log("Gemini requesting web search:", call.args?.query);
-                
+
                 const searchResults = await performWebSearch(call.args?.query || '');
-                
-                // Send function response back to Gemini
+
                 const toolResponse = {
                   toolResponse: {
                     functionResponses: [{
@@ -363,11 +368,16 @@ serve(async (req) => {
                     }]
                   }
                 };
-                
+
                 if (geminiSocket && geminiSocket.readyState === WebSocket.OPEN) {
                   geminiSocket.send(JSON.stringify(toolResponse));
                 }
               }
+              pendingFunctionCalls.delete(call.id);
+            }
+
+            if (pendingFunctionCalls.size === 0) {
+              console.log("[TOOL_GATE] ✅ All tool responses sent — resuming mic stream");
             }
           }
 
@@ -445,6 +455,10 @@ serve(async (req) => {
 
     // Handle audio input from client (16-bit PCM @ 16kHz, little-endian, base64)
     if (messageType === 'input_audio_buffer.append') {
+      // GATE: drop audio while a tool call is being resolved (prevents 1008 policy crash)
+      if (pendingFunctionCalls.size > 0) {
+        return;
+      }
       if (geminiSocket && geminiSocket.readyState === WebSocket.OPEN) {
         inboundAudioChunks++;
         inboundAudioBytes += parsedData.audio?.length || 0;
