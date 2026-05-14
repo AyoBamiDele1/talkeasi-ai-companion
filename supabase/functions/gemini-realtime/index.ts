@@ -207,7 +207,7 @@ serve(async (req) => {
     const modelFromEnv = Deno.env.get('GEMINI_MODEL');
     const model = modelFromEnv && modelFromEnv.trim().length > 0
       ? modelFromEnv.trim()
-      : "gemini-2.0-flash-live-001";
+      : "gemini-3.1-flash-live-preview";
 
     const setupMessage = {
       setup: {
