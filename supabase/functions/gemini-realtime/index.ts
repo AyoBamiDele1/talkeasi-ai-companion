@@ -346,14 +346,19 @@ serve(async (req) => {
           // Handle tool calls
           if (data.toolCall) {
             const functionCalls = data.toolCall.functionCalls || [];
-            
+
+            // GATE: block mic audio until all tool responses are sent
+            for (const call of functionCalls) {
+              pendingFunctionCalls.set(call.id, call);
+            }
+            console.log(`[TOOL_GATE] 🚧 Pausing mic stream — ${pendingFunctionCalls.size} tool call(s) pending`);
+
             for (const call of functionCalls) {
               if (call.name === 'search_web') {
                 console.log("Gemini requesting web search:", call.args?.query);
-                
+
                 const searchResults = await performWebSearch(call.args?.query || '');
-                
-                // Send function response back to Gemini
+
                 const toolResponse = {
                   toolResponse: {
                     functionResponses: [{
@@ -363,11 +368,16 @@ serve(async (req) => {
                     }]
                   }
                 };
-                
+
                 if (geminiSocket && geminiSocket.readyState === WebSocket.OPEN) {
                   geminiSocket.send(JSON.stringify(toolResponse));
                 }
               }
+              pendingFunctionCalls.delete(call.id);
+            }
+
+            if (pendingFunctionCalls.size === 0) {
+              console.log("[TOOL_GATE] ✅ All tool responses sent — resuming mic stream");
             }
           }
 
