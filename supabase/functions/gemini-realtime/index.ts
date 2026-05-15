@@ -173,6 +173,7 @@ serve(async (req) => {
   
   let geminiSocket: WebSocket | null = null;
   let sessionConfigured = false;
+  let geminiSessionReady = false;
   let lessonContext: any = null;
   let audioStreamActive = false;
   let pendingFunctionCalls: Map<string, any> = new Map();
@@ -207,7 +208,7 @@ serve(async (req) => {
     const modelFromEnv = Deno.env.get('GEMINI_MODEL');
     const model = modelFromEnv && modelFromEnv.trim().length > 0
       ? modelFromEnv.trim()
-      : "gemini-3.1-flash-live-preview";
+      : lessonContext?.model || "gemini-3.1-flash-live-preview";
 
     const setupMessage = {
       setup: {
@@ -295,6 +296,7 @@ serve(async (req) => {
           // Handle setup complete
           if (data.setupComplete) {
             setupCompletedAt = Date.now();
+            geminiSessionReady = true;
             console.log(`[WS_HANDSHAKE] ✅ Gemini setup complete in ${setupCompletedAt - handshakeStart}ms total — session ready for audio streaming`);
             socket.send(JSON.stringify({ type: 'session.created', provider: 'gemini' }));
             return;
@@ -419,6 +421,10 @@ serve(async (req) => {
             ? 'Google rejected the session — likely API key tier/billing issue. Check edge function logs for [GEMINI_REJECTED] details.'
             : null
         }));
+
+        if (socket.readyState === WebSocket.OPEN) {
+          setTimeout(() => socket.close(1011, 'Gemini session closed'), 100);
+        }
       };
 
     } catch (error) {
