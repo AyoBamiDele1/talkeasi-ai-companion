@@ -982,6 +982,24 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       return;
     }
 
+    if (message.type === 'gemini_disconnected') {
+      const reason = typeof message.reason === 'string' ? message.reason : '';
+      const isBillingIssue = reason.toLowerCase().includes('prepayment credits') || reason.toLowerCase().includes('billing');
+
+      toast({
+        title: 'Nova could not start talking',
+        description: isBillingIssue
+          ? 'Google rejected the Gemini Live session because the Google project has no available prepaid/billing credits.'
+          : message.hint || 'Google closed the Gemini Live session before audio could start.',
+        variant: 'destructive'
+      });
+
+      setIsSessionActive(false);
+      setIsHandsFreeMode(false);
+      setIsConnecting(false);
+      return;
+    }
+
     // Handle user speech transcript
     if (message.type === 'conversation.item.input_audio_transcription.completed') {
       const userText = message.transcript || '';
