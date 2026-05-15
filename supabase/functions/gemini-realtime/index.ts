@@ -461,6 +461,12 @@ serve(async (req) => {
 
     // Handle audio input from client (16-bit PCM @ 16kHz, little-endian, base64)
     if (messageType === 'input_audio_buffer.append') {
+      // Do not forward microphone frames until Google confirms setupComplete.
+      // Sending audio during setup/rejection creates noisy dropped-frame loops and can hide the real failure.
+      if (!geminiSessionReady) {
+        return;
+      }
+
       // GATE: drop audio while a tool call is being resolved (prevents 1008 policy crash)
       if (pendingFunctionCalls.size > 0) {
         return;
