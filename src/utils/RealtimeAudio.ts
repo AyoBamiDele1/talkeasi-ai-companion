@@ -417,6 +417,7 @@ export class RealtimeChat {
         this.ws.onclose = (event) => {
           console.log('[RealtimeChat] WebSocket onclose:', event.code, event.reason);
           this.isConnected = false;
+          this.isSessionReady = false;
           this.onConnectionStateChange?.(false);
           this.cleanup();
         };
@@ -525,6 +526,7 @@ export class RealtimeChat {
   disconnect() {
     console.log('Disconnecting RealtimeChat and clearing audio queue');
     this.isConnected = false;
+    this.isSessionReady = false;
     
     this.stopKeepalive();
     
