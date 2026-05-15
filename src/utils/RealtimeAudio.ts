@@ -284,6 +284,7 @@ export class RealtimeChat {
   private audioContext: AudioContext | null = null;
   private recorder: AudioRecorder | null = null;
   private isConnected = false;
+  private isSessionReady = false;
   private lessonContextToSend: any = null;
   private keepaliveInterval: ReturnType<typeof setInterval> | null = null;
   private onProviderChange?: (provider: AIProvider) => void;
@@ -387,6 +388,9 @@ export class RealtimeChat {
                 }));
               }
               
+            } else if (data.type === 'session.created') {
+              this.isSessionReady = true;
+              this.onMessage(data);
               await this.startAudioRecording();
             } else if (data.type === 'response.audio.delta' || data.type === 'response.output_audio.delta') {
               if (data.delta) {
@@ -436,7 +440,7 @@ export class RealtimeChat {
       console.log('Audio context created with sample rate:', this.audioContext.sampleRate);
       
       this.recorder = new AudioRecorder((audioData) => {
-        if (this.ws && this.isConnected) {
+        if (this.ws && this.isConnected && this.isSessionReady) {
           const encodedAudio = encodeAudioForAPI(audioData);
           this.ws.send(JSON.stringify({
             type: 'input_audio_buffer.append',
