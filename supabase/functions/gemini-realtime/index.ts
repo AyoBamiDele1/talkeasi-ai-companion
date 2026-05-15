@@ -173,6 +173,7 @@ serve(async (req) => {
   
   let geminiSocket: WebSocket | null = null;
   let sessionConfigured = false;
+  let geminiSessionReady = false;
   let lessonContext: any = null;
   let audioStreamActive = false;
   let pendingFunctionCalls: Map<string, any> = new Map();
@@ -295,6 +296,7 @@ serve(async (req) => {
           // Handle setup complete
           if (data.setupComplete) {
             setupCompletedAt = Date.now();
+            geminiSessionReady = true;
             console.log(`[WS_HANDSHAKE] ✅ Gemini setup complete in ${setupCompletedAt - handshakeStart}ms total — session ready for audio streaming`);
             socket.send(JSON.stringify({ type: 'session.created', provider: 'gemini' }));
             return;
@@ -419,6 +421,10 @@ serve(async (req) => {
             ? 'Google rejected the session — likely API key tier/billing issue. Check edge function logs for [GEMINI_REJECTED] details.'
             : null
         }));
+
+        if (socket.readyState === WebSocket.OPEN) {
+          setTimeout(() => socket.close(1011, 'Gemini session closed'), 100);
+        }
       };
 
     } catch (error) {
@@ -455,6 +461,12 @@ serve(async (req) => {
 
     // Handle audio input from client (16-bit PCM @ 16kHz, little-endian, base64)
     if (messageType === 'input_audio_buffer.append') {
+      // Do not forward microphone frames until Google confirms setupComplete.
+      // Sending audio during setup/rejection creates noisy dropped-frame loops and can hide the real failure.
+      if (!geminiSessionReady) {
+        return;
+      }
+
       // GATE: drop audio while a tool call is being resolved (prevents 1008 policy crash)
       if (pendingFunctionCalls.size > 0) {
         return;
