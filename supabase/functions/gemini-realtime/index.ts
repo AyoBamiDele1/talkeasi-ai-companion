@@ -312,7 +312,8 @@ serve(async (req) => {
 
       geminiSocket.onmessage = async (event) => {
         try {
-          const data = JSON.parse(event.data);
+          const data = await parseWebSocketJson(event.data);
+          if (!data) return;
 
           // Handle setup complete
           if (data.setupComplete) {
@@ -326,6 +327,28 @@ serve(async (req) => {
           // Handle server content (audio, text, function calls)
           if (data.serverContent) {
             const content = data.serverContent;
+            if (content.inputTranscription?.text) {
+              socket.send(JSON.stringify({
+                type: 'conversation.item.input_audio_transcription.completed',
+                transcript: content.inputTranscription.text
+              }));
+            }
+
+            if (content.inputAudioTranscription?.text) {
+              socket.send(JSON.stringify({
+                type: 'conversation.item.input_audio_transcription.completed',
+                transcript: content.inputAudioTranscription.text
+              }));
+            }
+            
+            if (content.generationComplete) {
+              socket.send(JSON.stringify({ type: 'response.output_audio.done' }));
+            }
+            
+            if (content.turnComplete) {
+              socket.send(JSON.stringify({ type: 'response.output_audio_transcript.done' }));
+              socket.send(JSON.stringify({ type: 'response.done' }));
+            }
             
             // Handle model turn (audio/text response)
             if (content.modelTurn) {
@@ -347,16 +370,11 @@ serve(async (req) => {
                 // Text response (for transcript)
                 if (part.text) {
                   socket.send(JSON.stringify({
-                    type: 'response.audio_transcript.delta',
+                    type: 'response.output_audio_transcript.delta',
                     delta: part.text
                   }));
                 }
               }
-            }
-            
-            // Handle turn complete
-            if (content.turnComplete) {
-              socket.send(JSON.stringify({ type: 'response.done' }));
             }
             
             // Handle interruption
