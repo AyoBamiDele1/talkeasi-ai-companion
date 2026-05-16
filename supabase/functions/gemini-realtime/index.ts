@@ -6,6 +6,27 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+async function parseWebSocketJson(data: unknown): Promise<any | null> {
+  if (typeof data === 'string') {
+    return JSON.parse(data);
+  }
+
+  if (data instanceof Blob) {
+    return JSON.parse(await data.text());
+  }
+
+  if (data instanceof ArrayBuffer) {
+    return JSON.parse(new TextDecoder().decode(data));
+  }
+
+  if (ArrayBuffer.isView(data)) {
+    return JSON.parse(new TextDecoder().decode(data as ArrayBufferView));
+  }
+
+  console.warn('[WS_MESSAGE] Ignoring unsupported Gemini message payload:', Object.prototype.toString.call(data));
+  return null;
+}
+
 // Web search function using Serper (Google Search)
 async function performWebSearch(query: string): Promise<any> {
   const serperKey = Deno.env.get('SERPER_API_KEY');
@@ -291,7 +312,8 @@ serve(async (req) => {
 
       geminiSocket.onmessage = async (event) => {
         try {
-          const data = JSON.parse(event.data);
+          const data = await parseWebSocketJson(event.data);
+          if (!data) return;
 
           // Handle setup complete
           if (data.setupComplete) {
@@ -305,6 +327,28 @@ serve(async (req) => {
           // Handle server content (audio, text, function calls)
           if (data.serverContent) {
             const content = data.serverContent;
+            if (content.inputTranscription?.text) {
+              socket.send(JSON.stringify({
+                type: 'conversation.item.input_audio_transcription.completed',
+                transcript: content.inputTranscription.text
+              }));
+            }
+
+            if (content.inputAudioTranscription?.text) {
+              socket.send(JSON.stringify({
+                type: 'conversation.item.input_audio_transcription.completed',
+                transcript: content.inputAudioTranscription.text
+              }));
+            }
+            
+            if (content.generationComplete) {
+              socket.send(JSON.stringify({ type: 'response.output_audio.done' }));
+            }
+            
+            if (content.turnComplete) {
+              socket.send(JSON.stringify({ type: 'response.output_audio_transcript.done' }));
+              socket.send(JSON.stringify({ type: 'response.done' }));
+            }
             
             // Handle model turn (audio/text response)
             if (content.modelTurn) {
@@ -326,16 +370,11 @@ serve(async (req) => {
                 // Text response (for transcript)
                 if (part.text) {
                   socket.send(JSON.stringify({
-                    type: 'response.audio_transcript.delta',
+                    type: 'response.output_audio_transcript.delta',
                     delta: part.text
                   }));
                 }
               }
-            }
-            
-            // Handle turn complete
-            if (content.turnComplete) {
-              socket.send(JSON.stringify({ type: 'response.done' }));
             }
             
             // Handle interruption
