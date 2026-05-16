@@ -6,6 +6,27 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+async function parseWebSocketJson(data: unknown): Promise<any | null> {
+  if (typeof data === 'string') {
+    return JSON.parse(data);
+  }
+
+  if (data instanceof Blob) {
+    return JSON.parse(await data.text());
+  }
+
+  if (data instanceof ArrayBuffer) {
+    return JSON.parse(new TextDecoder().decode(data));
+  }
+
+  if (ArrayBuffer.isView(data)) {
+    return JSON.parse(new TextDecoder().decode(data as ArrayBufferView));
+  }
+
+  console.warn('[WS_MESSAGE] Ignoring unsupported Gemini message payload:', Object.prototype.toString.call(data));
+  return null;
+}
+
 // Web search function using Serper (Google Search)
 async function performWebSearch(query: string): Promise<any> {
   const serperKey = Deno.env.get('SERPER_API_KEY');
