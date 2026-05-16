@@ -516,10 +516,10 @@ serve(async (req) => {
         logAudioStats();
         const geminiAudioMessage = {
           realtimeInput: {
-            mediaChunks: [{
+            audio: {
               mimeType: "audio/pcm;rate=16000",
               data: parsedData.audio
-            }]
+            }
           }
         };
         geminiSocket.send(JSON.stringify(geminiAudioMessage));
