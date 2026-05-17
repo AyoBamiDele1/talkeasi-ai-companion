@@ -302,13 +302,21 @@ export class RealtimeChat {
       isNigerian?: boolean;
     },
     onProviderChange?: (provider: AIProvider) => void,
-    onConnectionStateChange?: (isConnected: boolean) => void
+    onConnectionStateChange?: (isConnected: boolean) => void,
+    // Pre-warmed AudioContext created within the user gesture.
+    // CRITICAL on mobile (Chrome Android / iOS Safari): browsers will refuse
+    // to play audio if the AudioContext is created after async work has elapsed
+    // and the gesture has ended.
+    preWarmedAudioContext?: AudioContext
   ) {
     if (lessonContext) {
       this.lessonContextToSend = lessonContext;
     }
     this.onProviderChange = onProviderChange;
     this.onConnectionStateChange = onConnectionStateChange;
+    if (preWarmedAudioContext) {
+      this.audioContext = preWarmedAudioContext;
+    }
   }
 
   // Expose connection state for UI feedback
@@ -430,7 +438,11 @@ export class RealtimeChat {
 
   private async startAudioRecording() {
     try {
-      this.audioContext = new AudioContext({ sampleRate: 24000 });
+      // Reuse the pre-warmed AudioContext if it was created during the user gesture.
+      // Creating it here for the first time on mobile would silently fail to play audio.
+      if (!this.audioContext) {
+        this.audioContext = new AudioContext({ sampleRate: 24000 });
+      }
       
       if (this.audioContext.state === 'suspended') {
         await this.audioContext.resume();
@@ -438,7 +450,7 @@ export class RealtimeChat {
       }
       
       console.log('Audio context state:', this.audioContext.state);
-      console.log('Audio context created with sample rate:', this.audioContext.sampleRate);
+      console.log('Audio context sample rate:', this.audioContext.sampleRate);
       
       this.recorder = new AudioRecorder((audioData) => {
         if (this.ws && this.isConnected && this.isSessionReady) {
