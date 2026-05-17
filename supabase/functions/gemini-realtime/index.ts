@@ -256,6 +256,14 @@ serve(async (req) => {
             silenceDurationMs: 500
           }
         },
+        // Enable sliding-window context compression so sessions can run far past
+        // the default ~1–2 minute hard limit Gemini Live imposes on uncompressed
+        // sessions. Without this, the WSS gets closed mid-conversation.
+        contextWindowCompression: {
+          slidingWindow: {}
+        },
+        // Allow the session to be resumed if the WSS is briefly interrupted.
+        sessionResumption: {},
         tools: lessonContext?.lessonTitle === 'AI Companion' ? [{
           functionDeclarations: [{
             name: "search_web",
