@@ -438,7 +438,11 @@ export class RealtimeChat {
 
   private async startAudioRecording() {
     try {
-      this.audioContext = new AudioContext({ sampleRate: 24000 });
+      // Reuse the pre-warmed AudioContext if it was created during the user gesture.
+      // Creating it here for the first time on mobile would silently fail to play audio.
+      if (!this.audioContext) {
+        this.audioContext = new AudioContext({ sampleRate: 24000 });
+      }
       
       if (this.audioContext.state === 'suspended') {
         await this.audioContext.resume();
@@ -446,7 +450,7 @@ export class RealtimeChat {
       }
       
       console.log('Audio context state:', this.audioContext.state);
-      console.log('Audio context created with sample rate:', this.audioContext.sampleRate);
+      console.log('Audio context sample rate:', this.audioContext.sampleRate);
       
       this.recorder = new AudioRecorder((audioData) => {
         if (this.ws && this.isConnected && this.isSessionReady) {
