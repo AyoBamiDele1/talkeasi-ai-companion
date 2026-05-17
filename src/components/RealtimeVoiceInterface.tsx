@@ -623,6 +623,36 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     }
   };
 
+  // Create an AudioContext synchronously inside the user gesture and kick off resume().
+  // CRITICAL for Chrome on Android (and iOS Safari): if the AudioContext is created
+  // only after several `await`s have elapsed, the browser no longer treats it as
+  // user-activated and silently refuses to play any audio (Nova goes silent on phone).
+  const primeAudioContextForGesture = (): AudioContext | undefined => {
+    try {
+      const Ctor: any =
+        (window as any).AudioContext || (window as any).webkitAudioContext;
+      if (!Ctor) return undefined;
+      const ctx: AudioContext = new Ctor({ sampleRate: 24000 });
+      // Resume synchronously while still in the gesture; ignore the promise.
+      if (ctx.state === 'suspended') {
+        ctx.resume().catch((e) => console.warn('[primeAudio] resume failed', e));
+      }
+      // Play a 1-sample silent buffer to fully unlock playback on mobile.
+      try {
+        const buffer = ctx.createBuffer(1, 1, 22050);
+        const src = ctx.createBufferSource();
+        src.buffer = buffer;
+        src.connect(ctx.destination);
+        src.start(0);
+      } catch (_) { /* no-op */ }
+      console.log('[primeAudio] AudioContext primed in gesture, state:', ctx.state);
+      return ctx;
+    } catch (e) {
+      console.warn('[primeAudio] Failed to create AudioContext synchronously', e);
+      return undefined;
+    }
+  };
+
   const startHandsFreeSession = async () => {
     console.log('[DEBUG] Starting Standard Mode session with Gemini realtime');
     
@@ -634,6 +664,9 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       });
       return;
     }
+
+    // MUST run synchronously inside the gesture, before any await.
+    const primedAudioCtx = primeAudioContextForGesture();
 
     setIsConnecting(true);
     setCurrentMode('standard');
@@ -662,7 +695,10 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
           coveredScenarios: coveredScenarios,
           model: 'gemini-2.0-flash-live-001',
           userMemories: memories
-        }
+        },
+        undefined,
+        undefined,
+        primedAudioCtx
       );
 
       await chat.connect();
@@ -701,6 +737,8 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       return;
     }
 
+    const primedAudioCtx = primeAudioContextForGesture();
+
     setIsConnecting(true);
     setCurrentMode('premium');
     setIsHandsFreeMode(true);
@@ -709,10 +747,8 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     onSessionStart?.();
 
     try {
-      // Pre-request microphone permission immediately for faster UX
       await navigator.mediaDevices.getUserMedia({ audio: true });
       
-      // Fetch user memories for personalized conversation
       const memories = await fetchUserMemories();
       setUserMemories(memories);
       console.log('[DEBUG] Loaded memories for session:', memories.length);
@@ -721,14 +757,16 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
         (message) => {
           handleRealtimeMessage(message);
         },
-        // Pass lesson context with full model for Premium Mode
         {
           lessonTitle: lessonTitle,
           lessonContent: lessonContent,
           coveredScenarios: coveredScenarios,
           model: 'gemini-2.0-flash-live-001',
           userMemories: memories
-        }
+        },
+        undefined,
+        undefined,
+        primedAudioCtx
       );
 
       await chat.connect();
@@ -757,6 +795,8 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
 
   const startTapToTalkSession = async () => {
     console.log('[DEBUG] Starting Trial Mode session with Gemini realtime');
+
+    const primedAudioCtx = primeAudioContextForGesture();
     
     setIsConnecting(true);
     setCurrentMode('tap');
@@ -766,21 +806,21 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     onSessionStart?.();
 
     try {
-      // Pre-request microphone permission immediately for faster UX
       await navigator.mediaDevices.getUserMedia({ audio: true });
       
-      // Trial mode: no memory fetching (unauthenticated users)
       const chat = new RealtimeChat(
         (message) => {
           handleRealtimeMessage(message);
         },
-        // Pass lesson context with mini model for Trial Mode
         {
           lessonTitle: 'AI Companion',
           lessonContent: lessonContent,
           coveredScenarios: coveredScenarios,
           model: 'gemini-2.0-flash-live-001'
-        }
+        },
+        undefined,
+        undefined,
+        primedAudioCtx
       );
 
       await chat.connect();
