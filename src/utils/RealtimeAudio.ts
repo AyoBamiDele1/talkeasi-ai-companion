@@ -302,13 +302,21 @@ export class RealtimeChat {
       isNigerian?: boolean;
     },
     onProviderChange?: (provider: AIProvider) => void,
-    onConnectionStateChange?: (isConnected: boolean) => void
+    onConnectionStateChange?: (isConnected: boolean) => void,
+    // Pre-warmed AudioContext created within the user gesture.
+    // CRITICAL on mobile (Chrome Android / iOS Safari): browsers will refuse
+    // to play audio if the AudioContext is created after async work has elapsed
+    // and the gesture has ended.
+    preWarmedAudioContext?: AudioContext
   ) {
     if (lessonContext) {
       this.lessonContextToSend = lessonContext;
     }
     this.onProviderChange = onProviderChange;
     this.onConnectionStateChange = onConnectionStateChange;
+    if (preWarmedAudioContext) {
+      this.audioContext = preWarmedAudioContext;
+    }
   }
 
   // Expose connection state for UI feedback
