@@ -1024,19 +1024,24 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
 
     if (message.type === 'gemini_disconnected') {
       const reason = typeof message.reason === 'string' ? message.reason : '';
+      const code = typeof message.code === 'number' ? message.code : 0;
       const isBillingIssue = reason.toLowerCase().includes('prepayment credits') || reason.toLowerCase().includes('billing');
+      // Code 1000 = normal close (often Gemini Live session time limit hit).
+      // 1006 = abnormal — network blip. Both feel like "Nova went silent".
+      const isLikelySessionLimit = code === 1000 || code === 1006;
 
       toast({
-        title: 'Nova could not start talking',
+        title: isLikelySessionLimit ? 'Session ended' : 'Nova lost connection',
         description: isBillingIssue
           ? 'Google rejected the Gemini Live session because the Google project has no available prepaid/billing credits.'
-          : message.hint || 'Google closed the Gemini Live session before audio could start.',
-        variant: 'destructive'
+          : isLikelySessionLimit
+            ? "Nova's live session reached its time limit. Tap to start a new one."
+            : (message.hint || 'The voice connection dropped. Tap to reconnect.'),
+        variant: isLikelySessionLimit ? 'default' : 'destructive'
       });
 
-      setIsSessionActive(false);
-      setIsHandsFreeMode(false);
-      setIsConnecting(false);
+      // Properly end the session so credits are deducted and the parent UI returns to idle.
+      endSession();
       return;
     }
 
