@@ -23,11 +23,10 @@ const PaymentSuccess = () => {
     ranRef.current = true;
 
     const provider = params.get("provider");
-    const reference = params.get("reference");
+    const reference = params.get("reference") || params.get("trxref");
 
     const verifyPaystack = async (ref: string) => {
       setState("verifying");
-      // Retry up to ~20s in case Paystack hasn't finalised on their side yet
       for (let attempt = 1; attempt <= 6; attempt++) {
         try {
           const { data, error } = await supabase.functions.invoke("paystack-verify", {
@@ -46,11 +45,22 @@ const PaymentSuccess = () => {
             });
             return;
           }
-          // Not yet — wait and retry
         } catch (e: any) {
           console.error("[PaymentSuccess] Verify attempt failed:", e);
         }
         await new Promise((r) => setTimeout(r, 3000));
+      }
+      // Fallback: try sync by email
+      try {
+        const { data } = await supabase.functions.invoke("paystack-sync", { body: {} });
+        if (data?.success && data?.creditedTotal > 0) {
+          setCreditsAdded(data.creditedTotal);
+          setState("success");
+          toast({ title: "Credits added!", description: `${data.creditedTotal} credits recovered.` });
+          return;
+        }
+      } catch (e) {
+        console.error("[PaymentSuccess] Sync fallback failed:", e);
       }
       setErrorMsg(
         "We couldn't confirm your payment yet. If your bank confirmed it, please refresh in a minute or contact support."
@@ -58,10 +68,10 @@ const PaymentSuccess = () => {
       setState("error");
     };
 
-    if (provider === "paystack" && reference) {
+    // Paystack sometimes strips our query params and only returns ?reference= or ?trxref=
+    if (reference) {
       verifyPaystack(reference);
     } else {
-      // Stripe (or unknown) — webhook handles credit add. Just confirm + bounce.
       setState("success");
       const timer = setTimeout(() => navigate("/profile"), 8000);
       return () => clearTimeout(timer);
