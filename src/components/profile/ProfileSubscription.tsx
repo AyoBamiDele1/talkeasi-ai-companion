@@ -281,14 +281,25 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
   };
 
   const handleRefreshStatus = async () => {
+    // Try to recover any unrecorded successful Paystack payments first
+    let recovered = 0;
+    try {
+      const { data } = await supabase.functions.invoke('paystack-sync', { body: {} });
+      if (data?.success) recovered = data.creditedTotal || 0;
+    } catch (e) {
+      console.error('paystack-sync failed', e);
+    }
+
     await Promise.all([
       refetchSubscription(),
       refetchCredits()
     ]);
     refreshSubscription();
     toast({
-      title: "Status refreshed",
-      description: "Your subscription and credit balance have been updated."
+      title: recovered > 0 ? `Recovered ${recovered} credits!` : "Status refreshed",
+      description: recovered > 0
+        ? "We found a Paystack payment and added your credits."
+        : "Your subscription and credit balance have been updated."
     });
   };
 
