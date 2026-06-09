@@ -249,11 +249,7 @@ serve(async (req) => {
         },
         realtimeInputConfig: {
           automaticActivityDetection: {
-            disabled: false,
-            startOfSpeechSensitivity: "START_SENSITIVITY_HIGH",
-            endOfSpeechSensitivity: "END_SENSITIVITY_HIGH", 
-            prefixPaddingMs: 300,
-            silenceDurationMs: 500
+            disabled: true
           }
         },
         // Enable sliding-window context compression so sessions can run far past
@@ -533,6 +529,24 @@ serve(async (req) => {
         geminiSocket.send(JSON.stringify(geminiAudioMessage));
       } else {
         console.warn(`[AUDIO_BUFFER] ⚠️ Dropping audio chunk — Gemini socket not open (readyState=${geminiSocket?.readyState})`);
+      }
+      return;
+    }
+
+    if (messageType === 'input_audio_activity.start') {
+      if (geminiSessionReady && geminiSocket && geminiSocket.readyState === WebSocket.OPEN) {
+        console.log('[ACTIVITY_DETECTION] User speech started');
+        geminiSocket.send(JSON.stringify({ realtimeInput: { activityStart: {} } }));
+        audioStreamActive = true;
+      }
+      return;
+    }
+
+    if (messageType === 'input_audio_activity.end') {
+      if (geminiSessionReady && geminiSocket && geminiSocket.readyState === WebSocket.OPEN) {
+        console.log('[ACTIVITY_DETECTION] User speech ended — prompting Gemini response');
+        geminiSocket.send(JSON.stringify({ realtimeInput: { activityEnd: {} } }));
+        audioStreamActive = false;
       }
       return;
     }

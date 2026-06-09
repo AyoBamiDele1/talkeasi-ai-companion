@@ -4,6 +4,7 @@
 const GEMINI_SAMPLE_RATE = 16000;
 const AUDIO_CHUNK_TARGET_MS = 40; // Target 40ms chunks to avoid disconnection
 const MAX_CHUNK_BYTES = Math.floor((GEMINI_SAMPLE_RATE * AUDIO_CHUNK_TARGET_MS / 1000) * 2); // ~1280 bytes
+const SAMPLES_PER_CHUNK = MAX_CHUNK_BYTES / 2;
 
 /**
  * Resample audio from the browser's native sample rate to Gemini's required 16kHz.
@@ -36,6 +37,7 @@ export class AudioRecorder {
   private audioContext: AudioContext | null = null;
   private processor: ScriptProcessorNode | null = null;
   private source: MediaStreamAudioSourceNode | null = null;
+  private pendingSamples: number[] = [];
 
   constructor(private onAudioData: (audioData: Float32Array) => void) {}
 
@@ -70,7 +72,12 @@ export class AudioRecorder {
         const inputData = e.inputBuffer.getChannelData(0);
         // Resample from native rate to 16kHz before sending
         const resampled = resampleTo16kHz(new Float32Array(inputData), nativeSampleRate);
-        this.onAudioData(resampled);
+        this.pendingSamples.push(...resampled);
+
+        while (this.pendingSamples.length >= SAMPLES_PER_CHUNK) {
+          const chunk = this.pendingSamples.splice(0, SAMPLES_PER_CHUNK);
+          this.onAudioData(new Float32Array(chunk));
+        }
       };
       
       this.source.connect(this.processor);
@@ -82,6 +89,7 @@ export class AudioRecorder {
   }
 
   stop() {
+    this.pendingSamples = [];
     if (this.source) {
       this.source.disconnect();
       this.source = null;
@@ -289,6 +297,15 @@ export class RealtimeChat {
   private keepaliveInterval: ReturnType<typeof setInterval> | null = null;
   private onProviderChange?: (provider: AIProvider) => void;
   private onConnectionStateChange?: (isConnected: boolean) => void;
+  private isUserSpeaking = false;
+  private speechStartChunks = 0;
+  private silenceChunks = 0;
+  private prefixAudioChunks: Float32Array[] = [];
+  private readonly speechStartRms = 0.012;
+  private readonly speechEndRms = 0.006;
+  private readonly speechStartChunksRequired = 2;
+  private readonly silenceChunksToEnd = 18;
+  private readonly prefixChunksToKeep = 4;
 
   constructor(
     private onMessage: (message: any) => void,
@@ -453,13 +470,7 @@ export class RealtimeChat {
       console.log('Audio context sample rate:', this.audioContext.sampleRate);
       
       this.recorder = new AudioRecorder((audioData) => {
-        if (this.ws && this.isConnected && this.isSessionReady) {
-          const encodedAudio = encodeAudioForAPI(audioData);
-          this.ws.send(JSON.stringify({
-            type: 'input_audio_buffer.append',
-            audio: encodedAudio
-          }));
-        }
+        this.processMicrophoneAudio(audioData);
       });
 
       await this.recorder.start();
@@ -468,6 +479,66 @@ export class RealtimeChat {
       console.error('Error starting audio recording:', error);
       throw error;
     }
+  }
+
+  private processMicrophoneAudio(audioData: Float32Array) {
+    if (!this.ws || !this.isConnected || !this.isSessionReady || this.ws.readyState !== WebSocket.OPEN) {
+      return;
+    }
+
+    const rms = Math.sqrt(audioData.reduce((sum, sample) => sum + sample * sample, 0) / audioData.length);
+
+    if (!this.isUserSpeaking) {
+      this.prefixAudioChunks.push(audioData);
+      if (this.prefixAudioChunks.length > this.prefixChunksToKeep) {
+        this.prefixAudioChunks.shift();
+      }
+
+      if (rms >= this.speechStartRms) {
+        this.speechStartChunks += 1;
+      } else {
+        this.speechStartChunks = 0;
+      }
+
+      if (this.speechStartChunks >= this.speechStartChunksRequired) {
+        this.isUserSpeaking = true;
+        this.silenceChunks = 0;
+        this.ws.send(JSON.stringify({ type: 'input_audio_activity.start' }));
+
+        for (const chunk of this.prefixAudioChunks) {
+          this.sendAudioChunk(chunk);
+        }
+        this.prefixAudioChunks = [];
+      }
+
+      return;
+    }
+
+    this.sendAudioChunk(audioData);
+
+    if (rms <= this.speechEndRms) {
+      this.silenceChunks += 1;
+    } else {
+      this.silenceChunks = 0;
+    }
+
+    if (this.silenceChunks >= this.silenceChunksToEnd) {
+      this.isUserSpeaking = false;
+      this.speechStartChunks = 0;
+      this.silenceChunks = 0;
+      this.prefixAudioChunks = [];
+      this.ws.send(JSON.stringify({ type: 'input_audio_activity.end' }));
+    }
+  }
+
+  private sendAudioChunk(audioData: Float32Array) {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+
+    const encodedAudio = encodeAudioForAPI(audioData);
+    this.ws.send(JSON.stringify({
+      type: 'input_audio_buffer.append',
+      audio: encodedAudio
+    }));
   }
 
   private async handleAudioDelta(delta: string) {
