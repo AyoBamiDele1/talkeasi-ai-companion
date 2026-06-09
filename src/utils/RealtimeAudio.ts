@@ -481,6 +481,66 @@ export class RealtimeChat {
     }
   }
 
+  private processMicrophoneAudio(audioData: Float32Array) {
+    if (!this.ws || !this.isConnected || !this.isSessionReady || this.ws.readyState !== WebSocket.OPEN) {
+      return;
+    }
+
+    const rms = Math.sqrt(audioData.reduce((sum, sample) => sum + sample * sample, 0) / audioData.length);
+
+    if (!this.isUserSpeaking) {
+      this.prefixAudioChunks.push(audioData);
+      if (this.prefixAudioChunks.length > this.prefixChunksToKeep) {
+        this.prefixAudioChunks.shift();
+      }
+
+      if (rms >= this.speechStartRms) {
+        this.speechStartChunks += 1;
+      } else {
+        this.speechStartChunks = 0;
+      }
+
+      if (this.speechStartChunks >= this.speechStartChunksRequired) {
+        this.isUserSpeaking = true;
+        this.silenceChunks = 0;
+        this.ws.send(JSON.stringify({ type: 'input_audio_activity.start' }));
+
+        for (const chunk of this.prefixAudioChunks) {
+          this.sendAudioChunk(chunk);
+        }
+        this.prefixAudioChunks = [];
+      }
+
+      return;
+    }
+
+    this.sendAudioChunk(audioData);
+
+    if (rms <= this.speechEndRms) {
+      this.silenceChunks += 1;
+    } else {
+      this.silenceChunks = 0;
+    }
+
+    if (this.silenceChunks >= this.silenceChunksToEnd) {
+      this.isUserSpeaking = false;
+      this.speechStartChunks = 0;
+      this.silenceChunks = 0;
+      this.prefixAudioChunks = [];
+      this.ws.send(JSON.stringify({ type: 'input_audio_activity.end' }));
+    }
+  }
+
+  private sendAudioChunk(audioData: Float32Array) {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+
+    const encodedAudio = encodeAudioForAPI(audioData);
+    this.ws.send(JSON.stringify({
+      type: 'input_audio_buffer.append',
+      audio: encodedAudio
+    }));
+  }
+
   private async handleAudioDelta(delta: string) {
     if (!this.audioContext) {
       console.error('Audio context not initialized');
