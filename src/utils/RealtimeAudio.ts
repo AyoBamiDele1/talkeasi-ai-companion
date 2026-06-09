@@ -297,6 +297,15 @@ export class RealtimeChat {
   private keepaliveInterval: ReturnType<typeof setInterval> | null = null;
   private onProviderChange?: (provider: AIProvider) => void;
   private onConnectionStateChange?: (isConnected: boolean) => void;
+  private isUserSpeaking = false;
+  private speechStartChunks = 0;
+  private silenceChunks = 0;
+  private prefixAudioChunks: Float32Array[] = [];
+  private readonly speechStartRms = 0.012;
+  private readonly speechEndRms = 0.006;
+  private readonly speechStartChunksRequired = 2;
+  private readonly silenceChunksToEnd = 18;
+  private readonly prefixChunksToKeep = 4;
 
   constructor(
     private onMessage: (message: any) => void,
@@ -461,13 +470,7 @@ export class RealtimeChat {
       console.log('Audio context sample rate:', this.audioContext.sampleRate);
       
       this.recorder = new AudioRecorder((audioData) => {
-        if (this.ws && this.isConnected && this.isSessionReady) {
-          const encodedAudio = encodeAudioForAPI(audioData);
-          this.ws.send(JSON.stringify({
-            type: 'input_audio_buffer.append',
-            audio: encodedAudio
-          }));
-        }
+        this.processMicrophoneAudio(audioData);
       });
 
       await this.recorder.start();
