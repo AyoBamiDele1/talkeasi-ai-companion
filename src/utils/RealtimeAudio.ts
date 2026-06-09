@@ -4,6 +4,7 @@
 const GEMINI_SAMPLE_RATE = 16000;
 const AUDIO_CHUNK_TARGET_MS = 40; // Target 40ms chunks to avoid disconnection
 const MAX_CHUNK_BYTES = Math.floor((GEMINI_SAMPLE_RATE * AUDIO_CHUNK_TARGET_MS / 1000) * 2); // ~1280 bytes
+const SAMPLES_PER_CHUNK = MAX_CHUNK_BYTES / 2;
 
 /**
  * Resample audio from the browser's native sample rate to Gemini's required 16kHz.
@@ -36,6 +37,7 @@ export class AudioRecorder {
   private audioContext: AudioContext | null = null;
   private processor: ScriptProcessorNode | null = null;
   private source: MediaStreamAudioSourceNode | null = null;
+  private pendingSamples: number[] = [];
 
   constructor(private onAudioData: (audioData: Float32Array) => void) {}
 
@@ -70,7 +72,12 @@ export class AudioRecorder {
         const inputData = e.inputBuffer.getChannelData(0);
         // Resample from native rate to 16kHz before sending
         const resampled = resampleTo16kHz(new Float32Array(inputData), nativeSampleRate);
-        this.onAudioData(resampled);
+        this.pendingSamples.push(...resampled);
+
+        while (this.pendingSamples.length >= SAMPLES_PER_CHUNK) {
+          const chunk = this.pendingSamples.splice(0, SAMPLES_PER_CHUNK);
+          this.onAudioData(new Float32Array(chunk));
+        }
       };
       
       this.source.connect(this.processor);
@@ -82,6 +89,7 @@ export class AudioRecorder {
   }
 
   stop() {
+    this.pendingSamples = [];
     if (this.source) {
       this.source.disconnect();
       this.source = null;
