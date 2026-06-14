@@ -335,6 +335,25 @@ serve(async (req) => {
             geminiSessionReady = true;
             console.log(`[WS_HANDSHAKE] ✅ Gemini setup complete in ${setupCompletedAt - handshakeStart}ms total — session ready for audio streaming`);
             socket.send(JSON.stringify({ type: 'session.created', provider: 'gemini' }));
+
+            // PROACTIVE GREETING: Nova greets first instead of waiting for the user.
+            // Without this, both sides wait for each other (the system prompt tells Nova
+            // to greet "when the user first speaks"), so the session stays silent and the
+            // user thinks "it's not talking". We nudge Gemini with a hidden user turn so it
+            // generates the spoken opening greeting immediately.
+            if (geminiSocket && geminiSocket.readyState === WebSocket.OPEN) {
+              const greetingTrigger = {
+                clientContent: {
+                  turns: [{
+                    role: "user",
+                    parts: [{ text: "(The user has just joined the call. Warmly greet them out loud now to start the conversation.)" }]
+                  }],
+                  turnComplete: true
+                }
+              };
+              console.log("[GREETING] 👋 Triggering Nova's proactive opening greeting");
+              geminiSocket.send(JSON.stringify(greetingTrigger));
+            }
             return;
           }
 
