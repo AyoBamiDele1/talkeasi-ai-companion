@@ -544,9 +544,9 @@ export class RealtimeChat {
       this.recorder.stop();
       this.recorder = null;
     }
-    if (audioQueueInstance) {
-      audioQueueInstance.clear();
-      audioQueueInstance = null;
+    if (audioStreamPlayer) {
+      audioStreamPlayer.clear();
+      audioStreamPlayer = null;
     }
     if (this.audioContext) {
       this.audioContext.close().then(() => {
