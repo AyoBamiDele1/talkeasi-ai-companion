@@ -461,7 +461,7 @@ serve(async (req) => {
           console.error(`[GEMINI_REJECTED] Likely causes:
   1. GEMINI_API_KEY is on FREE tier — Live API requires a PAID key (https://aistudio.google.com/apikey)
   2. Billing not enabled on the GCP project that owns the key
-  3. Model "${sessionConfigured ? 'see setup log above' : '(setup never sent)'}" not available to this key (try GEMINI_MODEL=gemini-2.0-flash-live-001)
+  3. Model "${sessionConfigured ? 'see setup log above' : '(setup never sent)'}" not available to this key (current target: gemini-3.1-flash-live-preview)
   4. Generative Language API not enabled in the GCP project`);
         }
 
