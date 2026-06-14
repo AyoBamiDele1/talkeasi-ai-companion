@@ -136,13 +136,32 @@ export const encodeAudioForAPI = (float32Array: Float32Array): string => {
   return btoa(binary);
 };
 
-class AudioQueue {
-  private queue: Uint8Array[] = [];
-  private isPlaying = false;
+// Output sample rate Gemini Live streams back (24kHz, 16-bit PCM mono, little-endian)
+const GEMINI_OUTPUT_SAMPLE_RATE = 24000;
+
+/**
+ * Continuous, gap-free PCM playback over a SINGLE persistent AudioContext timeline.
+ *
+ * The previous implementation wrapped every incoming chunk in a WAV header and ran
+ * an async `decodeAudioData()` per chunk. That async hop introduced jitter between
+ * chunks, so consecutive buffers were scheduled with tiny gaps/overlaps — audible as
+ * cracking and stuttering.
+ *
+ * This player instead:
+ *  - converts each Int16 LE PCM chunk to a Float32 AudioBuffer SYNCHRONOUSLY
+ *    (no WAV, no decodeAudioData),
+ *  - stitches chunks together by scheduling each one exactly where the previous one
+ *    ends (`nextStartTime`), keeping one contiguous audio line open for the whole turn,
+ *  - only resets the timeline when the turn is flushed (turnComplete) or interrupted
+ *    (barge-in).
+ */
+class AudioStreamPlayer {
   private audioContext: AudioContext;
-  private currentSource: AudioBufferSourceNode | null = null;
   private gainNode: GainNode;
-  private nextStartTime: number = 0;
+  private nextStartTime = 0;
+  private scheduledSources: Set<AudioBufferSourceNode> = new Set();
+  // Small lead so the first buffer of a turn isn't scheduled in the past.
+  private readonly scheduleLeadSeconds = 0.06;
 
   constructor(audioContext: AudioContext) {
     this.audioContext = audioContext;
@@ -151,137 +170,96 @@ class AudioQueue {
     this.gainNode.connect(audioContext.destination);
   }
 
-  async addToQueue(audioData: Uint8Array) {
-    this.queue.push(audioData);
-    if (!this.isPlaying) {
-      await this.playNext();
-    }
-  }
-
-  private async playNext() {
-    if (this.queue.length === 0) {
-      this.isPlaying = false;
-      this.nextStartTime = 0;
-      return;
+  /** Append a raw PCM chunk (Int16 LE @ 24kHz mono) to the continuous timeline. */
+  async enqueue(pcmData: Uint8Array) {
+    if (this.audioContext.state === 'suspended') {
+      await this.audioContext.resume();
     }
 
-    this.isPlaying = true;
-    const audioData = this.queue.shift()!;
+    const sampleCount = Math.floor(pcmData.length / 2);
+    if (sampleCount === 0) return;
 
-    try {
-      if (this.audioContext.state === 'suspended') {
-        console.log('Resuming suspended audio context');
-        await this.audioContext.resume();
-      }
-
-      const wavData = this.createWavFromPCM(audioData);
-      const arrayCopy = new ArrayBuffer(wavData.byteLength);
-      new Uint8Array(arrayCopy).set(new Uint8Array(wavData.buffer));
-      
-      const audioBuffer = await this.audioContext.decodeAudioData(arrayCopy);
-      
-      const source = this.audioContext.createBufferSource();
-      source.buffer = audioBuffer;
-      source.connect(this.gainNode);
-      
-      this.currentSource = source;
-      
-      const currentTime = this.audioContext.currentTime;
-      const startTime = Math.max(currentTime, this.nextStartTime);
-      this.nextStartTime = startTime + audioBuffer.duration;
-      
-      console.log(`Scheduling audio playback at ${startTime}, duration: ${audioBuffer.duration}`);
-      
-      source.onended = () => {
-        console.log('Audio chunk finished playing');
-        this.currentSource = null;
-        this.playNext();
-      };
-      
-      source.start(startTime);
-      console.log('Audio playback started');
-    } catch (error) {
-      console.error('Error playing audio:', error);
-      this.currentSource = null;
-      this.playNext();
+    // Int16 LE -> Float32 [-1, 1], done synchronously to avoid scheduling jitter.
+    const float32 = new Float32Array(sampleCount);
+    const view = new DataView(pcmData.buffer, pcmData.byteOffset, pcmData.byteLength);
+    for (let i = 0; i < sampleCount; i++) {
+      const int16 = view.getInt16(i * 2, true); // little-endian
+      float32[i] = int16 < 0 ? int16 / 0x8000 : int16 / 0x7FFF;
     }
-  }
 
-  private createWavFromPCM(pcmData: Uint8Array): Uint8Array {
-    const int16Data = new Int16Array(pcmData.length / 2);
-    for (let i = 0; i < pcmData.length; i += 2) {
-      int16Data[i / 2] = (pcmData[i + 1] << 8) | pcmData[i];
+    const audioBuffer = this.audioContext.createBuffer(1, sampleCount, GEMINI_OUTPUT_SAMPLE_RATE);
+    audioBuffer.getChannelData(0).set(float32);
+
+    const source = this.audioContext.createBufferSource();
+    source.buffer = audioBuffer;
+    source.connect(this.gainNode);
+
+    const now = this.audioContext.currentTime;
+    // If the queue drained (gap in the network stream), restart the line slightly
+    // ahead of "now"; otherwise stitch this chunk directly onto the previous one.
+    if (this.nextStartTime < now + 0.005) {
+      this.nextStartTime = now + this.scheduleLeadSeconds;
     }
-    
-    const wavHeader = new ArrayBuffer(44);
-    const view = new DataView(wavHeader);
-    
-    const writeString = (view: DataView, offset: number, string: string) => {
-      for (let i = 0; i < string.length; i++) {
-        view.setUint8(offset + i, string.charCodeAt(i));
-      }
+
+    source.start(this.nextStartTime);
+    this.nextStartTime += audioBuffer.duration;
+
+    this.scheduledSources.add(source);
+    source.onended = () => {
+      this.scheduledSources.delete(source);
     };
-
-    const sampleRate = 24000;
-    const numChannels = 1;
-    const bitsPerSample = 16;
-    const blockAlign = (numChannels * bitsPerSample) / 8;
-    const byteRate = sampleRate * blockAlign;
-
-    writeString(view, 0, 'RIFF');
-    view.setUint32(4, 36 + int16Data.byteLength, true);
-    writeString(view, 8, 'WAVE');
-    writeString(view, 12, 'fmt ');
-    view.setUint32(16, 16, true);
-    view.setUint16(20, 1, true);
-    view.setUint16(22, numChannels, true);
-    view.setUint32(24, sampleRate, true);
-    view.setUint32(28, byteRate, true);
-    view.setUint16(32, blockAlign, true);
-    view.setUint16(34, bitsPerSample, true);
-    writeString(view, 36, 'data');
-    view.setUint32(40, int16Data.byteLength, true);
-
-    const wavArray = new Uint8Array(wavHeader.byteLength + int16Data.byteLength);
-    wavArray.set(new Uint8Array(wavHeader), 0);
-    wavArray.set(new Uint8Array(int16Data.buffer), wavHeader.byteLength);
-    
-    return wavArray;
   }
 
-  clear() {
-    console.log('Clearing audio queue - stopping all playback');
-    if (this.currentSource) {
-      try {
-        this.currentSource.stop(0);
-        this.currentSource.disconnect();
-      } catch (e) {
-        console.log('Audio source already stopped:', e);
-      }
-      this.currentSource = null;
-    }
-    this.queue = [];
-    this.isPlaying = false;
+  /**
+   * End of a model turn (turnComplete). Let everything already scheduled play out
+   * naturally — just reset the timeline so the next turn starts fresh.
+   */
+  flushTurn() {
     this.nextStartTime = 0;
-    
-    if (this.audioContext.state === 'running') {
-      this.audioContext.suspend().then(() => {
-        console.log('Audio context suspended to stop all playback');
-      }).catch(e => {
-        console.log('Error suspending audio context:', e);
-      });
+  }
+
+  /**
+   * Hard stop for barge-in / interruption: kill all scheduled buffers immediately.
+   */
+  interrupt() {
+    for (const source of this.scheduledSources) {
+      try {
+        source.stop(0);
+        source.disconnect();
+      } catch (e) {
+        // already stopped
+      }
     }
-    console.log('Audio queue cleared');
+    this.scheduledSources.clear();
+    this.nextStartTime = 0;
+  }
+
+  /** Full teardown used on disconnect/cleanup. */
+  clear() {
+    this.interrupt();
+    if (this.audioContext.state === 'running') {
+      this.audioContext.suspend().catch(() => {});
+    }
   }
 }
 
-let audioQueueInstance: AudioQueue | null = null;
+let audioStreamPlayer: AudioStreamPlayer | null = null;
 
 export const playAudioData = async (audioContext: AudioContext, audioData: Uint8Array) => {
-  if (!audioQueueInstance) {
-    audioQueueInstance = new AudioQueue(audioContext);
+  if (!audioStreamPlayer) {
+    audioStreamPlayer = new AudioStreamPlayer(audioContext);
   }
-  await audioQueueInstance.addToQueue(audioData);
+  await audioStreamPlayer.enqueue(audioData);
+};
+
+/** Called on turnComplete — let buffered audio finish, then reset the timeline. */
+export const flushAudioStream = () => {
+  audioStreamPlayer?.flushTurn();
+};
+
+/** Called on interrupted (barge-in) — stop the active audio line immediately. */
+export const interruptAudioStream = () => {
+  audioStreamPlayer?.interrupt();
 };
 
 // Provider type - Gemini only now
