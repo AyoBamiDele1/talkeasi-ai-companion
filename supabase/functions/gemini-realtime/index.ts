@@ -231,7 +231,15 @@ serve(async (req) => {
   // Configure Gemini session after receiving lesson context
   const configureSession = () => {
     if (!geminiSocket || sessionConfigured || !lessonContext) return;
-    
+
+    // Guard against the race where lesson_init arrives before the Gemini WSS
+    // finishes connecting. If the socket isn't OPEN yet, defer — geminiSocket.onopen
+    // will call configureSession() again once the connection is ready.
+    if (geminiSocket.readyState !== WebSocket.OPEN) {
+      console.log("Gemini socket not OPEN yet — deferring setup until onopen fires.");
+      return;
+    }
+
     console.log("Configuring Gemini session with lesson context:", lessonContext.lessonTitle);
     
     const systemInstruction = buildSystemInstruction(lessonContext);
