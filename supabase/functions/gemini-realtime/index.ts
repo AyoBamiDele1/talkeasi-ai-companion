@@ -186,17 +186,7 @@ serve(async (req) => {
   const { headers } = req;
   const upgradeHeader = headers.get("upgrade") || "";
 
-  // Safe diagnostic: confirm WHICH Gemini key the app is using without exposing it.
-  // Returns only the last 4 chars + length so it can be matched in Google AI Studio.
-  const url = new URL(req.url);
-  if (req.method === 'GET' && url.searchParams.get('keycheck') === '1') {
-    const k = Deno.env.get('GEMINI_API_KEY') || '';
-    return new Response(JSON.stringify({
-      configured: k.length > 0,
-      length: k.length,
-      last4: k.slice(-4),
-    }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-  }
+
 
   if (upgradeHeader.toLowerCase() !== "websocket") {
     return new Response("Expected WebSocket connection", { status: 400 });
@@ -231,7 +221,15 @@ serve(async (req) => {
   // Configure Gemini session after receiving lesson context
   const configureSession = () => {
     if (!geminiSocket || sessionConfigured || !lessonContext) return;
-    
+
+    // Guard against the race where lesson_init arrives before the Gemini WSS
+    // finishes connecting. If the socket isn't OPEN yet, defer — geminiSocket.onopen
+    // will call configureSession() again once the connection is ready.
+    if (geminiSocket.readyState !== WebSocket.OPEN) {
+      console.log("Gemini socket not OPEN yet — deferring setup until onopen fires.");
+      return;
+    }
+
     console.log("Configuring Gemini session with lesson context:", lessonContext.lessonTitle);
     
     const systemInstruction = buildSystemInstruction(lessonContext);
