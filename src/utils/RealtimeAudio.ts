@@ -403,6 +403,16 @@ export class RealtimeChat {
             } else if (data.type === 'response.audio_transcript.delta' || data.type === 'response.output_audio_transcript.delta') {
               console.log('Transcript delta:', data.delta);
               this.onMessage(data);
+            } else if (data.type === 'response.interrupted') {
+              // Barge-in: stop the active audio line immediately.
+              console.log('[RealtimeChat] Turn interrupted — flushing audio line');
+              interruptAudioStream();
+              this.onMessage(data);
+            } else if (data.type === 'response.done' || data.type === 'response.output_audio.done') {
+              // Turn complete: let buffered audio finish, then reset the timeline.
+              console.log('[RealtimeChat] Turn complete — closing audio line after buffered audio drains');
+              flushAudioStream();
+              this.onMessage(data);
             } else {
               this.onMessage(data);
             }
