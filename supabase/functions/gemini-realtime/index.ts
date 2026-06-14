@@ -186,17 +186,7 @@ serve(async (req) => {
   const { headers } = req;
   const upgradeHeader = headers.get("upgrade") || "";
 
-  // Safe diagnostic: confirm WHICH Gemini key the app is using without exposing it.
-  // Returns only the last 4 chars + length so it can be matched in Google AI Studio.
-  const url = new URL(req.url);
-  if (req.method === 'GET' && url.searchParams.get('keycheck') === '1') {
-    const k = Deno.env.get('GEMINI_API_KEY') || '';
-    return new Response(JSON.stringify({
-      configured: k.length > 0,
-      length: k.length,
-      last4: k.slice(-4),
-    }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-  }
+
 
   if (upgradeHeader.toLowerCase() !== "websocket") {
     return new Response("Expected WebSocket connection", { status: 400 });
