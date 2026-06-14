@@ -257,10 +257,12 @@ serve(async (req) => {
             }
           }
         },
+        // Let Gemini handle voice/turn detection server-side (automatic activity
+        // detection ON). The client streams mic audio continuously; Gemini decides
+        // when the user has started/stopped speaking. Disabling this previously
+        // required a flaky client-side VAD that never fired, so no audio was processed.
         realtimeInputConfig: {
-          automaticActivityDetection: {
-            disabled: true
-          }
+          automaticActivityDetection: {}
         },
         // Enable sliding-window context compression so sessions can run far past
         // the default ~1–2 minute hard limit Gemini Live imposes on uncompressed
