@@ -257,6 +257,11 @@ serve(async (req) => {
             }
           }
         },
+        // Transcribe both sides. Input transcription is essential for diagnosing
+        // "Nova doesn't respond" — if we see inputTranscription text, Gemini heard
+        // the user and the issue is turn/VAD; if not, it's an audio/format issue.
+        inputAudioTranscription: {},
+        outputAudioTranscription: {},
         // Let Gemini handle voice/turn detection server-side (automatic activity
         // detection ON). The client streams mic audio continuously; Gemini decides
         // when the user has started/stopped speaking. Disabling this previously
