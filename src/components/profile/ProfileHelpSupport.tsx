@@ -132,6 +132,12 @@ const ProfileHelpSupport = ({
               <span className="text-muted-foreground">Developer</span>
               <span>NovaDela Technologies</span>
             </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Support & Enquiries</span>
+              <a href="mailto:support@novadelatech.com" className="text-primary hover:underline">
+                support@novadelatech.com
+              </a>
+            </div>
             <div className="pt-3 mt-1 border-t text-center space-y-1">
               <p className="text-sm text-muted-foreground">
                 TalkEasi is a product of NovaDela Technologies
