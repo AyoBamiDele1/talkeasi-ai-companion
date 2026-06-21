@@ -530,9 +530,13 @@ export class RealtimeChat {
     const encodedAudio = encodeAudioForAPI(audioData);
     this.ws.send(JSON.stringify({
       type: 'input_audio_buffer.append',
-      audio: encodedAudio
+      audio: encodedAudio,
+      // Explicit per-frame MIME metadata so the server forwards Google's exact
+      // required format (raw 16-bit PCM @ 16kHz) instead of assuming it.
+      mimeType: GEMINI_INPUT_MIME
     }));
   }
+
 
   private async handleAudioDelta(delta: string) {
     if (!this.audioContext) {
