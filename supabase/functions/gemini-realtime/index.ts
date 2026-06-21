@@ -204,6 +204,16 @@ serve(async (req) => {
   // edge worker was recycled mid-conversation), it sends this back so Gemini resumes
   // the SAME conversation instead of starting fresh.
   let resumptionHandle: string | null = null;
+  // === Continuous-conversation state ===
+  // Once Gemini's upstream session has EVER reached setupComplete we know the key/tier
+  // are valid, so any later close is a recoverable time-limit/recycle event — NOT a
+  // rejection. We then transparently reopen the Gemini WSS (resuming via the handle)
+  // without ever closing the client's socket, so the call continues until the user ends it.
+  let everReady = false;
+  let hasGreeted = false;
+  let geminiReconnectAttempts = 0;
+  const maxGeminiReconnectAttempts = 12;
+  let intentionalGeminiClose = false;
 
   // === Debug telemetry ===
   const handshakeStart = Date.now();
@@ -311,34 +321,37 @@ serve(async (req) => {
     sessionConfigured = true;
   };
 
-  socket.onopen = async () => {
-    console.log("Client WebSocket connected to Gemini endpoint");
-    
+  // Opens (or re-opens) the upstream Gemini Live WSS. On a recoverable drop we call
+  // this again WITHOUT touching the client socket, so the user's call keeps going.
+  const connectToGemini = (isResume: boolean) => {
     const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
     if (!geminiApiKey) {
       socket.send(JSON.stringify({ error: 'Gemini API key not configured' }));
-      socket.close(1011, 'API key missing');
+      if (socket.readyState === WebSocket.OPEN) socket.close(1011, 'API key missing');
       return;
     }
 
-    try {
-      // Connect to Gemini Multimodal Live API using v1beta endpoint
-      console.log(`[WS_HANDSHAKE] 🔌 Initiating WSS connection to Gemini Live API at ${new Date(handshakeStart).toISOString()}`);
-      
-      const geminiWsUrl = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${geminiApiKey}`;
-      
-      console.log("[WS_HANDSHAKE] Gemini WebSocket URL:", geminiWsUrl.replace(geminiApiKey, 'REDACTED'));
-      geminiSocket = new WebSocket(geminiWsUrl);
+    // Reset per-connection state so configureSession runs again on this fresh socket.
+    sessionConfigured = false;
+    geminiSessionReady = false;
 
-      geminiSocket.onopen = () => {
-        handshakeCompletedAt = Date.now();
-        console.log(`[WS_HANDSHAKE] ✅ WSS established in ${handshakeCompletedAt - handshakeStart}ms (readyState=${geminiSocket?.readyState})`);
+    console.log(`[WS_HANDSHAKE] 🔌 ${isResume ? 'RE-' : ''}Initiating WSS connection to Gemini Live API (resume=${isResume}, handle=${resumptionHandle ? 'yes' : 'no'})`);
+
+    const geminiWsUrl = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${geminiApiKey}`;
+    console.log("[WS_HANDSHAKE] Gemini WebSocket URL:", geminiWsUrl.replace(geminiApiKey, 'REDACTED'));
+    geminiSocket = new WebSocket(geminiWsUrl);
+
+    geminiSocket.onopen = () => {
+      handshakeCompletedAt = Date.now();
+      console.log(`[WS_HANDSHAKE] ✅ WSS established in ${handshakeCompletedAt - handshakeStart}ms (readyState=${geminiSocket?.readyState})`);
+      if (!isResume) {
         socket.send(JSON.stringify({ type: 'connection_established', provider: 'gemini' }));
-        
-        if (lessonContext) {
-          configureSession();
-        }
-      };
+      }
+      if (lessonContext) {
+        configureSession();
+      }
+    };
+
 
       geminiSocket.onmessage = async (event) => {
         try {
@@ -349,6 +362,10 @@ serve(async (req) => {
           if (data.setupComplete) {
             setupCompletedAt = Date.now();
             geminiSessionReady = true;
+            everReady = true;
+            // A successful (re)connect proves the key/tier are valid and clears the
+            // recoverable-reconnect counter so the next time-limit drop can resume again.
+            geminiReconnectAttempts = 0;
             console.log(`[WS_HANDSHAKE] ✅ Gemini setup complete in ${setupCompletedAt - handshakeStart}ms total — session ready for audio streaming`);
             socket.send(JSON.stringify({ type: 'session.created', provider: 'gemini' }));
 
@@ -357,14 +374,10 @@ serve(async (req) => {
             // to greet "when the user first speaks"), so the session stays silent and the
             // user thinks "it's not talking". We nudge Gemini with a hidden user turn so it
             // generates the spoken opening greeting immediately.
-            // PROACTIVE GREETING: Nova greets first instead of waiting for the user.
-            // Without this, both sides wait for each other (the system prompt tells Nova
-            // to greet "when the user first speaks"), so the session stays silent and the
-            // user thinks "it's not talking". We nudge Gemini with a hidden user turn so it
-            // generates the spoken opening greeting immediately.
-            // SKIP on a resumed session — the conversation is already in progress and we
-            // don't want Nova to re-introduce herself after a transparent reconnect.
-            if (!resumptionHandle && geminiSocket && geminiSocket.readyState === WebSocket.OPEN) {
+            // SKIP on a resumed session OR after we've already greeted once — the
+            // conversation is already in progress and we don't want Nova to re-introduce
+            // herself after a transparent reconnect.
+            if (!resumptionHandle && !hasGreeted && geminiSocket && geminiSocket.readyState === WebSocket.OPEN) {
               const greetingTrigger = {
                 clientContent: {
                   turns: [{
@@ -376,11 +389,13 @@ serve(async (req) => {
               };
               console.log("[GREETING] 👋 Triggering Nova's proactive opening greeting");
               geminiSocket.send(JSON.stringify(greetingTrigger));
-            } else if (resumptionHandle) {
-              console.log("[RESUME] ↩️ Resumed session — skipping greeting, conversation continues");
+              hasGreeted = true;
+            } else {
+              console.log("[RESUME] ↩️ Resumed/continuing session — skipping greeting, conversation continues");
             }
             return;
           }
+
 
           // Gemini periodically issues a fresh resumption handle. Cache it and push it
           // to the client so a future reconnect can resume this exact conversation.
@@ -526,9 +541,43 @@ serve(async (req) => {
 
       geminiSocket.onclose = (event) => {
         const uptimeSec = ((Date.now() - handshakeStart) / 1000).toFixed(1);
-        console.log(`[WS_HANDSHAKE] 🔌 Gemini WSS closed (code=${event.code}, reason="${event.reason}", uptime=${uptimeSec}s)`);
+        const thisConnReady = geminiSessionReady;
+        geminiSessionReady = false;
+        console.log(`[WS_HANDSHAKE] 🔌 Gemini WSS closed (code=${event.code}, reason="${event.reason}", uptime=${uptimeSec}s, everReady=${everReady})`);
 
-        // Surface likely root cause for rejection codes
+        // The client (or worker) is going away — don't try to revive the upstream.
+        if (intentionalGeminiClose || socket.readyState !== WebSocket.OPEN) {
+          logAudioStats(true);
+          return;
+        }
+
+        // RECOVERABLE DROP: the session worked at least once and Google didn't reject
+        // us with a hard policy code (1008). This is almost always Gemini's per-session
+        // time limit or a transient blip. Transparently reopen the Gemini WSS and resume
+        // the SAME conversation via the cached handle — the client never notices.
+        const isHardReject = !everReady || event.code === 1008;
+        if (!isHardReject && geminiReconnectAttempts < maxGeminiReconnectAttempts) {
+          // If THIS attempt never reached setupComplete, the resumption handle may be
+          // stale/expired — drop it so the retry starts a fresh (still greeting-free)
+          // session rather than looping on a bad handle.
+          if (!thisConnReady) {
+            console.log('[GEMINI_RESUME] last attempt never became ready — clearing stale handle');
+            resumptionHandle = null;
+          }
+          geminiReconnectAttempts++;
+          const backoffMs = Math.min(300 * geminiReconnectAttempts, 2000);
+          console.log(`[GEMINI_RESUME] ♻️ recoverable close — reconnecting attempt ${geminiReconnectAttempts}/${maxGeminiReconnectAttempts} in ${backoffMs}ms`);
+          // Keep the client informed (non-terminal) so the UI can stay calm/active.
+          socket.send(JSON.stringify({ type: 'reconnecting', attempt: geminiReconnectAttempts }));
+          setTimeout(() => {
+            if (!intentionalGeminiClose && socket.readyState === WebSocket.OPEN) {
+              connectToGemini(true);
+            }
+          }, backoffMs);
+          return;
+        }
+
+        // HARD REJECTION (never set up, policy close, or retries exhausted): surface it.
         if (event.code === 1008 || event.code === 1011 || event.code === 1006) {
           console.error(`[GEMINI_REJECTED] ❌ Google closed the WSS with code ${event.code}. Reason from Google: "${event.reason || '(empty — typical for tier/billing rejection)'}"`);
           console.error(`[GEMINI_REJECTED] Likely causes:
@@ -552,17 +601,23 @@ serve(async (req) => {
           setTimeout(() => socket.close(1011, 'Gemini session closed'), 100);
         }
       };
+  };
 
+  socket.onopen = () => {
+    console.log("Client WebSocket connected to Gemini endpoint");
+    try {
+      connectToGemini(false);
     } catch (error) {
       console.error("Error setting up Gemini connection:", error);
-      socket.send(JSON.stringify({ 
-        type: 'error', 
+      socket.send(JSON.stringify({
+        type: 'error',
         error: `Gemini setup error: ${error.message}`,
-        fallback: true 
+        fallback: true
       }));
       socket.close(1011, 'Setup error');
     }
   };
+
 
   socket.onmessage = (event) => {
     let messageType = null;
@@ -679,6 +734,7 @@ serve(async (req) => {
 
   socket.onclose = () => {
     console.log("Client WebSocket closed");
+    intentionalGeminiClose = true;
     if (geminiSocket) {
       geminiSocket.close();
     }
@@ -686,6 +742,7 @@ serve(async (req) => {
 
   socket.onerror = (error) => {
     console.error("Client WebSocket error:", error);
+    intentionalGeminiClose = true;
     if (geminiSocket) {
       geminiSocket.close();
     }
