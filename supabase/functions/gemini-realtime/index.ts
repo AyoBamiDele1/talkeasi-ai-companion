@@ -734,6 +734,7 @@ serve(async (req) => {
 
   socket.onclose = () => {
     console.log("Client WebSocket closed");
+    intentionalGeminiClose = true;
     if (geminiSocket) {
       geminiSocket.close();
     }
@@ -741,6 +742,7 @@ serve(async (req) => {
 
   socket.onerror = (error) => {
     console.error("Client WebSocket error:", error);
+    intentionalGeminiClose = true;
     if (geminiSocket) {
       geminiSocket.close();
     }
