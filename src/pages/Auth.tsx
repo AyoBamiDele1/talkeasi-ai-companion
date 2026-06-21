@@ -28,10 +28,27 @@ export default function Auth() {
   useEffect(() => {
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const type = hashParams.get('type');
+    const errorDescription = hashParams.get('error_description');
+
+    if (searchParams.get('confirmed') === 'true' && !errorDescription) {
+      toast({
+        title: "Email confirmed",
+        description: "You can now sign in to TalkEasi.",
+      });
+    }
+
+    if (errorDescription) {
+      toast({
+        title: "Confirmation link problem",
+        description: decodeURIComponent(errorDescription.replace(/\+/g, ' ')),
+        variant: "destructive"
+      });
+    }
+
     if (type === 'recovery') {
       setIsRecoveryMode(true);
     }
-  }, []);
+  }, [searchParams, toast]);
 
   // Redirect if already authenticated (unless in recovery mode)
   if (user && !loading && !isRecoveryMode) {
@@ -49,9 +66,21 @@ export default function Auth() {
     const { error } = await signIn(email, password);
     
     if (error) {
+      if (error.message?.toLowerCase().includes('email not confirmed')) {
+        await supabase.auth.resend({
+          type: 'signup',
+          email,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth?mode=signin&confirmed=true`,
+          },
+        });
+      }
+
       toast({
         title: "Sign in failed",
-        description: error.message,
+        description: error.message?.toLowerCase().includes('email not confirmed')
+          ? "Your email is not confirmed yet. We've sent you a fresh confirmation link. Please use the newest email."
+          : error.message,
         variant: "destructive"
       });
     }
