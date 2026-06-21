@@ -541,9 +541,43 @@ serve(async (req) => {
 
       geminiSocket.onclose = (event) => {
         const uptimeSec = ((Date.now() - handshakeStart) / 1000).toFixed(1);
-        console.log(`[WS_HANDSHAKE] 🔌 Gemini WSS closed (code=${event.code}, reason="${event.reason}", uptime=${uptimeSec}s)`);
+        const thisConnReady = geminiSessionReady;
+        geminiSessionReady = false;
+        console.log(`[WS_HANDSHAKE] 🔌 Gemini WSS closed (code=${event.code}, reason="${event.reason}", uptime=${uptimeSec}s, everReady=${everReady})`);
 
-        // Surface likely root cause for rejection codes
+        // The client (or worker) is going away — don't try to revive the upstream.
+        if (intentionalGeminiClose || socket.readyState !== WebSocket.OPEN) {
+          logAudioStats(true);
+          return;
+        }
+
+        // RECOVERABLE DROP: the session worked at least once and Google didn't reject
+        // us with a hard policy code (1008). This is almost always Gemini's per-session
+        // time limit or a transient blip. Transparently reopen the Gemini WSS and resume
+        // the SAME conversation via the cached handle — the client never notices.
+        const isHardReject = !everReady || event.code === 1008;
+        if (!isHardReject && geminiReconnectAttempts < maxGeminiReconnectAttempts) {
+          // If THIS attempt never reached setupComplete, the resumption handle may be
+          // stale/expired — drop it so the retry starts a fresh (still greeting-free)
+          // session rather than looping on a bad handle.
+          if (!thisConnReady) {
+            console.log('[GEMINI_RESUME] last attempt never became ready — clearing stale handle');
+            resumptionHandle = null;
+          }
+          geminiReconnectAttempts++;
+          const backoffMs = Math.min(300 * geminiReconnectAttempts, 2000);
+          console.log(`[GEMINI_RESUME] ♻️ recoverable close — reconnecting attempt ${geminiReconnectAttempts}/${maxGeminiReconnectAttempts} in ${backoffMs}ms`);
+          // Keep the client informed (non-terminal) so the UI can stay calm/active.
+          socket.send(JSON.stringify({ type: 'reconnecting', attempt: geminiReconnectAttempts }));
+          setTimeout(() => {
+            if (!intentionalGeminiClose && socket.readyState === WebSocket.OPEN) {
+              connectToGemini(true);
+            }
+          }, backoffMs);
+          return;
+        }
+
+        // HARD REJECTION (never set up, policy close, or retries exhausted): surface it.
         if (event.code === 1008 || event.code === 1011 || event.code === 1006) {
           console.error(`[GEMINI_REJECTED] ❌ Google closed the WSS with code ${event.code}. Reason from Google: "${event.reason || '(empty — typical for tier/billing rejection)'}"`);
           console.error(`[GEMINI_REJECTED] Likely causes:
@@ -567,17 +601,23 @@ serve(async (req) => {
           setTimeout(() => socket.close(1011, 'Gemini session closed'), 100);
         }
       };
+  };
 
+  socket.onopen = () => {
+    console.log("Client WebSocket connected to Gemini endpoint");
+    try {
+      connectToGemini(false);
     } catch (error) {
       console.error("Error setting up Gemini connection:", error);
-      socket.send(JSON.stringify({ 
-        type: 'error', 
+      socket.send(JSON.stringify({
+        type: 'error',
         error: `Gemini setup error: ${error.message}`,
-        fallback: true 
+        fallback: true
       }));
       socket.close(1011, 'Setup error');
     }
   };
+
 
   socket.onmessage = (event) => {
     let messageType = null;
