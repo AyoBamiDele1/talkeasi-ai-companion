@@ -204,6 +204,16 @@ serve(async (req) => {
   // edge worker was recycled mid-conversation), it sends this back so Gemini resumes
   // the SAME conversation instead of starting fresh.
   let resumptionHandle: string | null = null;
+  // === Continuous-conversation state ===
+  // Once Gemini's upstream session has EVER reached setupComplete we know the key/tier
+  // are valid, so any later close is a recoverable time-limit/recycle event — NOT a
+  // rejection. We then transparently reopen the Gemini WSS (resuming via the handle)
+  // without ever closing the client's socket, so the call continues until the user ends it.
+  let everReady = false;
+  let hasGreeted = false;
+  let geminiReconnectAttempts = 0;
+  const maxGeminiReconnectAttempts = 12;
+  let intentionalGeminiClose = false;
 
   // === Debug telemetry ===
   const handshakeStart = Date.now();
