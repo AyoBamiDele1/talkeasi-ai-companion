@@ -50,11 +50,11 @@ serve(async (req) => {
       // Map actual Stripe price IDs to credit amounts
       const priceToCredits: Record<string, number> = {
         // Credit packages
-        "price_1SWMK92dz9WA913sD8RjAHqP": 50,   // 50 credits
-        "price_1SWMKP2dz9WA913sbt0ftTUf": 100,  // 100 credits
-        "price_1SWMKe2dz9WA913sV9VkYNyE": 200,  // 200 credits
-        // Pro subscription (600 credits/month)
-        "price_1SWMKu2dz9WA913sJSKAHETl": 600,  // Pro Plan
+        "price_1Tkkwg2dz9WA913sFdlN2QlO": 60,    // Snack Pack
+        "price_1Tkkx02dz9WA913st6y7nD1W": 200,   // Buddy Pack
+        "price_1TkkxO2dz9WA913sHcx7fygk": 500,   // Bestie Pack
+        // Super Fan subscription (1000 credits/month)
+        "price_1Tkkxq2dz9WA913sEiOZk06h": 1000,  // Super Fan Plan
       };
 
       const credits = priceToCredits[priceId] || 0;
