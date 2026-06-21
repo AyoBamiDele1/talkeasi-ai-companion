@@ -12,6 +12,7 @@ type VerifyState = "verifying" | "success" | "error" | "idle";
 const PaymentSuccess = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [params] = useSearchParams();
   const [state, setState] = useState<VerifyState>("idle");
   const [creditsAdded, setCreditsAdded] = useState<number | null>(null);
@@ -21,9 +22,7 @@ const PaymentSuccess = () => {
 
   useEffect(() => {
     if (ranRef.current) return;
-    ranRef.current = true;
 
-    const provider = params.get("provider");
     const reference = params.get("reference") || params.get("trxref");
 
     const verifyPaystack = async (ref: string) => {
@@ -69,15 +68,49 @@ const PaymentSuccess = () => {
       setState("error");
     };
 
+    const fetchBalance = async (userId: string): Promise<number | null> => {
+      const { data, error } = await supabase
+        .from("user_credits")
+        .select("balance")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (error || !data) return null;
+      return data.balance as number;
+    };
+
+    // Stripe returns to /payment-success with no reference. The credits are added
+    // asynchronously by the Stripe webhook, so poll the balance until it increases.
+    const verifyStripe = async (userId: string) => {
+      setState("verifying");
+      const baseline = (await fetchBalance(userId)) ?? 0;
+      for (let attempt = 1; attempt <= 10; attempt++) {
+        await new Promise((r) => setTimeout(r, 3000));
+        const current = await fetchBalance(userId);
+        if (current !== null && current > baseline) {
+          setCreditsAdded(current - baseline);
+          setNewBalance(current);
+          setState("success");
+          toast({
+            title: "Credits added!",
+            description: `${current - baseline} credits are now in your account.`,
+          });
+          return;
+        }
+      }
+      // Webhook may still be processing — show success but advise a refresh if needed.
+      setState("success");
+    };
+
     // Paystack sometimes strips our query params and only returns ?reference= or ?trxref=
     if (reference) {
+      ranRef.current = true;
       verifyPaystack(reference);
-    } else {
-      setState("success");
-      const timer = setTimeout(() => navigate("/profile"), 8000);
-      return () => clearTimeout(timer);
+    } else if (user) {
+      ranRef.current = true;
+      verifyStripe(user.id);
     }
-  }, [params, navigate, toast]);
+    // If no reference and user not loaded yet, wait for the next effect run.
+  }, [params, navigate, toast, user]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-primary/10 to-background p-6">
