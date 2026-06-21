@@ -259,6 +259,11 @@ class AudioStreamPlayer {
     this.nextStartTime = 0;
   }
 
+  /** True while there is audio scheduled/playing for the current turn. */
+  isPlaying(): boolean {
+    return this.scheduledSources.size > 0 && this.nextStartTime > this.audioContext.currentTime;
+  }
+
   /**
    * Hard stop for barge-in / interruption: kill all scheduled buffers immediately.
    */
