@@ -1,6 +1,8 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
+import NovaOrb from "@/components/NovaOrb";
+
 
 interface MilestoneInfo {
   type: string;
