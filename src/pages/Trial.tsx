@@ -72,10 +72,10 @@ const Trial = () => {
     // This will trigger the forceEnd effect in RealtimeVoiceInterface
     setShowModal(true);
     
-    // Show modal for 10 seconds then auto-redirect
+    // Show modal for 15 seconds then auto-redirect
     setTimeout(() => {
       navigate('/auth?mode=signup');
-    }, 10000);
+    }, 15000);
   };
 
   const handleConversationEnd = () => {
