@@ -58,34 +58,42 @@ export default function Auth() {
   const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     const formData = new FormData(e.currentTarget);
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
 
-    const { error } = await signIn(email, password);
-    
-    if (error) {
-      if (error.message?.toLowerCase().includes('email not confirmed')) {
-        await supabase.auth.resend({
-          type: 'signup',
-          email,
-          options: {
-            emailRedirectTo: `${window.location.origin}/auth?mode=signin&confirmed=true`,
-          },
+    try {
+      const { error } = await signIn(email, password);
+
+      if (error) {
+        if (error.message?.toLowerCase().includes('email not confirmed')) {
+          await supabase.auth.resend({
+            type: 'signup',
+            email,
+            options: {
+              emailRedirectTo: `${window.location.origin}/auth?mode=signin&confirmed=true`,
+            },
+          });
+        }
+
+        toast({
+          title: "Sign in failed",
+          description: error.message?.toLowerCase().includes('email not confirmed')
+            ? "Your email is not confirmed yet. We've sent you a fresh confirmation link. Please use the newest email."
+            : error.message,
+          variant: "destructive"
         });
       }
-
+    } catch (err: any) {
       toast({
         title: "Sign in failed",
-        description: error.message?.toLowerCase().includes('email not confirmed')
-          ? "Your email is not confirmed yet. We've sent you a fresh confirmation link. Please use the newest email."
-          : error.message,
+        description: err?.message || "Something went wrong. Please check your connection and try again.",
         variant: "destructive"
       });
+    } finally {
+      setIsLoading(false);
     }
-    
-    setIsLoading(false);
   };
 
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
