@@ -128,6 +128,18 @@ const ProfileHelpSupport = ({
               <span className="text-muted-foreground">Platform</span>
               <span>Web App</span>
             </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Developer</span>
+              <span>NovaDela Tech</span>
+            </div>
+            <div className="pt-3 mt-1 border-t text-center space-y-1">
+              <p className="text-sm text-muted-foreground">
+                TalkEasi is a product of NovaDela Tech
+              </p>
+              <p className="text-xs text-muted-foreground/80">
+                © 2026 NovaDela Tech. All rights reserved.
+              </p>
+            </div>
           </CardContent>
         </Card>
 
