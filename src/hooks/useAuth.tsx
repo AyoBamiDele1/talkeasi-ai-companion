@@ -69,13 +69,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signIn = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
-    
-    return { error };
+    // Safeguard against the Supabase client occasionally hanging on mobile
+    // (navigator.locks deadlock in PWA/standalone mode). If sign-in does not
+    // settle in time, reject so the UI can recover instead of spinning forever.
+    const timeout = new Promise<{ error: any }>((_, reject) =>
+      setTimeout(
+        () => reject(new Error('Sign in timed out. Please check your connection and try again.')),
+        20000
+      )
+    );
+
+    const attempt = supabase.auth
+      .signInWithPassword({ email, password })
+      .then(({ error }) => ({ error }));
+
+    return Promise.race([attempt, timeout]);
   };
+
 
   const signOut = async () => {
     await supabase.auth.signOut();
