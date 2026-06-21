@@ -621,12 +621,21 @@ export class RealtimeChat {
         this.prefixAudioChunks.shift();
       }
 
-      this.speechStartChunks = rms >= this.speechStartRms ? this.speechStartChunks + 1 : 0;
+      // While Nova is speaking, require a louder, longer burst to barge in so
+      // background voices/TV can't interrupt her — only deliberate close-up
+      // speech from the user crosses the gate.
+      const novaSpeaking = isNovaSpeaking();
+      const startRms = novaSpeaking ? this.speechStartRms * 1.6 : this.speechStartRms;
+      const startChunks = novaSpeaking
+        ? this.speechStartChunksRequired + 3
+        : this.speechStartChunksRequired;
 
-      if (this.speechStartChunks >= this.speechStartChunksRequired) {
+      this.speechStartChunks = rms >= startRms ? this.speechStartChunks + 1 : 0;
+
+      if (this.speechStartChunks >= startChunks) {
         this.isUserSpeaking = true;
         this.silenceChunks = 0;
-        console.log(`[ClientVAD] speech started rms=${rms.toFixed(4)}`);
+        console.log(`[ClientVAD] speech started rms=${rms.toFixed(4)} (novaSpeaking=${novaSpeaking})`);
         this.sendActivityStart();
         for (const chunk of this.prefixAudioChunks) {
           this.sendAudioChunk(chunk);
