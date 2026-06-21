@@ -26,9 +26,9 @@ const ProfileHelpSupport = ({
     icon: Mail,
     title: "Email Support",
     description: "Get help via email",
-    action: "novadelatech1@gmail.com",
+    action: "support@novadelatech.com",
     available: "24/7",
-    onClick: () => window.location.href = "mailto:novadelatech1@gmail.com"
+    onClick: () => window.location.href = "mailto:support@novadelatech.com"
   }, {
     icon: MessageCircle,
     title: "Live Chat (WhatsApp)",
