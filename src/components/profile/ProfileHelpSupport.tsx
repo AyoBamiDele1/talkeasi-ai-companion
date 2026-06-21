@@ -130,14 +130,14 @@ const ProfileHelpSupport = ({
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Developer</span>
-              <span>NovaDela Tech</span>
+              <span>NovaDela Technologies</span>
             </div>
             <div className="pt-3 mt-1 border-t text-center space-y-1">
               <p className="text-sm text-muted-foreground">
-                TalkEasi is a product of NovaDela Tech
+                TalkEasi is a product of NovaDela Technologies
               </p>
               <p className="text-xs text-muted-foreground/80">
-                © 2026 NovaDela Tech. All rights reserved.
+                © 2026 NovaDela Technologies. All rights reserved.
               </p>
             </div>
           </CardContent>
