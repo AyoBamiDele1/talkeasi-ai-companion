@@ -423,7 +423,26 @@ export class RealtimeChat {
 
             if (data.error) {
               console.error('[RealtimeChat] Server error:', data.error);
+              this.serverRejected = true;
               this.onMessage({ type: 'error', error: data.error });
+              return;
+            }
+
+            // Google rejected/closed the upstream session (billing, tier, policy).
+            // Do NOT auto-reconnect — surface it and let the session end.
+            if (data.type === 'gemini_disconnected') {
+              this.serverRejected = true;
+              this.onMessage(data);
+              return;
+            }
+
+            // Cache the latest resumption handle so an unexpected drop can resume
+            // this exact conversation. Not surfaced to the UI.
+            if (data.type === 'session_resumption_update') {
+              if (typeof data.handle === 'string' && data.handle.length > 0) {
+                this.sessionResumptionHandle = data.handle;
+                console.log('[Resume] Cached new session resumption handle');
+              }
               return;
             }
 
@@ -436,12 +455,16 @@ export class RealtimeChat {
                 console.log('Sending lesson context:', this.lessonContextToSend.lessonTitle);
                 this.ws.send(JSON.stringify({
                   type: 'lesson_init',
-                  payload: this.lessonContextToSend
+                  payload: this.lessonContextToSend,
+                  // On a reconnect this restores the in-progress conversation.
+                  resumeHandle: this.sessionResumptionHandle || undefined
                 }));
               }
               
             } else if (data.type === 'session.created') {
               this.isSessionReady = true;
+              // A successful (re)connect clears the retry counter.
+              this.reconnectAttempts = 0;
               this.onMessage(data);
               await this.startAudioRecording();
             } else if (data.type === 'response.audio.delta' || data.type === 'response.output_audio.delta') {
