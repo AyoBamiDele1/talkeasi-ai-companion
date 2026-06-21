@@ -530,8 +530,45 @@ export class RealtimeChat {
     });
   }
 
+  /**
+   * Transparent reconnect after an unexpected WebSocket drop. Opens a fresh
+   * connection that replays the cached lesson context + resumption handle, so
+   * Gemini continues the same conversation. The mic/audio context stay alive.
+   */
+  private async reconnect() {
+    this.reconnectAttempts++;
+    const backoffMs = Math.min(500 * this.reconnectAttempts, 3000);
+    console.log(`[Reconnect] attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts} in ${backoffMs}ms (handle=${this.sessionResumptionHandle ? 'yes' : 'no'})`);
+    this.onMessage({ type: 'reconnecting', attempt: this.reconnectAttempts });
+
+    await new Promise((r) => setTimeout(r, backoffMs));
+
+    if (this.intentionalClose || this.serverRejected) return;
+
+    try {
+      await this.connect();
+      console.log('[Reconnect] ✅ reconnected — session resuming');
+    } catch (err) {
+      console.error('[Reconnect] attempt failed:', err);
+      if (!this.intentionalClose && !this.serverRejected && this.reconnectAttempts < this.maxReconnectAttempts) {
+        this.reconnect();
+      } else {
+        this.onMessage({ type: 'reconnect_failed' });
+        this.cleanup();
+      }
+    }
+  }
+
   private async startAudioRecording() {
     try {
+      // On a transparent reconnect the recorder is already capturing — keep it.
+      if (this.recorder) {
+        console.log('Recorder already active — keeping existing mic stream through reconnect');
+        if (this.audioContext && this.audioContext.state === 'suspended') {
+          await this.audioContext.resume();
+        }
+        return;
+      }
       // Reuse the pre-warmed AudioContext if it was created during the user gesture.
       // Creating it here for the first time on mobile would silently fail to play audio.
       if (!this.audioContext) {
