@@ -282,8 +282,10 @@ serve(async (req) => {
         contextWindowCompression: {
           slidingWindow: {}
         },
-        // Allow the session to be resumed if the WSS is briefly interrupted.
-        sessionResumption: {},
+        // Allow the session to be resumed if the WSS is interrupted. When the client
+        // reconnects with a previously-issued handle, Gemini restores the conversation
+        // state so the user never notices the worker was recycled.
+        sessionResumption: resumptionHandle ? { handle: resumptionHandle } : {},
         tools: lessonContext?.lessonTitle === 'AI Companion' ? [{
           functionDeclarations: [{
             name: "search_web",
