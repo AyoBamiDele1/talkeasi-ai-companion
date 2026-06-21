@@ -321,34 +321,37 @@ serve(async (req) => {
     sessionConfigured = true;
   };
 
-  socket.onopen = async () => {
-    console.log("Client WebSocket connected to Gemini endpoint");
-    
+  // Opens (or re-opens) the upstream Gemini Live WSS. On a recoverable drop we call
+  // this again WITHOUT touching the client socket, so the user's call keeps going.
+  const connectToGemini = (isResume: boolean) => {
     const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
     if (!geminiApiKey) {
       socket.send(JSON.stringify({ error: 'Gemini API key not configured' }));
-      socket.close(1011, 'API key missing');
+      if (socket.readyState === WebSocket.OPEN) socket.close(1011, 'API key missing');
       return;
     }
 
-    try {
-      // Connect to Gemini Multimodal Live API using v1beta endpoint
-      console.log(`[WS_HANDSHAKE] 🔌 Initiating WSS connection to Gemini Live API at ${new Date(handshakeStart).toISOString()}`);
-      
-      const geminiWsUrl = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${geminiApiKey}`;
-      
-      console.log("[WS_HANDSHAKE] Gemini WebSocket URL:", geminiWsUrl.replace(geminiApiKey, 'REDACTED'));
-      geminiSocket = new WebSocket(geminiWsUrl);
+    // Reset per-connection state so configureSession runs again on this fresh socket.
+    sessionConfigured = false;
+    geminiSessionReady = false;
 
-      geminiSocket.onopen = () => {
-        handshakeCompletedAt = Date.now();
-        console.log(`[WS_HANDSHAKE] ✅ WSS established in ${handshakeCompletedAt - handshakeStart}ms (readyState=${geminiSocket?.readyState})`);
+    console.log(`[WS_HANDSHAKE] 🔌 ${isResume ? 'RE-' : ''}Initiating WSS connection to Gemini Live API (resume=${isResume}, handle=${resumptionHandle ? 'yes' : 'no'})`);
+
+    const geminiWsUrl = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${geminiApiKey}`;
+    console.log("[WS_HANDSHAKE] Gemini WebSocket URL:", geminiWsUrl.replace(geminiApiKey, 'REDACTED'));
+    geminiSocket = new WebSocket(geminiWsUrl);
+
+    geminiSocket.onopen = () => {
+      handshakeCompletedAt = Date.now();
+      console.log(`[WS_HANDSHAKE] ✅ WSS established in ${handshakeCompletedAt - handshakeStart}ms (readyState=${geminiSocket?.readyState})`);
+      if (!isResume) {
         socket.send(JSON.stringify({ type: 'connection_established', provider: 'gemini' }));
-        
-        if (lessonContext) {
-          configureSession();
-        }
-      };
+      }
+      if (lessonContext) {
+        configureSession();
+      }
+    };
+
 
       geminiSocket.onmessage = async (event) => {
         try {
