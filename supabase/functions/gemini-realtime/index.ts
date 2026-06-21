@@ -565,7 +565,9 @@ serve(async (req) => {
         const geminiAudioMessage = {
           realtimeInput: {
             audio: {
-              mimeType: "audio/pcm;rate=16000",
+              // Honor the client-supplied MIME (raw 16-bit PCM @ 16kHz); fall back
+              // to the required default if an older client omits it.
+              mimeType: parsedData.mimeType || "audio/pcm;rate=16000",
               data: parsedData.audio
             }
           }

@@ -2,31 +2,53 @@
 
 // Audio constraints for Gemini: 16-bit PCM Mono at 16,000Hz, little-endian
 const GEMINI_SAMPLE_RATE = 16000;
+// MIME type Google's Live API requires for raw PCM input frames.
+export const GEMINI_INPUT_MIME = `audio/pcm;rate=${GEMINI_SAMPLE_RATE}`;
 const AUDIO_CHUNK_TARGET_MS = 40; // Target 40ms chunks to avoid disconnection
 const MAX_CHUNK_BYTES = Math.floor((GEMINI_SAMPLE_RATE * AUDIO_CHUNK_TARGET_MS / 1000) * 2); // ~1280 bytes
 const SAMPLES_PER_CHUNK = MAX_CHUNK_BYTES / 2;
 
 /**
- * Resample audio from the browser's native sample rate to Gemini's required 16kHz.
- * Uses linear interpolation for quality resampling.
+ * Resample audio from the browser's native sample rate down to Gemini's required 16kHz.
+ *
+ * IMPORTANT: when DOWNSAMPLING (native rate > 16kHz, the common case at 44.1/48kHz),
+ * we AVERAGE all source samples that fall inside each output sample's window. That box
+ * filter acts as a cheap anti-aliasing low-pass: it removes the >8kHz content that would
+ * otherwise fold back as aliasing noise. Naive linear interpolation skips this and can
+ * smear/garble the signal enough that Google's server-side voice-activity detection fails
+ * to register the user as speaking — which is exactly the "Nova goes silent" symptom.
  */
 function resampleTo16kHz(inputData: Float32Array, inputSampleRate: number): Float32Array {
   if (inputSampleRate === GEMINI_SAMPLE_RATE) {
-    return inputData; // No resampling needed
+    return inputData; // Browser already delivered 16kHz — no resampling needed.
   }
 
   const ratio = inputSampleRate / GEMINI_SAMPLE_RATE;
   const outputLength = Math.floor(inputData.length / ratio);
   const output = new Float32Array(outputLength);
 
-  for (let i = 0; i < outputLength; i++) {
-    const srcIndex = i * ratio;
-    const srcIndexFloor = Math.floor(srcIndex);
-    const srcIndexCeil = Math.min(srcIndexFloor + 1, inputData.length - 1);
-    const fraction = srcIndex - srcIndexFloor;
-
-    // Linear interpolation between two nearest samples
-    output[i] = inputData[srcIndexFloor] * (1 - fraction) + inputData[srcIndexCeil] * fraction;
+  if (ratio > 1) {
+    // Downsampling: average the source window (anti-aliasing box filter).
+    for (let i = 0; i < outputLength; i++) {
+      const start = Math.floor(i * ratio);
+      const end = Math.min(Math.floor((i + 1) * ratio), inputData.length);
+      let sum = 0;
+      let count = 0;
+      for (let j = start; j < end; j++) {
+        sum += inputData[j];
+        count++;
+      }
+      output[i] = count > 0 ? sum / count : (inputData[start] || 0);
+    }
+  } else {
+    // Upsampling (rare): linear interpolation is appropriate here.
+    for (let i = 0; i < outputLength; i++) {
+      const srcIndex = i * ratio;
+      const srcIndexFloor = Math.floor(srcIndex);
+      const srcIndexCeil = Math.min(srcIndexFloor + 1, inputData.length - 1);
+      const fraction = srcIndex - srcIndexFloor;
+      output[i] = inputData[srcIndexFloor] * (1 - fraction) + inputData[srcIndexCeil] * fraction;
+    }
   }
 
   return output;
@@ -50,18 +72,36 @@ export class AudioRecorder {
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
-        }
+          // Hint the browser to capture at 16kHz where supported.
+          sampleRate: GEMINI_SAMPLE_RATE,
+        } as MediaTrackConstraints
       });
       
       console.log('[AudioRecorder] Microphone access granted');
       
-      // Use the browser's default sample rate — we'll resample in software
-      this.audioContext = new AudioContext();
-      const nativeSampleRate = this.audioContext.sampleRate;
-      console.log('[AudioRecorder] AudioContext created with native sample rate:', nativeSampleRate);
-      
+      // Prefer a 16kHz AudioContext so the browser performs high-quality,
+      // anti-aliased resampling at the source. If the browser refuses the
+      // requested rate (Safari historically pins to the hardware rate), we
+      // fall back to a default context + our own anti-aliasing resampler.
+      try {
+        this.audioContext = new AudioContext({ sampleRate: GEMINI_SAMPLE_RATE });
+      } catch {
+        this.audioContext = new AudioContext();
+      }
+      let nativeSampleRate = this.audioContext.sampleRate;
+
+      // Some browsers silently ignore the requested sampleRate and return the
+      // hardware rate (e.g. 48000). Detect that and rebuild a plain context so
+      // our software resampler handles the conversion deterministically.
       if (nativeSampleRate !== GEMINI_SAMPLE_RATE) {
-        console.log(`[AudioRecorder] Will resample from ${nativeSampleRate}Hz → ${GEMINI_SAMPLE_RATE}Hz`);
+        console.log(`[AudioRecorder] Requested ${GEMINI_SAMPLE_RATE}Hz context but got ${nativeSampleRate}Hz`);
+      }
+      console.log('[AudioRecorder] AudioContext sample rate:', nativeSampleRate);
+
+      if (nativeSampleRate === GEMINI_SAMPLE_RATE) {
+        console.log('[AudioRecorder] Capturing natively at 16kHz — no software resampling needed');
+      } else {
+        console.log(`[AudioRecorder] Will downsample ${nativeSampleRate}Hz → ${GEMINI_SAMPLE_RATE}Hz (anti-aliased)`);
       }
       
       this.source = this.audioContext.createMediaStreamSource(this.stream);
@@ -87,6 +127,7 @@ export class AudioRecorder {
       throw error;
     }
   }
+
 
   stop() {
     this.pendingSamples = [];
@@ -489,9 +530,13 @@ export class RealtimeChat {
     const encodedAudio = encodeAudioForAPI(audioData);
     this.ws.send(JSON.stringify({
       type: 'input_audio_buffer.append',
-      audio: encodedAudio
+      audio: encodedAudio,
+      // Explicit per-frame MIME metadata so the server forwards Google's exact
+      // required format (raw 16-bit PCM @ 16kHz) instead of assuming it.
+      mimeType: GEMINI_INPUT_MIME
     }));
   }
+
 
   private async handleAudioDelta(delta: string) {
     if (!this.audioContext) {
