@@ -581,6 +581,12 @@ serve(async (req) => {
     if (messageType === 'lesson_init') {
       console.log("=== LESSON CONTEXT RECEIVED (Gemini) ===");
       lessonContext = parsedData.payload;
+      // If the client is reconnecting, it sends back the last resumption handle so we
+      // restore the same conversation (and skip the greeting).
+      if (typeof parsedData.resumeHandle === 'string' && parsedData.resumeHandle.length > 0) {
+        resumptionHandle = parsedData.resumeHandle;
+        console.log("[RESUME] ↩️ Client provided resumption handle — resuming session");
+      }
       configureSession();
       return;
     }
