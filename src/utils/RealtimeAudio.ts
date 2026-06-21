@@ -308,6 +308,9 @@ export const interruptAudioStream = () => {
   audioStreamPlayer?.interrupt();
 };
 
+/** True while Nova is actively speaking — used to apply a stricter barge-in gate. */
+export const isNovaSpeaking = (): boolean => audioStreamPlayer?.isPlaying() ?? false;
+
 // Provider type - Gemini only now
 export type AIProvider = 'gemini';
 
