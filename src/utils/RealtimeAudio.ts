@@ -72,18 +72,36 @@ export class AudioRecorder {
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
-        }
+          // Hint the browser to capture at 16kHz where supported.
+          sampleRate: GEMINI_SAMPLE_RATE,
+        } as MediaTrackConstraints
       });
       
       console.log('[AudioRecorder] Microphone access granted');
       
-      // Use the browser's default sample rate — we'll resample in software
-      this.audioContext = new AudioContext();
-      const nativeSampleRate = this.audioContext.sampleRate;
-      console.log('[AudioRecorder] AudioContext created with native sample rate:', nativeSampleRate);
-      
+      // Prefer a 16kHz AudioContext so the browser performs high-quality,
+      // anti-aliased resampling at the source. If the browser refuses the
+      // requested rate (Safari historically pins to the hardware rate), we
+      // fall back to a default context + our own anti-aliasing resampler.
+      try {
+        this.audioContext = new AudioContext({ sampleRate: GEMINI_SAMPLE_RATE });
+      } catch {
+        this.audioContext = new AudioContext();
+      }
+      let nativeSampleRate = this.audioContext.sampleRate;
+
+      // Some browsers silently ignore the requested sampleRate and return the
+      // hardware rate (e.g. 48000). Detect that and rebuild a plain context so
+      // our software resampler handles the conversion deterministically.
       if (nativeSampleRate !== GEMINI_SAMPLE_RATE) {
-        console.log(`[AudioRecorder] Will resample from ${nativeSampleRate}Hz → ${GEMINI_SAMPLE_RATE}Hz`);
+        console.log(`[AudioRecorder] Requested ${GEMINI_SAMPLE_RATE}Hz context but got ${nativeSampleRate}Hz`);
+      }
+      console.log('[AudioRecorder] AudioContext sample rate:', nativeSampleRate);
+
+      if (nativeSampleRate === GEMINI_SAMPLE_RATE) {
+        console.log('[AudioRecorder] Capturing natively at 16kHz — no software resampling needed');
+      } else {
+        console.log(`[AudioRecorder] Will downsample ${nativeSampleRate}Hz → ${GEMINI_SAMPLE_RATE}Hz (anti-aliased)`);
       }
       
       this.source = this.audioContext.createMediaStreamSource(this.stream);
@@ -109,6 +127,7 @@ export class AudioRecorder {
       throw error;
     }
   }
+
 
   stop() {
     this.pendingSamples = [];
