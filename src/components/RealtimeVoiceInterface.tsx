@@ -250,10 +250,14 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   const messageIdCounter = useRef(0);
   const idleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const audioInactivityTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const creditLimitTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastAudioInputRef = useRef<number>(Date.now());
   
   const IDLE_TIMEOUT_MS = lessonContext?.includes('Friendly Chat') || lessonContext?.includes('free_form') ? 600000 : 180000;
   const AUDIO_INACTIVITY_TIMEOUT_MS = 120000; // 2 minutes of no audio input
+
+  // Credits consumed per minute by the active mode (1 credit = 1 minute for Nova Live)
+  const CREDITS_PER_MINUTE = currentMode === 'premium' ? 20 : 1;
 
   // Defensive effect: Prevent hands-free state in trial mode
   useEffect(() => {
@@ -992,6 +996,41 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       }
     };
   }, [isSessionActive, isHandsFreeMode]);
+
+  // Hard cut-off when the user runs out of credits.
+  // Without this, a new user's 5 free credits (5 min) would never stop the call.
+  useEffect(() => {
+    if (creditLimitTimeoutRef.current) {
+      clearTimeout(creditLimitTimeoutRef.current);
+      creditLimitTimeoutRef.current = null;
+    }
+
+    if (!isTrialMode && isSessionActive && sessionStartTime) {
+      // How many minutes the current balance can pay for.
+      const affordableMinutes = Math.floor(userCredits / CREDITS_PER_MINUTE);
+      const budgetMs = Math.max(0, affordableMinutes * 60000);
+      const elapsedMs = Date.now() - sessionStartTime;
+      const remainingMs = budgetMs - elapsedMs;
+
+      creditLimitTimeoutRef.current = setTimeout(() => {
+        console.log('[DEBUG] Credit limit reached - ending session automatically');
+        toast({
+          title: "Out of Credits",
+          description: "You've used all your available credits. Top up to keep talking with Nova.",
+          variant: "destructive",
+        });
+        endSession();
+      }, Math.max(0, remainingMs));
+    }
+
+    return () => {
+      if (creditLimitTimeoutRef.current) {
+        clearTimeout(creditLimitTimeoutRef.current);
+        creditLimitTimeoutRef.current = null;
+      }
+    };
+  }, [isSessionActive, isTrialMode, sessionStartTime, userCredits, CREDITS_PER_MINUTE]);
+
 
   const handleRealtimeMessage = async (message: any) => {
     console.log('Realtime message:', message);
