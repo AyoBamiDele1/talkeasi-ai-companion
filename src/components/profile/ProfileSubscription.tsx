@@ -37,7 +37,7 @@ const CREDIT_PACKAGES: Record<string, {
     name: "Snack Pack",
     credits: 60,
     talkTime: "1 Hour",
-    priceId: "price_1SWMK92dz9WA913sD8RjAHqP",
+    priceId: "price_1Tkkwg2dz9WA913sFdlN2QlO",
     priceNGN: 700,
     priceUSD: 1.99,
     priceGBP: 1.60,
@@ -47,7 +47,7 @@ const CREDIT_PACKAGES: Record<string, {
     name: "Buddy Pack",
     credits: 200,
     talkTime: "3.3 Hours",
-    priceId: "price_1SWMKP2dz9WA913sbt0ftTUf",
+    priceId: "price_1Tkkx02dz9WA913st6y7nD1W",
     priceNGN: 1950,
     priceUSD: 4.99,
     priceGBP: 4.00,
@@ -57,7 +57,7 @@ const CREDIT_PACKAGES: Record<string, {
     name: "Bestie Pack",
     credits: 500,
     talkTime: "8.3 Hours",
-    priceId: "price_1SWMKe2dz9WA913sV9VkYNyE",
+    priceId: "price_1TkkxO2dz9WA913sHcx7fygk",
     priceNGN: 4500,
     priceUSD: 8.99,
     priceGBP: 7.00
@@ -66,8 +66,8 @@ const CREDIT_PACKAGES: Record<string, {
 
 const PRO_PLAN = {
   name: "Super Fan",
-  priceId: "price_1SWMKu2dz9WA913sJSKAHETl",
-  productId: "prod_TTIwjh5O9HkYuf",
+  priceId: "price_1Tkkxq2dz9WA913sEiOZk06h",
+  productId: "prod_UkFSMfMC2Ljdd8",
   credits: 1000,
   talkTime: "16.6 Hours",
   priceNGN: 9500,
