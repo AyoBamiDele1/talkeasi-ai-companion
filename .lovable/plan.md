@@ -1,38 +1,47 @@
-## Goal
+## Problem
 
-Make purchased credits show up immediately and reliably after checkout, for both Stripe and Paystack — no manual page refresh needed.
+The Paystack 700 Naira ("Snack Pack") recharge adds the wrong number of credits. The balance is being built by **string concatenation instead of numeric addition**.
 
-## What's wrong today
+Trace for the affected user (Johnson, balance now `26060`):
+- Pre-purchase balance: `2`
+- After 1st ₦700 recharge: `260` (correct would be `62`)
+- After 2nd ₦700 recharge: `26060` (correct would be `122`)
 
-1. **Realtime is not actually enabled on `user_credits`.** The `useRealtimeCredits` hook subscribes to Postgres changes, but the table is not in the `supabase_realtime` publication and its replica identity is `default`. So balance changes are never pushed to the UI — it only updates on a fresh fetch (page load/navigation).
-2. **Stripe success page has a race.** After Stripe checkout, `/payment-success` gets no reference, shows success, and redirects to `/profile` after 8s relying on a single mount fetch. If the async Stripe webhook hasn't credited the account yet, the user sees a stale balance until they refresh again.
+`2 → 260 → 26060` is digits being glued together, not summed.
 
-Paystack already works (verify-on-return credits the DB and refetches), but it also benefits from live updates.
+## Root cause
+
+In `supabase/functions/gemini-realtime`… no — in `supabase/functions/paystack-verify/index.ts`:
+
+```js
+const credits = metadata.credits || PACKAGE_CREDITS[packageKey] || 0;   // "60" as a STRING
+...
+const newBalance = (currentCredits?.balance || 0) + credits;           // 2 + "60" = "260"
+```
+
+Paystack returns custom `metadata` values as strings, so `metadata.credits` is `"60"`. `number + string` in JS concatenates. That string ("260", then "26060") is written into the `user_credits.balance` integer column.
+
+`paystack-sync` is already safe (it uses `Number(metadata.credits)`); only `paystack-verify` has the bug.
 
 ## Fix
 
-### 1. Enable realtime on `user_credits` (migration)
+### 1. `supabase/functions/paystack-verify/index.ts`
+- Coerce credits to a number: `const credits = Number(metadata.credits) || PACKAGE_CREDITS[packageKey] || 0;`
+- Defensively coerce the existing balance too: `const newBalance = Number(currentCredits?.balance ?? 0) + credits;`
 
-- Set `REPLICA IDENTITY FULL` on `public.user_credits` (so the `user_id` filter matches on UPDATE events).
-- Add `public.user_credits` to the `supabase_realtime` publication.
+This guarantees numeric addition for all future Paystack recharges.
 
-This makes the existing `useRealtimeCredits` subscription fire, so any balance change (purchase, gift, deduction) updates the UI live wherever that hook is used.
-
-### 2. Poll for the credited balance on the Stripe success page
-
-`src/pages/PaymentSuccess.tsx`: when there is no Paystack reference (i.e. a Stripe return), instead of just waiting 8s, capture the balance on entry and poll `user_credits` every ~3s for up to ~30s until the balance increases (webhook landed). Show "confirming…" until then, then show the updated balance. Keeps a graceful fallback message if it never lands.
-
-### 3. Use the live balance consistently (small)
-
-Ensure the credit displays that matter after purchase (Profile balance) reflect the live value. Profile already refetches on mount and after Paystack verify; with realtime enabled it will also update live. No business-logic changes.
+### 2. Correct the affected balance (data fix)
+Johnson's two ₦700 purchases are legitimate (60 + 60). Correct balance = pre-purchase `2` + `120` = **122**.
+- Update `user_credits.balance` to `122` for user `e5fc942a-b241-4c32-9938-9311eaec230c`.
+- Insert an `adjustment` row in `credit_transactions` recording the correction (from 26060 to 122) for an audit trail.
 
 ## Validation
 
-- Confirm via DB that `user_credits` is in `supabase_realtime` and replica identity is `full`.
-- Test a Paystack purchase: balance updates on return without manual refresh.
-- Test a Stripe purchase: success page polls and shows the new balance once the webhook lands; confirm the live subscription pushes the update.
+- After the edge function redeploys, do a test ₦700 recharge and confirm the balance increases by exactly 60 (not concatenated), and `credit_transactions.balance_after` is the correct sum.
+- Confirm the corrected balance shows `122` on the Credits & Subscription screen.
 
 ## Notes
 
-- No changes to pricing, credit amounts, or the deduction logic.
-- The Stripe path still depends on the `process-payment-webhook` endpoint being registered in the Stripe dashboard (the `STRIPE_WEBHOOK_SECRET` secret is present, which indicates it is); polling simply removes the perceived delay.
+- No pricing, package, or UI changes — packages remain Snack 60 / Buddy 200 / Bestie 500.
+- The realtime balance updates added earlier will reflect the corrected value automatically once it changes.

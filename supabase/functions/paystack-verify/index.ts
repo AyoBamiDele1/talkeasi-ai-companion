@@ -60,7 +60,7 @@ serve(async (req) => {
     const metadata = txData.metadata || {};
     const userId = metadata.user_id;
     const packageKey = metadata.package_key || (metadata.is_subscription ? "pro" : null);
-    const credits = metadata.credits || PACKAGE_CREDITS[packageKey] || 0;
+    const credits = Number(metadata.credits) || PACKAGE_CREDITS[packageKey] || 0;
     const isSubscription = metadata.is_subscription || false;
 
     if (!userId) {
@@ -118,7 +118,7 @@ serve(async (req) => {
       .eq("user_id", userId)
       .single();
 
-    const newBalance = (currentCredits?.balance || 0) + credits;
+    const newBalance = Number(currentCredits?.balance ?? 0) + credits;
 
     // Update user credits
     const { error: updateError } = await supabaseAdmin
