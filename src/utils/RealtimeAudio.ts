@@ -328,11 +328,16 @@ export class RealtimeChat {
   private speechStartChunks = 0;
   private silenceChunks = 0;
   private prefixAudioChunks: Float32Array[] = [];
-  private readonly speechStartRms = 0.008;
-  private readonly speechEndRms = 0.004;
-  private readonly speechStartChunksRequired = 2;
+  // VAD tuning: thresholds are deliberately set so only the primary (close,
+  // louder) speaker triggers a turn. Distant background voices/TV typically sit
+  // well below ~0.015 RMS at the mic, so raising the start gate plus requiring a
+  // longer sustained burst stops Nova from reacting to ambient chatter and
+  // interrupting herself.
+  private readonly speechStartRms = 0.018;
+  private readonly speechEndRms = 0.009;
+  private readonly speechStartChunksRequired = 5;
   private readonly silenceChunksToEnd = 18;
-  private readonly prefixChunksToKeep = 4;
+  private readonly prefixChunksToKeep = 5;
 
   constructor(
     private onMessage: (message: any) => void,
