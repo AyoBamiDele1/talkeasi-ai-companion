@@ -145,11 +145,14 @@ serve(async (req) => {
         throw new Error("Invalid gift code format");
       }
 
+      // Normalize to lowercase since gift codes are stored lowercase (case-insensitive match)
+      const normalizedGiftCode = gift_code.trim().toLowerCase();
+
       // Find the gift
       const { data: gift, error: giftError } = await supabaseAdmin
         .from('credit_gifts')
         .select('*')
-        .eq('gift_code', gift_code)
+        .eq('gift_code', normalizedGiftCode)
         .single();
 
       if (giftError || !gift) {
