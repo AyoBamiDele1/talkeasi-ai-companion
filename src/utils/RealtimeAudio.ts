@@ -320,8 +320,8 @@ export class RealtimeChat {
   private speechStartChunks = 0;
   private silenceChunks = 0;
   private prefixAudioChunks: Float32Array[] = [];
-  private readonly speechStartRms = 0.012;
-  private readonly speechEndRms = 0.006;
+  private readonly speechStartRms = 0.008;
+  private readonly speechEndRms = 0.004;
   private readonly speechStartChunksRequired = 2;
   private readonly silenceChunksToEnd = 18;
   private readonly prefixChunksToKeep = 4;
@@ -515,12 +515,62 @@ export class RealtimeChat {
       return;
     }
 
-    // Stream ALL mic audio continuously to Gemini. Turn-taking (when the user
-    // starts/stops speaking) is handled server-side by Gemini's automatic
-    // activity detection. The previous client-side RMS gate (speechStartRms)
-    // never tripped, so zero audio was ever sent — that's why Nova didn't
-    // respond to the user's voice.
+    const rms = this.calculateRms(audioData);
+
+    if (!this.isUserSpeaking) {
+      this.prefixAudioChunks.push(audioData);
+      if (this.prefixAudioChunks.length > this.prefixChunksToKeep) {
+        this.prefixAudioChunks.shift();
+      }
+
+      this.speechStartChunks = rms >= this.speechStartRms ? this.speechStartChunks + 1 : 0;
+
+      if (this.speechStartChunks >= this.speechStartChunksRequired) {
+        this.isUserSpeaking = true;
+        this.silenceChunks = 0;
+        console.log(`[ClientVAD] speech started rms=${rms.toFixed(4)}`);
+        this.sendActivityStart();
+        for (const chunk of this.prefixAudioChunks) {
+          this.sendAudioChunk(chunk);
+        }
+        this.prefixAudioChunks = [];
+      }
+      return;
+    }
+
     this.sendAudioChunk(audioData);
+
+    if (rms <= this.speechEndRms) {
+      this.silenceChunks++;
+      if (this.silenceChunks >= this.silenceChunksToEnd) {
+        console.log(`[ClientVAD] speech ended after ${this.silenceChunks} quiet chunks`);
+        this.sendActivityEnd();
+        this.isUserSpeaking = false;
+        this.speechStartChunks = 0;
+        this.silenceChunks = 0;
+        this.prefixAudioChunks = [];
+      }
+    } else {
+      this.silenceChunks = 0;
+    }
+  }
+
+  private calculateRms(audioData: Float32Array): number {
+    let sum = 0;
+    for (let i = 0; i < audioData.length; i++) {
+      sum += audioData[i] * audioData[i];
+    }
+    return Math.sqrt(sum / audioData.length);
+  }
+
+  private sendActivityStart() {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+    this.ws.send(JSON.stringify({ type: 'input_audio_activity.start' }));
+  }
+
+  private sendActivityEnd() {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+    this.ws.send(JSON.stringify({ type: 'input_audio_activity.end' }));
   }
 
 
@@ -584,6 +634,13 @@ export class RealtimeChat {
   private cleanup() {
     console.log('Running cleanup - stopping all audio and closing context');
     this.stopKeepalive();
+    if (this.isUserSpeaking) {
+      this.sendActivityEnd();
+    }
+    this.isUserSpeaking = false;
+    this.speechStartChunks = 0;
+    this.silenceChunks = 0;
+    this.prefixAudioChunks = [];
     
     if (this.recorder) {
       this.recorder.stop();

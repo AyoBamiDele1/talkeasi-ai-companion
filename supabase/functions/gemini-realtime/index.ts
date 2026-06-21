@@ -262,12 +262,15 @@ serve(async (req) => {
         // the user and the issue is turn/VAD; if not, it's an audio/format issue.
         inputAudioTranscription: {},
         outputAudioTranscription: {},
-        // Let Gemini handle voice/turn detection server-side (automatic activity
-        // detection ON). The client streams mic audio continuously; Gemini decides
-        // when the user has started/stopped speaking. Disabling this previously
-        // required a flaky client-side VAD that never fired, so no audio was processed.
+        // Use explicit client-side speech boundaries. Recent sessions show Google
+        // receives the PCM stream but never emits input transcripts after Nova's
+        // greeting, so relying on automatic VAD leaves the user's turn open/silent.
+        // With automatic VAD disabled, the frontend must send activityStart before
+        // voiced PCM and activityEnd after trailing silence.
         realtimeInputConfig: {
-          automaticActivityDetection: {}
+          automaticActivityDetection: {
+            disabled: true
+          }
         },
         // Enable sliding-window context compression so sessions can run far past
         // the default ~1–2 minute hard limit Gemini Live imposes on uncompressed
@@ -583,6 +586,7 @@ serve(async (req) => {
       if (geminiSessionReady && geminiSocket && geminiSocket.readyState === WebSocket.OPEN) {
         console.log('[ACTIVITY_DETECTION] User speech started');
         geminiSocket.send(JSON.stringify({ realtimeInput: { activityStart: {} } }));
+        socket.send(JSON.stringify({ type: 'input_audio_buffer.speech_started' }));
         audioStreamActive = true;
       }
       return;
@@ -592,6 +596,7 @@ serve(async (req) => {
       if (geminiSessionReady && geminiSocket && geminiSocket.readyState === WebSocket.OPEN) {
         console.log('[ACTIVITY_DETECTION] User speech ended — prompting Gemini response');
         geminiSocket.send(JSON.stringify({ realtimeInput: { activityEnd: {} } }));
+        socket.send(JSON.stringify({ type: 'input_audio_buffer.speech_stopped' }));
         audioStreamActive = false;
       }
       return;
