@@ -133,7 +133,7 @@ const ProfileHelpSupport = ({
               <span>NovaDela Technologies</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Support & Enquiries</span>
+              <span className="text-muted-foreground">Support</span>
               <a href="mailto:support@novadelatech.com" className="text-primary hover:underline">
                 support@novadelatech.com
               </a>
