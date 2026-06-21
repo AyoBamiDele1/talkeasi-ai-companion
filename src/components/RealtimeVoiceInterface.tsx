@@ -1005,6 +1005,25 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       resetAudioInactivityTimer();
     }
 
+    // Transparent reconnect: the relay worker was recycled; we're resuming the
+    // same conversation. Keep the session UI active — no need to alarm the user.
+    if (message.type === 'reconnecting') {
+      console.log('[Voice] Reconnecting to keep the conversation going...');
+      return;
+    }
+
+    // Reconnect ultimately failed — end the session cleanly.
+    if (message.type === 'reconnect_failed') {
+      toast({
+        title: 'Connection lost',
+        description: 'The conversation dropped and could not reconnect. Tap to start again.',
+        variant: 'destructive'
+      });
+      endSession();
+      return;
+    }
+
+
     // Surface errors from the voice service
     if (message.type === 'error') {
       console.error('Realtime API error:', message);
