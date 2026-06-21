@@ -1,6 +1,8 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
+import NovaOrb from "@/components/NovaOrb";
+
 
 interface MilestoneInfo {
   type: string;
@@ -144,10 +146,11 @@ const MilestoneCelebrationModal = ({ milestone, onClose, onCelebrated }: Milesto
             {info.message}
           </p>
 
-          <div className="flex items-center justify-center gap-2 mb-6">
-            <span className="text-4xl">💬</span>
+          <div className="flex items-center justify-center gap-3 mb-6">
+            <NovaOrb size="sm" isConnected isActive />
             <span className="text-sm text-muted-foreground">Nova is celebrating with you!</span>
           </div>
+
 
           <Button onClick={handleClose} className="w-full">
             Continue
