@@ -62,7 +62,7 @@ serve(async (req) => {
     const { data: creditData, error: fetchError } = await supabase
       .from('user_credits')
       .select('balance')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .single();
 
     if (fetchError) {
@@ -86,7 +86,7 @@ serve(async (req) => {
     const { error: updateError } = await supabase
       .from('user_credits')
       .update({ balance: newBalance, updated_at: new Date().toISOString() })
-      .eq('user_id', user.id);
+      .eq('user_id', userId);
 
     if (updateError) {
       throw new Error('Failed to update balance');
@@ -103,7 +103,7 @@ serve(async (req) => {
     const { error: txnError } = await supabase
       .from('credit_transactions')
       .insert({
-        user_id: user.id,
+        user_id: userId,
         type: 'usage',
         amount: -creditsToDeduct,
         balance_after: newBalance,
@@ -124,7 +124,7 @@ serve(async (req) => {
       const { data: profile } = await supabase
         .from('profiles')
         .select('first_conversation_at')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .single();
 
       const updates: any = { last_activity_date: today };
@@ -135,15 +135,15 @@ serve(async (req) => {
       await supabase
         .from('profiles')
         .update(updates)
-        .eq('user_id', user.id);
+        .eq('user_id', userId);
 
       // Call the streak calculation function
-      await supabase.rpc('update_user_streaks', { target_user_id: user.id });
-      console.log('Streak tracking updated for user:', user.id);
+      await supabase.rpc('update_user_streaks', { target_user_id: userId });
+      console.log('Streak tracking updated for user:', userId);
 
       // Check milestones
-      await supabase.rpc('check_milestones', { target_user_id: user.id });
-      console.log('Milestones checked for user:', user.id);
+      await supabase.rpc('check_milestones', { target_user_id: userId });
+      console.log('Milestones checked for user:', userId);
     } catch (streakError) {
       console.error('Failed to update streak/milestones:', streakError);
       // Don't fail the entire request if streak update fails
