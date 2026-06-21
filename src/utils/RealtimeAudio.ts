@@ -504,7 +504,24 @@ export class RealtimeChat {
           this.isConnected = false;
           this.isSessionReady = false;
           this.onConnectionStateChange?.(false);
-          this.cleanup();
+          this.stopKeepalive();
+
+          // User ended the call, or Google rejected the session → tear everything down.
+          if (this.intentionalClose || this.serverRejected) {
+            this.cleanup();
+            return;
+          }
+
+          // Unexpected drop (the edge worker gets recycled after ~75s, or a network
+          // blip). Keep the mic + audio context alive and transparently resume the
+          // conversation using the cached resumption handle — the user hears no gap.
+          if (this.reconnectAttempts < this.maxReconnectAttempts) {
+            this.reconnect();
+          } else {
+            console.error('[Reconnect] Max attempts reached — ending session');
+            this.onMessage({ type: 'reconnect_failed' });
+            this.cleanup();
+          }
         };
       } catch (error) {
         console.error('Error creating WebSocket:', error);
