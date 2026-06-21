@@ -43,7 +43,7 @@ const Progress = () => {
           </p>
         </div>
         <div className="flex-1 flex flex-col items-center justify-center text-center">
-          <div className="mb-4"><NovaOrb size="lg" /></div>
+          <div className="mb-4"><NovaOrb size="sm" /></div>
           <p className="text-muted-foreground mb-6">
             Have your first conversation to see your progress here!
           </p>
