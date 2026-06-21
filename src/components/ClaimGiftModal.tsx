@@ -118,7 +118,7 @@ const ClaimGiftModal: React.FC<ClaimGiftModalProps> = ({
                 type="text"
                 placeholder="Enter 12-character code"
                 value={giftCode}
-                onChange={(e) => setGiftCode(e.target.value.toUpperCase())}
+                onChange={(e) => setGiftCode(e.target.value.toLowerCase())}
                 disabled={isLoading}
                 className="font-mono text-center tracking-widest"
                 maxLength={16}
