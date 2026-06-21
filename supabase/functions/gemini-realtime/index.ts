@@ -200,6 +200,10 @@ serve(async (req) => {
   let lessonContext: any = null;
   let audioStreamActive = false;
   let pendingFunctionCalls: Map<string, any> = new Map();
+  // Gemini-issued session resumption handle. When the client reconnects (e.g. the
+  // edge worker was recycled mid-conversation), it sends this back so Gemini resumes
+  // the SAME conversation instead of starting fresh.
+  let resumptionHandle: string | null = null;
 
   // === Debug telemetry ===
   const handshakeStart = Date.now();
