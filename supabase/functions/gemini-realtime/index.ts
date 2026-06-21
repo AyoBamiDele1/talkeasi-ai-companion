@@ -382,6 +382,27 @@ serve(async (req) => {
             return;
           }
 
+          // Gemini periodically issues a fresh resumption handle. Cache it and push it
+          // to the client so a future reconnect can resume this exact conversation.
+          if (data.sessionResumptionUpdate) {
+            const upd = data.sessionResumptionUpdate;
+            if (upd.resumable && upd.newHandle) {
+              resumptionHandle = upd.newHandle;
+              socket.send(JSON.stringify({ type: 'session_resumption_update', handle: upd.newHandle }));
+            }
+            return;
+          }
+
+          // Gemini warns it is about to close the connection (server-side time limit).
+          // Tell the client so it can proactively reconnect with the latest handle.
+          if (data.goAway) {
+            console.log(`[GOAWAY] ⏳ Gemini scheduling disconnect, timeLeft=${JSON.stringify(data.goAway.timeLeft ?? null)}`);
+            socket.send(JSON.stringify({ type: 'gemini_go_away', timeLeft: data.goAway.timeLeft ?? null }));
+            return;
+          }
+
+
+
           // Handle server content (audio, text, function calls)
           if (data.serverContent) {
             const content = data.serverContent;
