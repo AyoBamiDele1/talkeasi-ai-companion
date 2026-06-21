@@ -6,6 +6,21 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Decode the JWT payload to extract the user id (sub) without requiring the
+// auth server's session to still exist. Safe because verify_jwt=true means the
+// gateway has already validated this token's signature before we run.
+function decodeJwtSub(token: string): string | null {
+  try {
+    const part = token.split('.')[1];
+    if (!part) return null;
+    const json = atob(part.replace(/-/g, '+').replace(/_/g, '/'));
+    const payload = JSON.parse(json);
+    return typeof payload?.sub === 'string' ? payload.sub : null;
+  } catch {
+    return null;
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -18,11 +33,15 @@ serve(async (req) => {
     );
 
     // Get user from JWT
-    const authHeader = req.headers.get('Authorization')!;
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    const authHeader = req.headers.get('Authorization') ?? '';
+    const token = authHeader.replace('Bearer ', '').trim();
 
-    if (authError || !user) {
+    // Primary: validate via auth server. Fallback: trust the gateway-verified
+    // JWT's sub claim when the session row no longer exists (session_not_found).
+    const { data: { user } } = await supabase.auth.getUser(token);
+    const userId = user?.id ?? decodeJwtSub(token);
+
+    if (!userId) {
       throw new Error('Unauthorized');
     }
 
