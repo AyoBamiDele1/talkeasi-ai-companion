@@ -250,10 +250,14 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   const messageIdCounter = useRef(0);
   const idleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const audioInactivityTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const creditLimitTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastAudioInputRef = useRef<number>(Date.now());
   
   const IDLE_TIMEOUT_MS = lessonContext?.includes('Friendly Chat') || lessonContext?.includes('free_form') ? 600000 : 180000;
   const AUDIO_INACTIVITY_TIMEOUT_MS = 120000; // 2 minutes of no audio input
+
+  // Credits consumed per minute by the active mode (1 credit = 1 minute for Nova Live)
+  const CREDITS_PER_MINUTE = currentMode === 'premium' ? 20 : 1;
 
   // Defensive effect: Prevent hands-free state in trial mode
   useEffect(() => {
