@@ -26,9 +26,9 @@ const ProfileHelpSupport = ({
     icon: Mail,
     title: "Email Support",
     description: "Get help via email",
-    action: "novadelatech1@gmail.com",
+    action: "support@novadelatech.com",
     available: "24/7",
-    onClick: () => window.location.href = "mailto:novadelatech1@gmail.com"
+    onClick: () => window.location.href = "mailto:support@novadelatech.com"
   }, {
     icon: MessageCircle,
     title: "Live Chat (WhatsApp)",
@@ -131,6 +131,12 @@ const ProfileHelpSupport = ({
             <div className="flex justify-between">
               <span className="text-muted-foreground">Developer</span>
               <span>NovaDela Technologies</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Support & Enquiries</span>
+              <a href="mailto:support@novadelatech.com" className="text-primary hover:underline">
+                support@novadelatech.com
+              </a>
             </div>
             <div className="pt-3 mt-1 border-t text-center space-y-1">
               <p className="text-sm text-muted-foreground">
