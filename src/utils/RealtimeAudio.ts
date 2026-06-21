@@ -314,6 +314,14 @@ export class RealtimeChat {
   private isSessionReady = false;
   private lessonContextToSend: any = null;
   private keepaliveInterval: ReturnType<typeof setInterval> | null = null;
+  // --- Transparent session resumption ---
+  // Gemini issues a resumption handle we cache so we can silently reconnect and
+  // continue the SAME conversation when the edge worker is recycled mid-call.
+  private sessionResumptionHandle: string | null = null;
+  private intentionalClose = false;
+  private serverRejected = false;
+  private reconnectAttempts = 0;
+  private readonly maxReconnectAttempts = 6;
   private onProviderChange?: (provider: AIProvider) => void;
   private onConnectionStateChange?: (isConnected: boolean) => void;
   private isUserSpeaking = false;
