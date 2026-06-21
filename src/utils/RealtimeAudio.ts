@@ -314,6 +314,14 @@ export class RealtimeChat {
   private isSessionReady = false;
   private lessonContextToSend: any = null;
   private keepaliveInterval: ReturnType<typeof setInterval> | null = null;
+  // --- Transparent session resumption ---
+  // Gemini issues a resumption handle we cache so we can silently reconnect and
+  // continue the SAME conversation when the edge worker is recycled mid-call.
+  private sessionResumptionHandle: string | null = null;
+  private intentionalClose = false;
+  private serverRejected = false;
+  private reconnectAttempts = 0;
+  private readonly maxReconnectAttempts = 6;
   private onProviderChange?: (provider: AIProvider) => void;
   private onConnectionStateChange?: (isConnected: boolean) => void;
   private isUserSpeaking = false;
@@ -415,7 +423,26 @@ export class RealtimeChat {
 
             if (data.error) {
               console.error('[RealtimeChat] Server error:', data.error);
+              this.serverRejected = true;
               this.onMessage({ type: 'error', error: data.error });
+              return;
+            }
+
+            // Google rejected/closed the upstream session (billing, tier, policy).
+            // Do NOT auto-reconnect — surface it and let the session end.
+            if (data.type === 'gemini_disconnected') {
+              this.serverRejected = true;
+              this.onMessage(data);
+              return;
+            }
+
+            // Cache the latest resumption handle so an unexpected drop can resume
+            // this exact conversation. Not surfaced to the UI.
+            if (data.type === 'session_resumption_update') {
+              if (typeof data.handle === 'string' && data.handle.length > 0) {
+                this.sessionResumptionHandle = data.handle;
+                console.log('[Resume] Cached new session resumption handle');
+              }
               return;
             }
 
@@ -428,12 +455,16 @@ export class RealtimeChat {
                 console.log('Sending lesson context:', this.lessonContextToSend.lessonTitle);
                 this.ws.send(JSON.stringify({
                   type: 'lesson_init',
-                  payload: this.lessonContextToSend
+                  payload: this.lessonContextToSend,
+                  // On a reconnect this restores the in-progress conversation.
+                  resumeHandle: this.sessionResumptionHandle || undefined
                 }));
               }
               
             } else if (data.type === 'session.created') {
               this.isSessionReady = true;
+              // A successful (re)connect clears the retry counter.
+              this.reconnectAttempts = 0;
               this.onMessage(data);
               await this.startAudioRecording();
             } else if (data.type === 'response.audio.delta' || data.type === 'response.output_audio.delta') {
@@ -473,7 +504,24 @@ export class RealtimeChat {
           this.isConnected = false;
           this.isSessionReady = false;
           this.onConnectionStateChange?.(false);
-          this.cleanup();
+          this.stopKeepalive();
+
+          // User ended the call, or Google rejected the session → tear everything down.
+          if (this.intentionalClose || this.serverRejected) {
+            this.cleanup();
+            return;
+          }
+
+          // Unexpected drop (the edge worker gets recycled after ~75s, or a network
+          // blip). Keep the mic + audio context alive and transparently resume the
+          // conversation using the cached resumption handle — the user hears no gap.
+          if (this.reconnectAttempts < this.maxReconnectAttempts) {
+            this.reconnect();
+          } else {
+            console.error('[Reconnect] Max attempts reached — ending session');
+            this.onMessage({ type: 'reconnect_failed' });
+            this.cleanup();
+          }
         };
       } catch (error) {
         console.error('Error creating WebSocket:', error);
@@ -482,8 +530,45 @@ export class RealtimeChat {
     });
   }
 
+  /**
+   * Transparent reconnect after an unexpected WebSocket drop. Opens a fresh
+   * connection that replays the cached lesson context + resumption handle, so
+   * Gemini continues the same conversation. The mic/audio context stay alive.
+   */
+  private async reconnect() {
+    this.reconnectAttempts++;
+    const backoffMs = Math.min(500 * this.reconnectAttempts, 3000);
+    console.log(`[Reconnect] attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts} in ${backoffMs}ms (handle=${this.sessionResumptionHandle ? 'yes' : 'no'})`);
+    this.onMessage({ type: 'reconnecting', attempt: this.reconnectAttempts });
+
+    await new Promise((r) => setTimeout(r, backoffMs));
+
+    if (this.intentionalClose || this.serverRejected) return;
+
+    try {
+      await this.connect();
+      console.log('[Reconnect] ✅ reconnected — session resuming');
+    } catch (err) {
+      console.error('[Reconnect] attempt failed:', err);
+      if (!this.intentionalClose && !this.serverRejected && this.reconnectAttempts < this.maxReconnectAttempts) {
+        this.reconnect();
+      } else {
+        this.onMessage({ type: 'reconnect_failed' });
+        this.cleanup();
+      }
+    }
+  }
+
   private async startAudioRecording() {
     try {
+      // On a transparent reconnect the recorder is already capturing — keep it.
+      if (this.recorder) {
+        console.log('Recorder already active — keeping existing mic stream through reconnect');
+        if (this.audioContext && this.audioContext.state === 'suspended') {
+          await this.audioContext.resume();
+        }
+        return;
+      }
       // Reuse the pre-warmed AudioContext if it was created during the user gesture.
       // Creating it here for the first time on mobile would silently fail to play audio.
       if (!this.audioContext) {
@@ -662,6 +747,8 @@ export class RealtimeChat {
 
   disconnect() {
     console.log('Disconnecting RealtimeChat and clearing audio queue');
+    // Mark this as user-initiated so onclose does NOT try to auto-reconnect.
+    this.intentionalClose = true;
     this.isConnected = false;
     this.isSessionReady = false;
     

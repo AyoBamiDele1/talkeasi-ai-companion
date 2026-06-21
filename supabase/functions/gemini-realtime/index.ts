@@ -200,6 +200,10 @@ serve(async (req) => {
   let lessonContext: any = null;
   let audioStreamActive = false;
   let pendingFunctionCalls: Map<string, any> = new Map();
+  // Gemini-issued session resumption handle. When the client reconnects (e.g. the
+  // edge worker was recycled mid-conversation), it sends this back so Gemini resumes
+  // the SAME conversation instead of starting fresh.
+  let resumptionHandle: string | null = null;
 
   // === Debug telemetry ===
   const handshakeStart = Date.now();
@@ -278,8 +282,10 @@ serve(async (req) => {
         contextWindowCompression: {
           slidingWindow: {}
         },
-        // Allow the session to be resumed if the WSS is briefly interrupted.
-        sessionResumption: {},
+        // Allow the session to be resumed if the WSS is interrupted. When the client
+        // reconnects with a previously-issued handle, Gemini restores the conversation
+        // state so the user never notices the worker was recycled.
+        sessionResumption: resumptionHandle ? { handle: resumptionHandle } : {},
         tools: lessonContext?.lessonTitle === 'AI Companion' ? [{
           functionDeclarations: [{
             name: "search_web",
@@ -351,7 +357,14 @@ serve(async (req) => {
             // to greet "when the user first speaks"), so the session stays silent and the
             // user thinks "it's not talking". We nudge Gemini with a hidden user turn so it
             // generates the spoken opening greeting immediately.
-            if (geminiSocket && geminiSocket.readyState === WebSocket.OPEN) {
+            // PROACTIVE GREETING: Nova greets first instead of waiting for the user.
+            // Without this, both sides wait for each other (the system prompt tells Nova
+            // to greet "when the user first speaks"), so the session stays silent and the
+            // user thinks "it's not talking". We nudge Gemini with a hidden user turn so it
+            // generates the spoken opening greeting immediately.
+            // SKIP on a resumed session — the conversation is already in progress and we
+            // don't want Nova to re-introduce herself after a transparent reconnect.
+            if (!resumptionHandle && geminiSocket && geminiSocket.readyState === WebSocket.OPEN) {
               const greetingTrigger = {
                 clientContent: {
                   turns: [{
@@ -363,9 +376,32 @@ serve(async (req) => {
               };
               console.log("[GREETING] 👋 Triggering Nova's proactive opening greeting");
               geminiSocket.send(JSON.stringify(greetingTrigger));
+            } else if (resumptionHandle) {
+              console.log("[RESUME] ↩️ Resumed session — skipping greeting, conversation continues");
             }
             return;
           }
+
+          // Gemini periodically issues a fresh resumption handle. Cache it and push it
+          // to the client so a future reconnect can resume this exact conversation.
+          if (data.sessionResumptionUpdate) {
+            const upd = data.sessionResumptionUpdate;
+            if (upd.resumable && upd.newHandle) {
+              resumptionHandle = upd.newHandle;
+              socket.send(JSON.stringify({ type: 'session_resumption_update', handle: upd.newHandle }));
+            }
+            return;
+          }
+
+          // Gemini warns it is about to close the connection (server-side time limit).
+          // Tell the client so it can proactively reconnect with the latest handle.
+          if (data.goAway) {
+            console.log(`[GOAWAY] ⏳ Gemini scheduling disconnect, timeLeft=${JSON.stringify(data.goAway.timeLeft ?? null)}`);
+            socket.send(JSON.stringify({ type: 'gemini_go_away', timeLeft: data.goAway.timeLeft ?? null }));
+            return;
+          }
+
+
 
           // Handle server content (audio, text, function calls)
           if (data.serverContent) {
@@ -545,6 +581,12 @@ serve(async (req) => {
     if (messageType === 'lesson_init') {
       console.log("=== LESSON CONTEXT RECEIVED (Gemini) ===");
       lessonContext = parsedData.payload;
+      // If the client is reconnecting, it sends back the last resumption handle so we
+      // restore the same conversation (and skip the greeting).
+      if (typeof parsedData.resumeHandle === 'string' && parsedData.resumeHandle.length > 0) {
+        resumptionHandle = parsedData.resumeHandle;
+        console.log("[RESUME] ↩️ Client provided resumption handle — resuming session");
+      }
       configureSession();
       return;
     }
