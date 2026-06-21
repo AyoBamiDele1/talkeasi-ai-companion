@@ -359,6 +359,10 @@ serve(async (req) => {
           if (data.setupComplete) {
             setupCompletedAt = Date.now();
             geminiSessionReady = true;
+            everReady = true;
+            // A successful (re)connect proves the key/tier are valid and clears the
+            // recoverable-reconnect counter so the next time-limit drop can resume again.
+            geminiReconnectAttempts = 0;
             console.log(`[WS_HANDSHAKE] ✅ Gemini setup complete in ${setupCompletedAt - handshakeStart}ms total — session ready for audio streaming`);
             socket.send(JSON.stringify({ type: 'session.created', provider: 'gemini' }));
 
@@ -367,14 +371,10 @@ serve(async (req) => {
             // to greet "when the user first speaks"), so the session stays silent and the
             // user thinks "it's not talking". We nudge Gemini with a hidden user turn so it
             // generates the spoken opening greeting immediately.
-            // PROACTIVE GREETING: Nova greets first instead of waiting for the user.
-            // Without this, both sides wait for each other (the system prompt tells Nova
-            // to greet "when the user first speaks"), so the session stays silent and the
-            // user thinks "it's not talking". We nudge Gemini with a hidden user turn so it
-            // generates the spoken opening greeting immediately.
-            // SKIP on a resumed session — the conversation is already in progress and we
-            // don't want Nova to re-introduce herself after a transparent reconnect.
-            if (!resumptionHandle && geminiSocket && geminiSocket.readyState === WebSocket.OPEN) {
+            // SKIP on a resumed session OR after we've already greeted once — the
+            // conversation is already in progress and we don't want Nova to re-introduce
+            // herself after a transparent reconnect.
+            if (!resumptionHandle && !hasGreeted && geminiSocket && geminiSocket.readyState === WebSocket.OPEN) {
               const greetingTrigger = {
                 clientContent: {
                   turns: [{
@@ -386,11 +386,13 @@ serve(async (req) => {
               };
               console.log("[GREETING] 👋 Triggering Nova's proactive opening greeting");
               geminiSocket.send(JSON.stringify(greetingTrigger));
-            } else if (resumptionHandle) {
-              console.log("[RESUME] ↩️ Resumed session — skipping greeting, conversation continues");
+              hasGreeted = true;
+            } else {
+              console.log("[RESUME] ↩️ Resumed/continuing session — skipping greeting, conversation continues");
             }
             return;
           }
+
 
           // Gemini periodically issues a fresh resumption handle. Cache it and push it
           // to the client so a future reconnect can resume this exact conversation.
