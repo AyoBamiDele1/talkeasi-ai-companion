@@ -257,6 +257,11 @@ serve(async (req) => {
             }
           }
         },
+        // Transcribe both sides. Input transcription is essential for diagnosing
+        // "Nova doesn't respond" — if we see inputTranscription text, Gemini heard
+        // the user and the issue is turn/VAD; if not, it's an audio/format issue.
+        inputAudioTranscription: {},
+        outputAudioTranscription: {},
         // Let Gemini handle voice/turn detection server-side (automatic activity
         // detection ON). The client streams mic audio continuously; Gemini decides
         // when the user has started/stopped speaking. Disabling this previously
@@ -363,6 +368,7 @@ serve(async (req) => {
           if (data.serverContent) {
             const content = data.serverContent;
             if (content.inputTranscription?.text) {
+              console.log(`[TRANSCRIPT] 🎤 User said: "${content.inputTranscription.text}"`);
               socket.send(JSON.stringify({
                 type: 'conversation.item.input_audio_transcription.completed',
                 transcript: content.inputTranscription.text
@@ -370,17 +376,24 @@ serve(async (req) => {
             }
 
             if (content.inputAudioTranscription?.text) {
+              console.log(`[TRANSCRIPT] 🎤 User said: "${content.inputAudioTranscription.text}"`);
               socket.send(JSON.stringify({
                 type: 'conversation.item.input_audio_transcription.completed',
                 transcript: content.inputAudioTranscription.text
               }));
             }
+
+            if (content.outputTranscription?.text) {
+              console.log(`[TRANSCRIPT] 🗣️ Nova said: "${content.outputTranscription.text}"`);
+            }
             
             if (content.generationComplete) {
+              console.log("[TURN] ✅ generationComplete");
               socket.send(JSON.stringify({ type: 'response.output_audio.done' }));
             }
             
             if (content.turnComplete) {
+              console.log("[TURN] ✅ turnComplete");
               socket.send(JSON.stringify({ type: 'response.output_audio_transcript.done' }));
               socket.send(JSON.stringify({ type: 'response.done' }));
             }
