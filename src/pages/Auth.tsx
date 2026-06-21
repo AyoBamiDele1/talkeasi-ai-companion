@@ -115,8 +115,14 @@ export default function Auth() {
       });
     } else {
       toast({
-        title: "Account created!",
-        description: "Please check your email to verify your account.",
+        title: <span className="text-lg font-bold">Account created! 🎉</span>,
+        description: (
+          <span className="text-base leading-relaxed">
+            Please check your email to verify your account.
+          </span>
+        ),
+        duration: 8000,
+        className: "p-6",
       });
     }
     
