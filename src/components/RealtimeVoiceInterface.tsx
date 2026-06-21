@@ -997,6 +997,41 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     };
   }, [isSessionActive, isHandsFreeMode]);
 
+  // Hard cut-off when the user runs out of credits.
+  // Without this, a new user's 5 free credits (5 min) would never stop the call.
+  useEffect(() => {
+    if (creditLimitTimeoutRef.current) {
+      clearTimeout(creditLimitTimeoutRef.current);
+      creditLimitTimeoutRef.current = null;
+    }
+
+    if (!isTrialMode && isSessionActive && sessionStartTime) {
+      // How many minutes the current balance can pay for.
+      const affordableMinutes = Math.floor(userCredits / CREDITS_PER_MINUTE);
+      const budgetMs = Math.max(0, affordableMinutes * 60000);
+      const elapsedMs = Date.now() - sessionStartTime;
+      const remainingMs = budgetMs - elapsedMs;
+
+      creditLimitTimeoutRef.current = setTimeout(() => {
+        console.log('[DEBUG] Credit limit reached - ending session automatically');
+        toast({
+          title: "Out of Credits",
+          description: "You've used all your available credits. Top up to keep talking with Nova.",
+          variant: "destructive",
+        });
+        endSession();
+      }, Math.max(0, remainingMs));
+    }
+
+    return () => {
+      if (creditLimitTimeoutRef.current) {
+        clearTimeout(creditLimitTimeoutRef.current);
+        creditLimitTimeoutRef.current = null;
+      }
+    };
+  }, [isSessionActive, isTrialMode, sessionStartTime, userCredits, CREDITS_PER_MINUTE]);
+
+
   const handleRealtimeMessage = async (message: any) => {
     console.log('Realtime message:', message);
 
