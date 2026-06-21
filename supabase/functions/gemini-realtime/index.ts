@@ -357,7 +357,14 @@ serve(async (req) => {
             // to greet "when the user first speaks"), so the session stays silent and the
             // user thinks "it's not talking". We nudge Gemini with a hidden user turn so it
             // generates the spoken opening greeting immediately.
-            if (geminiSocket && geminiSocket.readyState === WebSocket.OPEN) {
+            // PROACTIVE GREETING: Nova greets first instead of waiting for the user.
+            // Without this, both sides wait for each other (the system prompt tells Nova
+            // to greet "when the user first speaks"), so the session stays silent and the
+            // user thinks "it's not talking". We nudge Gemini with a hidden user turn so it
+            // generates the spoken opening greeting immediately.
+            // SKIP on a resumed session — the conversation is already in progress and we
+            // don't want Nova to re-introduce herself after a transparent reconnect.
+            if (!resumptionHandle && geminiSocket && geminiSocket.readyState === WebSocket.OPEN) {
               const greetingTrigger = {
                 clientContent: {
                   turns: [{
@@ -369,6 +376,8 @@ serve(async (req) => {
               };
               console.log("[GREETING] 👋 Triggering Nova's proactive opening greeting");
               geminiSocket.send(JSON.stringify(greetingTrigger));
+            } else if (resumptionHandle) {
+              console.log("[RESUME] ↩️ Resumed session — skipping greeting, conversation continues");
             }
             return;
           }
