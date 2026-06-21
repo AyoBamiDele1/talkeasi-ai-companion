@@ -747,6 +747,8 @@ export class RealtimeChat {
 
   disconnect() {
     console.log('Disconnecting RealtimeChat and clearing audio queue');
+    // Mark this as user-initiated so onclose does NOT try to auto-reconnect.
+    this.intentionalClose = true;
     this.isConnected = false;
     this.isSessionReady = false;
     
