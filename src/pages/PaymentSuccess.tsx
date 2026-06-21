@@ -5,6 +5,7 @@ import { CheckCircle2, CreditCard, ArrowRight, Loader2, AlertCircle } from "luci
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 type VerifyState = "verifying" | "success" | "error" | "idle";
 
