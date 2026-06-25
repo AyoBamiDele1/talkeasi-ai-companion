@@ -1250,6 +1250,28 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
         {/* Mode Selection */}
         {!isSessionActive && !isTrialMode && (
           <div className="mb-4 space-y-3">
+            {/* Voice selection */}
+            <div className="flex items-center justify-center gap-3">
+              <span className="text-sm text-muted-foreground">Voice</span>
+              <ToggleGroup
+                type="single"
+                value={selectedVoice}
+                onValueChange={(value) => {
+                  if (!value) return;
+                  setSelectedVoice(value);
+                  localStorage.setItem('nova_voice', value);
+                }}
+                className="rounded-full border border-border p-0.5"
+              >
+                <ToggleGroupItem value="Aoede" className="rounded-full px-4 text-sm data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+                  Female
+                </ToggleGroupItem>
+                <ToggleGroupItem value="Charon" className="rounded-full px-4 text-sm data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+                  Male
+                </ToggleGroupItem>
+              </ToggleGroup>
+            </div>
+
             <Button
               size="lg"
               variant="default"
