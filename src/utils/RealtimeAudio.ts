@@ -354,6 +354,7 @@ export class RealtimeChat {
       lessonContent?: any; 
       coveredScenarios?: string[];
       model?: string;
+      voice?: string;
       userMemories?: Array<{ content: string; memory_type: string; importance: number }>;
       userCountry?: string;
       isNigerian?: boolean;

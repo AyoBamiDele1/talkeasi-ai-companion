@@ -12,6 +12,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { FEATURES } from '@/config/features';
 import { useUserLocation } from '@/hooks/useUserLocation';
 import ProcessingIndicator from './ProcessingIndicator';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { RealtimeChat } from '@/utils/RealtimeAudio';
 
 interface ConversationMessage {
@@ -239,6 +240,11 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   const [isAISpeaking, setIsAISpeaking] = useState(false);
   const [currentTranscript, setCurrentTranscript] = useState('');
   const [userMemories, setUserMemories] = useState<Array<{ content: string; memory_type: string; importance: number }>>([]);
+  const [selectedVoice, setSelectedVoice] = useState<string>(() => {
+    if (typeof window === 'undefined') return 'Aoede';
+    return localStorage.getItem('nova_voice') || 'Aoede';
+  });
+  
   
   const audioRecorderRef = useRef<AudioRecorder>(new AudioRecorder());
   const realtimeChatRef = useRef<RealtimeChat | null>(null);
@@ -698,6 +704,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
           lessonContent: lessonContent,
           coveredScenarios: coveredScenarios,
           model: 'gemini-2.0-flash-live-001',
+          voice: selectedVoice,
           userMemories: memories
         },
         undefined,
@@ -766,6 +773,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
           lessonContent: lessonContent,
           coveredScenarios: coveredScenarios,
           model: 'gemini-2.0-flash-live-001',
+          voice: selectedVoice,
           userMemories: memories
         },
         undefined,
@@ -820,7 +828,8 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
           lessonTitle: 'AI Companion',
           lessonContent: lessonContent,
           coveredScenarios: coveredScenarios,
-          model: 'gemini-2.0-flash-live-001'
+          model: 'gemini-2.0-flash-live-001',
+          voice: selectedVoice
         },
         undefined,
         undefined,
@@ -1241,6 +1250,28 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
         {/* Mode Selection */}
         {!isSessionActive && !isTrialMode && (
           <div className="mb-4 space-y-3">
+            {/* Voice selection */}
+            <div className="flex items-center justify-center gap-3">
+              <span className="text-sm text-muted-foreground">Voice</span>
+              <ToggleGroup
+                type="single"
+                value={selectedVoice}
+                onValueChange={(value) => {
+                  if (!value) return;
+                  setSelectedVoice(value);
+                  localStorage.setItem('nova_voice', value);
+                }}
+                className="rounded-full border border-border p-0.5"
+              >
+                <ToggleGroupItem value="Aoede" className="rounded-full px-4 text-sm data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+                  Female
+                </ToggleGroupItem>
+                <ToggleGroupItem value="Charon" className="rounded-full px-4 text-sm data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+                  Male
+                </ToggleGroupItem>
+              </ToggleGroup>
+            </div>
+
             <Button
               size="lg"
               variant="default"

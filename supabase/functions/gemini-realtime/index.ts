@@ -255,6 +255,13 @@ serve(async (req) => {
       ? modelFromEnv.trim()
       : "gemini-3.1-flash-live-preview";
 
+    // Resolve the prebuilt voice. Female = Aoede (default), Male = Charon.
+    // Validate against an allowlist and fall back to Aoede so an unexpected
+    // client value can never break the session setup.
+    const ALLOWED_VOICES = ["Aoede", "Charon"];
+    const requestedVoice = lessonContext?.voice;
+    const voiceName = ALLOWED_VOICES.includes(requestedVoice) ? requestedVoice : "Aoede";
+
     const setupMessage = {
       setup: {
         model: `models/${model}`,
@@ -266,7 +273,7 @@ serve(async (req) => {
           speechConfig: {
             voiceConfig: {
               prebuiltVoiceConfig: {
-                voiceName: "Aoede"
+                voiceName: voiceName
               }
             }
           }
