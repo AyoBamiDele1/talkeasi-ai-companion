@@ -704,6 +704,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
           lessonContent: lessonContent,
           coveredScenarios: coveredScenarios,
           model: 'gemini-2.0-flash-live-001',
+          voice: selectedVoice,
           userMemories: memories
         },
         undefined,
@@ -772,6 +773,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
           lessonContent: lessonContent,
           coveredScenarios: coveredScenarios,
           model: 'gemini-2.0-flash-live-001',
+          voice: selectedVoice,
           userMemories: memories
         },
         undefined,
@@ -826,7 +828,8 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
           lessonTitle: 'AI Companion',
           lessonContent: lessonContent,
           coveredScenarios: coveredScenarios,
-          model: 'gemini-2.0-flash-live-001'
+          model: 'gemini-2.0-flash-live-001',
+          voice: selectedVoice
         },
         undefined,
         undefined,
