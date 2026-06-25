@@ -12,6 +12,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { FEATURES } from '@/config/features';
 import { useUserLocation } from '@/hooks/useUserLocation';
 import ProcessingIndicator from './ProcessingIndicator';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { RealtimeChat } from '@/utils/RealtimeAudio';
 
 interface ConversationMessage {
@@ -239,6 +240,11 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   const [isAISpeaking, setIsAISpeaking] = useState(false);
   const [currentTranscript, setCurrentTranscript] = useState('');
   const [userMemories, setUserMemories] = useState<Array<{ content: string; memory_type: string; importance: number }>>([]);
+  const [selectedVoice, setSelectedVoice] = useState<string>(() => {
+    if (typeof window === 'undefined') return 'Aoede';
+    return localStorage.getItem('nova_voice') || 'Aoede';
+  });
+  
   
   const audioRecorderRef = useRef<AudioRecorder>(new AudioRecorder());
   const realtimeChatRef = useRef<RealtimeChat | null>(null);
