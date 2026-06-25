@@ -1208,28 +1208,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
 
         {/* Status */}
         <div className="text-center mb-4">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <Badge variant={isSessionActive ? "default" : "secondary"} className="text-xs">
-              {isConnecting ? "Connecting..." : isSessionActive ? "Session Active" : "Session Inactive"}
-            </Badge>
-            
-            {!isTrialMode && isHandsFreeMode}
-            
-            {(isSpeaking || isAISpeaking) && <div className="flex items-center gap-1 text-success text-xs">
-                <Volume2 className="w-3 h-3" />
-                <span>AI Speaking</span>
-              </div>}
-            
-            {isRecording && <div className="flex items-center gap-1 text-primary text-xs">
-                <Mic className="w-3 h-3" />
-                <span>Recording...</span>
-              </div>}
-            
-            {isProcessing && <div className="flex items-center gap-1 text-warning text-xs">
-                <ProcessingIndicator stage="transcribing" />
-                <span>Processing...</span>
-              </div>}
-          </div>
+
           
           <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">
             {!isSessionActive 
