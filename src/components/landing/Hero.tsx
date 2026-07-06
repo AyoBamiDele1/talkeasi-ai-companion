@@ -14,7 +14,7 @@ const Hero = ({ onStartTrial, onSignIn }: HeroProps) => {
       <div className="pointer-events-none absolute -top-24 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-primary/20 blur-3xl" />
 
       <div className="relative mx-auto flex max-w-3xl flex-col items-center px-6 pt-20 pb-16 text-center md:pt-28 md:pb-24">
-        <div className="mb-8">
+        <div className="mb-6 scale-75">
           <NovaOrb size="lg" />
         </div>
 
