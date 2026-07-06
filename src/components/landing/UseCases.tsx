@@ -1,0 +1,64 @@
+import { Card, CardContent } from "@/components/ui/card";
+
+const useCases = [
+  {
+    emoji: "😮‍💨",
+    title: "Feeling stressed",
+    description: "Talk through a hard day and let some of the pressure out.",
+  },
+  {
+    emoji: "🌙",
+    title: "Feeling lonely",
+    description: "Company whenever you want it — day or night, no waiting.",
+  },
+  {
+    emoji: "💭",
+    title: "Need advice",
+    description: "Think out loud and get practical, down-to-earth suggestions.",
+  },
+  {
+    emoji: "🗣️",
+    title: "Just want to vent",
+    description: "Say what's on your mind freely. Nova won't judge you.",
+  },
+];
+
+const UseCases = () => {
+  return (
+    <section className="mx-auto max-w-5xl px-6 py-16 md:py-24">
+      <div className="mb-12 text-center">
+        <h2 className="text-3xl font-bold text-foreground md:text-4xl">
+          What you can talk about
+        </h2>
+        <p className="mt-3 text-muted-foreground">
+          Whatever's on your mind — Nova is here for it.
+        </p>
+      </div>
+
+      <div className="grid gap-5 sm:grid-cols-2">
+        {useCases.map((item) => (
+          <Card
+            key={item.title}
+            className="border-border bg-card/40 backdrop-blur-sm transition-all hover:scale-[1.01]"
+          >
+            <CardContent className="flex items-start gap-4 p-6">
+              <span className="text-3xl" aria-hidden="true">
+                {item.emoji}
+              </span>
+              <div>
+                <h3 className="mb-1 text-lg font-semibold text-foreground">
+                  {item.title}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {item.description}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </section>
+  );
+};
+
+export default UseCases;

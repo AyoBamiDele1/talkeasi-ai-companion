@@ -1,11 +1,18 @@
-// Onboarding/Welcome Screen - will redirect to Home after onboarding
+// Landing page for TalkEasi (talkeasi.com / "/")
+// Logged-in users are redirected to /home; everyone else sees the marketing page.
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
-import NovaOrb from "@/components/NovaOrb";
+import Hero from "@/components/landing/Hero";
+import HowItWorks from "@/components/landing/HowItWorks";
+import UseCases from "@/components/landing/UseCases";
+import WhyNova from "@/components/landing/WhyNova";
+import SafetySection from "@/components/landing/SafetySection";
+import FAQ, { faqs } from "@/components/landing/FAQ";
+import FinalCTA from "@/components/landing/FinalCTA";
+import LandingFooter from "@/components/landing/LandingFooter";
+import FaqJsonLd from "@/components/landing/FaqJsonLd";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -17,45 +24,22 @@ const Index = () => {
     }
   }, [user, loading, navigate]);
 
+  const startTrial = () => navigate("/trial");
+  const signIn = () => navigate("/auth");
+
   return (
-    <div className="flex min-h-screen items-start md:items-center justify-center bg-gradient-to-b from-primary/10 to-background p-6 pt-16 md:pt-6">
-      <Card className="w-full max-w-md">
-        <CardContent className="p-8 text-center">
-          <div className="text-center mb-6 md:mb-8">
-            <div className="mb-4 md:mb-6">
-              <div className="flex justify-center mb-3 md:mb-4">
-                <NovaOrb size="sm" />
-              </div>
-              <h1 className="text-3xl md:text-5xl font-bold text-foreground mb-2 md:mb-3">
-                TalkEasi
-              </h1>
-              <p className="text-base md:text-xl text-muted-foreground">
-                Meet Nova, Your AI Friend
-              </p>
-            </div>
-
-            <p className="text-muted-foreground mb-2 md:mb-4">
-              Stressed? Bored? Need advice? Just want to vent?
-            </p>
-            <p className="text-sm text-muted-foreground/80 mb-4 md:mb-6">
-              Nova is listening.
-            </p>
-          </div>
-
-          <div className="space-y-3">
-            <Button onClick={() => navigate("/trial")} className="w-full" size="lg">
-              🎤 Start 2-Minute Free Talk
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => navigate("/auth")} 
-              className="w-full"
-            >
-              Sign In
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+    <div className="min-h-screen bg-background">
+      <FaqJsonLd faqs={faqs} />
+      <main>
+        <Hero onStartTrial={startTrial} onSignIn={signIn} />
+        <HowItWorks />
+        <UseCases />
+        <WhyNova />
+        <SafetySection />
+        <FAQ />
+        <FinalCTA onStartTrial={startTrial} />
+      </main>
+      <LandingFooter />
     </div>
   );
 };
