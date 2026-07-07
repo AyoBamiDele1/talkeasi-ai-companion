@@ -1,45 +1,45 @@
-# TalkEasi Landing Page Rebuild (talkeasi.com / `/`)
+# Add a warm hero illustration to the TalkEasi landing page
 
-Replace the thin onboarding card at the root route with a real, content-rich marketing landing page. Same URL (`/`), same routing behavior — just a much stronger first impression that reduces bounce and gives Google real content to index.
+Make the landing page feel less plain by introducing a **soft flat-vector hero scene** and warming up the surrounding layout. Everything stays frontend-only and preview-only until you Publish.
 
 ## Deployment safety
-This is a frontend change. It appears **only in preview** until you click **Publish → Update**. Live `talkeasi.com` is untouched until then. You review first, ship when ready.
+Frontend change only. It shows in **preview** and does not touch live `talkeasi.com` until you click **Publish → Update**.
 
-## Behavior (unchanged routing)
-- `talkeasi.com` (`/`) → new landing page.
-- Logged-in users still auto-redirect to `/home` (existing logic preserved).
-- Primary CTA "Start 2-Minute Free Talk" → `/trial`.
-- Secondary CTA "Sign In" → `/auth`.
+## The illustration
+- Generate one **soft flat-vector hero illustration** in Nova's palette (coral/pink + warm accents on the deep navy background): a cozy, friendly scene — a warm rounded character relaxed and talking, with gentle gradient blobs and the NovaOrb glow woven in. Rounded, modern, Headspace/Calm-style warmth.
+- Style rules: soft rounded shapes, coral/pink primary, gentle gradients, no harsh outlines, no text baked into the art, transparent or navy-matched background so it blends with the page.
+- Saved as a project image asset and imported into the hero (with descriptive `alt` for SEO/accessibility).
 
-## Design direction
-Reuse the existing design system — no new brand. Warm minimal aesthetic, NovaOrb (pink/purple glow) as the visual anchor, semantic tokens only (no hardcoded colors), voice-first language throughout ("talk", never "chat"). Nova stays the warm, gender-neutral friend. No stock images (keeps with the no-images preference); NovaOrb + typography + soft gradients carry the visuals.
+## Hero layout change
+Rebuild `src/components/landing/Hero.tsx` into a **two-column hero** on desktop, single-column stacked on mobile:
 
-## Page sections (top to bottom)
-1. **Hero** — NovaOrb, headline + subhead, primary CTA "🎤 Start 2-Minute Free Talk", secondary "Sign In". Reassures: free, no signup to try.
-2. **How it works** — 3 steps: Tap to talk → Nova listens → Feel lighter. Reinforces zero-typing, voice-first.
-3. **What you can talk about** — Stressed · Lonely · Need advice · Just want to vent (maps to real search intent).
-4. **Why Nova** — Always available · Judgment-free · Remembers you · A warm friend, not a clinical bot.
-5. **Private & safe** — conversations are private, family-friendly, and Nova gently points serious issues to professionals (matches existing safety rules; no medical/legal/financial advice).
-6. **Start free** — "1 credit = 1 minute, first talk is free" mini pricing reassurance + CTA into `/trial`.
-7. **FAQ** — 4–6 Q&As targeting long-tail search ("Is it okay to talk to an AI like a friend?", "Is TalkEasi private?", "Is it really free to start?", "What can I talk to Nova about?"). Doubles as FAQPage structured data.
-8. **Final CTA band** + simple footer (links to trial, sign in, and legal/contact if present).
+```text
+ Desktop
+ ┌───────────────────────────┬───────────────────────────┐
+ │  Headline (H1)            │                           │
+ │  Subhead                  │     Warm flat-vector      │
+ │  [🎤 Start Free Talk]     │     hero illustration     │
+ │  [Sign In]                │     (NovaOrb glow behind) │
+ │  Free to try · no signup  │                           │
+ └───────────────────────────┴───────────────────────────┘
 
-## SEO baked in (lightweight, since content now exists)
-- Confirm/refine `index.html` `<title>` + meta description (already app-specific).
-- Add **Organization + WebSite JSON-LD** in `index.html`.
-- Add **FAQPage JSON-LD** matching the on-page FAQ.
-- Ensure a single H1 (hero headline), semantic section headings, alt/aria where relevant.
-- `canonical` + `og:url` → `https://talkeasi.com/`.
-(Sitemap/referral loop are separate follow-ups — not part of this landing build.)
+ Mobile: illustration on top, text + CTAs below (centered)
+```
+
+- Keep the existing NovaOrb as a soft glowing accent behind/near the illustration rather than the sole visual.
+- Keep all current copy, CTAs, and routing (`/trial`, `/auth`) unchanged.
+
+## Small warmth pass (light touch)
+- Add subtle warm radial glows behind the section headings so the lower sections don't read as flat cards on navy.
+- Fix the broken emoji glyphs currently showing as boxes (the CTA "🎤", "Feeling stressed", "Need advice" cards) by replacing them with reliably-rendering lucide icons in Nova's coral, consistent with the other cards.
 
 ## Technical notes
-- Rewrite `src/pages/Index.tsx`; extract sections into small components under `src/components/landing/` (Hero, HowItWorks, UseCases, WhyNova, SafetySection, FAQ, LandingFooter).
-- Keep the existing logged-in redirect (`useEffect` → `/home`).
-- Reuse shadcn `Button`, `Card`, `Accordion` (for FAQ), and existing NovaOrb component.
-- All colors via semantic tokens; verify light-mode contrast.
-- No backend or DB changes.
+- Generate the illustration with the image tool into `src/assets/` and import it as an ES6 asset in `Hero.tsx`.
+- All colors via existing semantic tokens (no hardcoded colors); verify contrast on the navy background.
+- Responsive: two-column `md:grid-cols-2` hero, image `loading="eager"` (above the fold) with width/height to avoid layout shift.
+- No backend, DB, routing, or copy changes beyond the emoji-glyph fix.
 
-## Out of scope for this step
-Referral/sharing loop, sitemap.xml, trial-modal funnel changes, paid ads — all deferred to later phases.
+## Out of scope
+Card spot art, section-divider illustrations, and any other illustration styles — deferred. We can add those next if you like the hero direction.
 
-Ready to build the landing page in preview on approval.
+I'll generate the illustration and rebuild the hero in preview on approval, then you review before publishing.
