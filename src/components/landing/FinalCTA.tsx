@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Mic } from "lucide-react";
 
 interface FinalCTAProps {
   onStartTrial: () => void;
