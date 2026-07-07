@@ -1,23 +1,24 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { Wind, Moon, MessageCircle, Megaphone } from "lucide-react";
 
 const useCases = [
   {
-    emoji: "😮‍💨",
+    icon: Wind,
     title: "Feeling stressed",
     description: "Talk through a hard day and let some of the pressure out.",
   },
   {
-    emoji: "🌙",
+    icon: Moon,
     title: "Feeling lonely",
     description: "Company whenever you want it — day or night, no waiting.",
   },
   {
-    emoji: "💭",
+    icon: MessageCircle,
     title: "Need advice",
     description: "Think out loud and get practical, down-to-earth suggestions.",
   },
   {
-    emoji: "🗣️",
+    icon: Megaphone,
     title: "Just want to vent",
     description: "Say what's on your mind freely. Nova won't judge you.",
   },
@@ -42,9 +43,9 @@ const UseCases = () => {
             className="border-border bg-card/40 backdrop-blur-sm transition-all hover:scale-[1.01]"
           >
             <CardContent className="flex items-start gap-4 p-6">
-              <span className="text-3xl" aria-hidden="true">
-                {item.emoji}
-              </span>
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/15">
+                <item.icon className="h-6 w-6 text-primary" />
+              </div>
               <div>
                 <h3 className="mb-1 text-lg font-semibold text-foreground">
                   {item.title}
