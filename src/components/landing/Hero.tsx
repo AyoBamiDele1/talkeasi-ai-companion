@@ -32,7 +32,7 @@ const Hero = ({ onStartTrial, onSignIn }: HeroProps) => {
 
         {/* Copy + CTAs */}
         <div className="order-2 flex flex-col items-center text-center md:order-1 md:items-start md:text-left">
-          <h1 className="text-4xl font-bold tracking-tight text-foreground md:text-6xl">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl md:text-6xl">
             Someone to talk to,
             <span className="block bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               anytime you need
