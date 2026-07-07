@@ -27,7 +27,8 @@ const FinalCTA = ({ onStartTrial }: FinalCTAProps) => {
               size="lg"
               className="text-base"
             >
-              🎤 Start 2-Minute Free Talk
+              <Mic className="mr-2 h-5 w-5" />
+              Start 2-Minute Free Talk
             </Button>
           </div>
         </div>
