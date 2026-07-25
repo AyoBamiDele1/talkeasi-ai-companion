@@ -1,45 +1,42 @@
-# Add a warm hero illustration to the TalkEasi landing page
 
-Make the landing page feel less plain by introducing a **soft flat-vector hero scene** and warming up the surrounding layout. Everything stays frontend-only and preview-only until you Publish.
+# Rebuild the landing page to match the attached mockup
 
-## Deployment safety
-Frontend change only. It shows in **preview** and does not touch live `talkeasi.com` until you click **Publish → Update**.
+Adopt the editorial, mature design from the uploaded `talkeasi-landing_3.html` — a serif/mono typography system, a phone mockup as the hero visual (no character illustration), and quiet, magazine-style sections. Deep navy background, coral accent, and Fraunces serif headings.
 
-## The illustration
-- Generate one **soft flat-vector hero illustration** in Nova's palette (coral/pink + warm accents on the deep navy background): a cozy, friendly scene — a warm rounded character relaxed and talking, with gentle gradient blobs and the NovaOrb glow woven in. Rounded, modern, Headspace/Calm-style warmth.
-- Style rules: soft rounded shapes, coral/pink primary, gentle gradients, no harsh outlines, no text baked into the art, transparent or navy-matched background so it blends with the page.
-- Saved as a project image asset and imported into the hero (with descriptive `alt` for SEO/accessibility).
+Only preview changes until Publish.
 
-## Hero layout change
-Rebuild `src/components/landing/Hero.tsx` into a **two-column hero** on desktop, single-column stacked on mobile:
+## Design system updates
 
-```text
- Desktop
- ┌───────────────────────────┬───────────────────────────┐
- │  Headline (H1)            │                           │
- │  Subhead                  │     Warm flat-vector      │
- │  [🎤 Start Free Talk]     │     hero illustration     │
- │  [Sign In]                │     (NovaOrb glow behind) │
- │  Free to try · no signup  │                           │
- └───────────────────────────┴───────────────────────────┘
+- Add Google Fonts: **Fraunces** (serif, headings + italics), **Public Sans** (body), **JetBrains Mono** (eyebrows/labels) — loaded from `index.html`.
+- Add Tailwind font families in `tailwind.config.ts`: `serif: Fraunces`, `sans: Public Sans`, `mono: JetBrains Mono`.
+- Keep existing HSL tokens (navy bg, coral primary/accent) — palette already matches. No token changes needed.
+- Body font becomes Public Sans; headings default to Fraunces serif with medium weight and italic gradient accent word.
 
- Mobile: illustration on top, text + CTAs below (centered)
-```
+## Section rewrites (`src/components/landing/`)
 
-- Keep the existing NovaOrb as a soft glowing accent behind/near the illustration rather than the sole visual.
-- Keep all current copy, CTAs, and routing (`/trial`, `/auth`) unchanged.
+1. **Hero** — two-column: left = eyebrow dot ("Nova is listening") + serif H1 with italic gradient "anytime you need" + subhead + coral pill CTA + underlined ghost link "Read the FAQ" + mono note. Right = **phone mockup** replicating the real Voice Chat screen (notch, credits pill, "AI Companion" title, "Speaking time: 0:00", Nova greeting bubble with timestamp, "Session Inactive" pill, "Nova Live" coral button). Gentle float animation. Delete `src/assets/hero-nova.png`.
+2. **HowItWorks** — replace boxed cards with a horizontal **connected flow**: three numbered circles ("01/02/03" in italic serif) joined by a dashed line, small headings + captions. Stacks vertically on mobile.
+3. **UseCases** — replace card grid with an **editorial topic list**: single column, thin dividers between rows, mono "01–04" markers on the left, bold heading + muted caption on the right.
+4. **WhyNova** — quiet **two-column list** with small coral dots before each heading, no cards.
+5. **SafetySection** — inset **panel** with rounded border, section label + serif H2, then two-column private/limits items inside.
+6. **FAQ** — native `<details>` accordions with `+` toggle rotating to `×`, serif question weight, thin dividers. Keep the existing `faqs` data and `FaqJsonLd`.
+7. **FinalCTA** — centered **closing panel** with radial coral glow at top, mono label, serif H2, subhead, single coral pill CTA.
+8. **LandingFooter** — slim: `talk` + coral `easi` wordmark left, small link row right (Try free / Sign in / Create account), copyright underneath.
+9. **Nav (new)** — add a sticky translucent top nav in `Index.tsx`: `talkeasi` wordmark left, "Sign in" text link + coral "Start free talk" pill right.
 
-## Small warmth pass (light touch)
-- Add subtle warm radial glows behind the section headings so the lower sections don't read as flat cards on navy.
-- Fix the broken emoji glyphs currently showing as boxes (the CTA "🎤", "Feeling stressed", "Need advice" cards) by replacing them with reliably-rendering lucide icons in Nova's coral, consistent with the other cards.
+## Preserved behavior
+
+- Routing unchanged: primary CTAs → `/trial`, Sign in → `/auth`, logged-in redirect to `/home`.
+- FAQ copy, JSON-LD, canonical, meta — unchanged.
+- No backend, DB, or edge-function changes.
 
 ## Technical notes
-- Generate the illustration with the image tool into `src/assets/` and import it as an ES6 asset in `Hero.tsx`.
-- All colors via existing semantic tokens (no hardcoded colors); verify contrast on the navy background.
-- Responsive: two-column `md:grid-cols-2` hero, image `loading="eager"` (above the fold) with width/height to avoid layout shift.
-- No backend, DB, routing, or copy changes beyond the emoji-glyph fix.
+
+- All colors via existing semantic tokens (`bg-background`, `text-primary`, `border-border`, etc.). The mockup's hex values already map cleanly to current tokens.
+- Phone mockup built with pure Tailwind divs — no new assets.
+- Respect `prefers-reduced-motion` on the float animation.
+- Remove `src/assets/hero-nova.png` (import gone).
 
 ## Out of scope
-Card spot art, section-divider illustrations, and any other illustration styles — deferred. We can add those next if you like the hero direction.
 
-I'll generate the illustration and rebuild the hero in preview on approval, then you review before publishing.
+Route changes, copy rewrites beyond what the mockup already contains, and any backend/pricing work.
