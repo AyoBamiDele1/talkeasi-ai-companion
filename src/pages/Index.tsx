@@ -12,6 +12,7 @@ import SafetySection from "@/components/landing/SafetySection";
 import FAQ, { faqs } from "@/components/landing/FAQ";
 import FinalCTA from "@/components/landing/FinalCTA";
 import LandingFooter from "@/components/landing/LandingFooter";
+import LandingNav from "@/components/landing/LandingNav";
 import FaqJsonLd from "@/components/landing/FaqJsonLd";
 
 const Index = () => {
@@ -28,8 +29,9 @@ const Index = () => {
   const signIn = () => navigate("/auth");
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background font-sans">
       <FaqJsonLd faqs={faqs} />
+      <LandingNav onStartTrial={startTrial} onSignIn={signIn} />
       <main>
         <Hero onStartTrial={startTrial} onSignIn={signIn} />
         <HowItWorks />
