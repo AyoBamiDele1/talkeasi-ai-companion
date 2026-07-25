@@ -1,62 +1,43 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { Wind, Moon, MessageCircle, Megaphone } from "lucide-react";
-
 const useCases = [
-  {
-    icon: Wind,
-    title: "Feeling stressed",
-    description: "Talk through a hard day and let some of the pressure out.",
-  },
-  {
-    icon: Moon,
-    title: "Feeling lonely",
-    description: "Company whenever you want it — day or night, no waiting.",
-  },
-  {
-    icon: MessageCircle,
-    title: "Need advice",
-    description: "Think out loud and get practical, down-to-earth suggestions.",
-  },
-  {
-    icon: Megaphone,
-    title: "Just want to vent",
-    description: "Say what's on your mind freely. Nova won't judge you.",
-  },
+  { n: "01", title: "Feeling stressed", description: "Talk through a hard day and let some of the pressure out." },
+  { n: "02", title: "Feeling lonely", description: "Company whenever you want it — day or night, no waiting." },
+  { n: "03", title: "Need advice", description: "Think out loud and get practical, down-to-earth suggestions." },
+  { n: "04", title: "Just want to vent", description: "Say what's on your mind freely. Nova won't judge you." },
 ];
 
 const UseCases = () => {
   return (
-    <section className="mx-auto max-w-5xl px-6 py-16 md:py-24">
-      <div className="mb-12 text-center">
-        <h2 className="text-3xl font-bold text-foreground md:text-4xl">
-          What you can talk about
-        </h2>
-        <p className="mt-3 text-muted-foreground">
-          Whatever's on your mind — Nova is here for it.
-        </p>
-      </div>
+    <section className="border-t border-border py-20 md:py-24">
+      <div className="mx-auto max-w-5xl px-6">
+        <div className="mx-auto mb-13 max-w-xl text-center">
+          <div className="mb-3.5 font-mono text-[12.5px] uppercase tracking-[0.1em] text-accent">
+            What you can talk about
+          </div>
+          <h2 className="font-serif text-[clamp(26px,3.2vw,36px)] font-medium leading-[1.15] tracking-[-0.01em] text-foreground">
+            Whatever's on your mind — Nova is here for it
+          </h2>
+        </div>
 
-      <div className="grid gap-5 sm:grid-cols-2">
-        {useCases.map((item) => (
-          <Card
-            key={item.title}
-            className="border-border bg-card/40 backdrop-blur-sm transition-all hover:scale-[1.01]"
-          >
-            <CardContent className="flex items-start gap-4 p-6">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/15">
-                <item.icon className="h-6 w-6 text-primary" />
+        <div className="mx-auto max-w-3xl border-t border-border">
+          {useCases.map((item) => (
+            <div
+              key={item.n}
+              className="flex items-start gap-5 border-b border-border px-1 py-6"
+            >
+              <div className="w-11 shrink-0 pt-1 font-mono text-xs text-accent">
+                {item.n}
               </div>
               <div>
-                <h3 className="mb-1 text-lg font-semibold text-foreground">
+                <h3 className="mb-1.5 text-[16.5px] font-bold text-foreground">
                   {item.title}
                 </h3>
-                <p className="text-sm text-muted-foreground">
+                <p className="max-w-md text-sm text-muted-foreground">
                   {item.description}
                 </p>
               </div>
-            </CardContent>
-          </Card>
-        ))}
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );

@@ -1,36 +1,35 @@
-import { Button } from "@/components/ui/button";
-import { Mic } from "lucide-react";
-
 interface FinalCTAProps {
   onStartTrial: () => void;
 }
 
 const FinalCTA = ({ onStartTrial }: FinalCTAProps) => {
   return (
-    <section className="mx-auto max-w-4xl px-6 py-16 md:py-24">
-      <div className="relative overflow-hidden rounded-3xl border border-border p-10 text-center md:p-16">
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/20 via-accent/10 to-background" />
-        <div className="relative">
-          <p className="mb-2 text-sm font-medium text-primary">
+    <section className="border-t border-border py-20 md:py-24">
+      <div className="mx-auto max-w-4xl px-6 text-center">
+        <div
+          className="mx-auto max-w-2xl rounded-3xl border border-border px-8 py-14 md:px-10 md:py-16"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 50% 0%, hsl(var(--primary) / 0.14), transparent 60%)",
+            backgroundColor: "hsl(var(--card) / 0.6)",
+          }}
+        >
+          <div className="mb-3.5 font-mono text-[12.5px] uppercase tracking-[0.1em] text-accent">
             Start free · 1 credit = 1 minute
-          </p>
-          <h2 className="text-3xl font-bold text-foreground md:text-4xl">
+          </div>
+          <h2 className="mb-6 font-serif text-[clamp(26px,3.2vw,36px)] font-medium leading-[1.15] tracking-[-0.01em] text-foreground">
             Your first talk is on us
           </h2>
-          <p className="mx-auto mt-4 max-w-md text-muted-foreground">
+          <p className="mx-auto mb-8 max-w-sm text-[15px] text-muted-foreground">
             Nova is ready to listen. Try a 2-minute talk right now — no sign-up
             required.
           </p>
-          <div className="mt-8 flex justify-center">
-            <Button
-              onClick={onStartTrial}
-              size="lg"
-              className="text-base"
-            >
-              <Mic className="mr-2 h-5 w-5" />
-              Start 2-Minute Free Talk
-            </Button>
-          </div>
+          <button
+            onClick={onStartTrial}
+            className="rounded-full bg-primary px-6 py-[15px] text-[15px] font-bold text-primary-foreground transition-all hover:-translate-y-0.5 hover:shadow-[0_10px_28px_hsl(var(--primary)/0.35)]"
+          >
+            Start 2-minute free talk
+          </button>
         </div>
       </div>
     </section>
