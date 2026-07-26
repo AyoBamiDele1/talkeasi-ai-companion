@@ -1,42 +1,25 @@
+## Goal
 
-# Rebuild the landing page to match the attached mockup
+Replace the hand-built phone contents in the landing hero with a real screenshot of the app's Nova conversation screen, rendered at mobile size inside the existing phone frame.
 
-Adopt the editorial, mature design from the uploaded `talkeasi-landing_3.html` — a serif/mono typography system, a phone mockup as the hero visual (no character illustration), and quiet, magazine-style sections. Deep navy background, coral accent, and Fraunces serif headings.
+## Steps
 
-Only preview changes until Publish.
+1. **Capture the real screen**
+   - Run the app locally via Playwright at a mobile viewport (390x844, dpr 2), restore the injected Supabase session, and navigate to the AI companion conversation route (`/lesson/ai-companion`).
+   - Wait for the screen to settle in its idle/pre-session state (NovaOrb, credits pill, Nova Live button visible) and screenshot only the app viewport — no browser chrome.
+   - If the authenticated session isn't available, fall back to capturing `/trial`, which renders the same voice interface publicly.
 
-## Design system updates
+2. **Add the image to the project**
+   - Save the capture as `src/assets/nova-screen.png` (kept as a normal image import).
 
-- Add Google Fonts: **Fraunces** (serif, headings + italics), **Public Sans** (body), **JetBrains Mono** (eyebrows/labels) — loaded from `index.html`.
-- Add Tailwind font families in `tailwind.config.ts`: `serif: Fraunces`, `sans: Public Sans`, `mono: JetBrains Mono`.
-- Keep existing HSL tokens (navy bg, coral primary/accent) — palette already matches. No token changes needed.
-- Body font becomes Public Sans; headings default to Fraunces serif with medium weight and italic gradient accent word.
+3. **Update `src/components/landing/Hero.tsx`**
+   - Keep the phone frame: rounded bezel, notch, rotation, float animation, shadow.
+   - Delete the fake inner markup (credits pill, "AI Companion" title, speaking-time chip, greeting bubble, Session Inactive, Nova Live card).
+   - Replace it with the screenshot inside the rounded inner area: `object-cover object-top`, `w-full`, clipped by the `rounded-[30px]` mask, with descriptive alt text ("Nova conversation screen in the TalkEasi app").
+   - Keep the notch layered above the image.
 
-## Section rewrites (`src/components/landing/`)
+## Notes
 
-1. **Hero** — two-column: left = eyebrow dot ("Nova is listening") + serif H1 with italic gradient "anytime you need" + subhead + coral pill CTA + underlined ghost link "Read the FAQ" + mono note. Right = **phone mockup** replicating the real Voice Chat screen (notch, credits pill, "AI Companion" title, "Speaking time: 0:00", Nova greeting bubble with timestamp, "Session Inactive" pill, "Nova Live" coral button). Gentle float animation. Delete `src/assets/hero-nova.png`.
-2. **HowItWorks** — replace boxed cards with a horizontal **connected flow**: three numbered circles ("01/02/03" in italic serif) joined by a dashed line, small headings + captions. Stacks vertically on mobile.
-3. **UseCases** — replace card grid with an **editorial topic list**: single column, thin dividers between rows, mono "01–04" markers on the left, bold heading + muted caption on the right.
-4. **WhyNova** — quiet **two-column list** with small coral dots before each heading, no cards.
-5. **SafetySection** — inset **panel** with rounded border, section label + serif H2, then two-column private/limits items inside.
-6. **FAQ** — native `<details>` accordions with `+` toggle rotating to `×`, serif question weight, thin dividers. Keep the existing `faqs` data and `FaqJsonLd`.
-7. **FinalCTA** — centered **closing panel** with radial coral glow at top, mono label, serif H2, subhead, single coral pill CTA.
-8. **LandingFooter** — slim: `talk` + coral `easi` wordmark left, small link row right (Try free / Sign in / Create account), copyright underneath.
-9. **Nav (new)** — add a sticky translucent top nav in `Index.tsx`: `talkeasi` wordmark left, "Sign in" text link + coral "Start free talk" pill right.
-
-## Preserved behavior
-
-- Routing unchanged: primary CTAs → `/trial`, Sign in → `/auth`, logged-in redirect to `/home`.
-- FAQ copy, JSON-LD, canonical, meta — unchanged.
-- No backend, DB, or edge-function changes.
-
-## Technical notes
-
-- All colors via existing semantic tokens (`bg-background`, `text-primary`, `border-border`, etc.). The mockup's hex values already map cleanly to current tokens.
-- Phone mockup built with pure Tailwind divs — no new assets.
-- Respect `prefers-reduced-motion` on the float animation.
-- Remove `src/assets/hero-nova.png` (import gone).
-
-## Out of scope
-
-Route changes, copy rewrites beyond what the mockup already contains, and any backend/pricing work.
+- Purely presentational — no routing, backend, or conversation-logic changes.
+- Screenshot is static; if the conversation UI changes later, it needs a re-capture.
+- Reduced-motion behavior on the float animation is preserved.
