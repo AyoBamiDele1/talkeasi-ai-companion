@@ -1,4 +1,4 @@
-import { Phone } from "lucide-react";
+import novaScreen from "@/assets/nova-screen.png";
 
 interface HeroProps {
   onStartTrial: () => void;
@@ -45,60 +45,25 @@ const Hero = ({ onStartTrial, onSignIn }: HeroProps) => {
           </div>
         </div>
 
-        {/* Phone mockup */}
+        {/* Phone mockup with real app screen */}
         <div className="flex justify-center">
           <div
             className="relative w-[272px] rounded-[42px] bg-[#050B18] p-3 shadow-[0_40px_80px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.05)] motion-safe:animate-[floatPhone_6s_ease-in-out_infinite]"
             style={{ transform: "rotate(-3deg)" }}
           >
             <div className="absolute left-1/2 top-0 z-10 h-5 w-[84px] -translate-x-1/2 rounded-b-[14px] bg-[#050B18]" />
-            <div className="flex min-h-[460px] flex-col justify-between rounded-[30px] bg-[linear-gradient(165deg,hsl(212_60%_22%),hsl(var(--background))_75%)] px-4 pb-[18px] pt-8">
-              <div>
-                <div className="mb-3.5 flex items-center justify-between">
-                  <span className="w-5 text-center text-[15px] opacity-80">←</span>
-                  <div className="rounded-full bg-white px-3 py-1.5 text-[10.5px] font-bold text-background">
-                    484 Credits
-                  </div>
-                  <span className="w-5 text-center text-[15px] opacity-80">🔊</span>
-                </div>
-                <div className="mb-3.5 text-center font-serif text-base font-semibold">
-                  AI Companion
-                </div>
-                <div className="mx-auto mb-5 w-fit rounded-full border border-border px-4 py-1.5 font-mono text-[10px] text-muted-foreground">
-                  Speaking time: 0:00
-                </div>
-                <div className="rounded-[14px] border border-border p-[15px] text-xs leading-[1.5]">
-                  Hey! It's Nova. I'm here for you. How are you feeling today?
-                  <div className="mt-2.5 font-mono text-[10px] text-muted-foreground">
-                    21:11:59
-                  </div>
-                </div>
-              </div>
-              <div className="flex flex-col items-center gap-2.5">
-                <div className="rounded-full bg-white px-4 py-2 text-[11.5px] font-bold text-background">
-                  Session Inactive
-                </div>
-                <div className="text-[10.5px] text-muted-foreground">
-                  Tap Nova Live to start talking
-                </div>
-                <div className="w-full rounded-[20px] bg-primary px-4 py-3">
-                  <div className="mb-1 flex items-center justify-between text-[12.5px] font-bold text-primary-foreground">
-                    <span className="flex items-center gap-1.5">
-                      <Phone className="h-3 w-3" /> Nova Live
-                    </span>
-                    <span className="rounded-full bg-white/30 px-2.5 py-0.5 text-[9.5px] font-bold">
-                      1 credit/min
-                    </span>
-                  </div>
-                  <div className="text-[10px] text-primary-foreground/90">
-                    Natural conversation flow with instant responses
-                  </div>
-                </div>
-              </div>
+            <div className="overflow-hidden rounded-[30px]">
+              <img
+                src={novaScreen}
+                alt="Nova conversation screen in the TalkEasi app, showing credits, speaking time and the Nova Live button"
+                loading="lazy"
+                className="block w-full"
+              />
             </div>
           </div>
         </div>
       </div>
+
 
       <style>{`
         @keyframes floatPhone {
