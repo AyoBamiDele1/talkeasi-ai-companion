@@ -48,7 +48,7 @@ const Hero = ({ onStartTrial, onSignIn }: HeroProps) => {
         {/* Phone mockup with real app screen */}
         <div className="flex justify-center">
           <div
-            className="relative w-[272px] rounded-[42px] bg-[#050B18] p-3 shadow-[0_40px_80px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.05)] motion-safe:animate-[floatPhone_6s_ease-in-out_infinite]"
+            className="relative w-[272px] rounded-[42px] bg-[#050B18] p-2 shadow-[0_40px_80px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.05)] motion-safe:animate-[floatPhone_6s_ease-in-out_infinite]"
             style={{ transform: "rotate(-3deg)" }}
           >
             <div className="absolute left-1/2 top-0 z-10 h-5 w-[84px] -translate-x-1/2 rounded-b-[14px] bg-[#050B18]" />
