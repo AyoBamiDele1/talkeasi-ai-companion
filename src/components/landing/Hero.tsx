@@ -1,4 +1,4 @@
-import { Phone } from "lucide-react";
+import novaScreen from "@/assets/nova-screen.png";
 
 interface HeroProps {
   onStartTrial: () => void;
