@@ -1,4 +1,4 @@
-import novaScreen from "@/assets/nova-screen.png";
+import novaScreen from "@/assets/voice-chat-interface.jpeg.asset.json";
 
 interface HeroProps {
   onStartTrial: () => void;
@@ -45,22 +45,15 @@ const Hero = ({ onStartTrial, onSignIn }: HeroProps) => {
           </div>
         </div>
 
-        {/* Phone mockup with real app screen */}
+        {/* Real app screen */}
         <div className="flex justify-center">
-          <div
-            className="relative w-[272px] rounded-[42px] bg-[#050B18] p-2 shadow-[0_40px_80px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.05)] motion-safe:animate-[floatPhone_6s_ease-in-out_infinite]"
+          <img
+            src={novaScreen.url}
+            alt="Nova voice chat interface in the TalkEasi app, showing credits, speaking time and the Nova Live button"
+            loading="lazy"
+            className="block w-[300px] max-w-full motion-safe:animate-[floatPhone_6s_ease-in-out_infinite]"
             style={{ transform: "rotate(-3deg)" }}
-          >
-            <div className="absolute left-1/2 top-0 z-10 h-5 w-[84px] -translate-x-1/2 rounded-b-[14px] bg-[#050B18]" />
-            <div className="overflow-hidden rounded-[30px]">
-              <img
-                src={novaScreen}
-                alt="Nova conversation screen in the TalkEasi app, showing credits, speaking time and the Nova Live button"
-                loading="lazy"
-                className="block w-full"
-              />
-            </div>
-          </div>
+          />
         </div>
       </div>
 
