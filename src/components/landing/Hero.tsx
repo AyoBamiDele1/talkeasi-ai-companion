@@ -11,7 +11,7 @@ const Hero = ({ onStartTrial, onSignIn }: HeroProps) => {
       <div className="mx-auto grid max-w-6xl items-center gap-12 px-6 pt-16 pb-20 md:grid-cols-[1.05fr_0.95fr] md:pt-24 md:pb-24">
         {/* Copy */}
         <div>
-          <div className="mb-5 flex items-center gap-2.5 font-mono text-[12.5px] uppercase tracking-[0.14em] text-accent">
+          <div className="mb-5 flex items-center gap-2.5 font-mono text-[14px] uppercase tracking-[0.12em] text-accent">
             <span className="relative inline-block h-[7px] w-[7px] rounded-full bg-primary shadow-[0_0_0_4px_hsl(var(--primary)/0.2)]" />
             Nova is listening
           </div>
