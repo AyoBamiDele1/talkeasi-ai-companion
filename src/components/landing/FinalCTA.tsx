@@ -14,7 +14,7 @@ const FinalCTA = ({ onStartTrial }: FinalCTAProps) => {
             backgroundColor: "hsl(var(--card) / 0.6)",
           }}
         >
-          <div className="mb-3.5 font-mono text-[12.5px] uppercase tracking-[0.1em] text-accent">
+          <div className="mb-3.5 font-mono text-[14px] uppercase tracking-[0.1em] text-accent">
             Start free · 1 credit = 1 minute
           </div>
           <h2 className="mb-6 font-serif text-[clamp(26px,3.2vw,36px)] font-medium leading-[1.15] tracking-[-0.01em] text-foreground">

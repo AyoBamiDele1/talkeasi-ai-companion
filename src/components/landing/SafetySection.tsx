@@ -4,7 +4,7 @@ const SafetySection = () => {
       <div className="mx-auto max-w-4xl px-6">
         <div className="mx-auto max-w-3xl rounded-3xl border border-border bg-card/60 p-8 md:p-12">
           <div className="text-center">
-            <div className="mb-3.5 font-mono text-[12.5px] uppercase tracking-[0.1em] text-accent">
+            <div className="mb-3.5 font-mono text-[14px] uppercase tracking-[0.1em] text-accent">
               Private &amp; safe
             </div>
             <h2 className="font-serif text-[clamp(26px,3.2vw,36px)] font-medium leading-[1.15] tracking-[-0.01em] text-foreground">
