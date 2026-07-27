@@ -1,4 +1,4 @@
-import novaScreen from "@/assets/voice-chat-interface.jpeg.asset.json";
+import novaScreen from "@/assets/voice-chat-interface.png.asset.json";
 
 interface HeroProps {
   onStartTrial: () => void;
