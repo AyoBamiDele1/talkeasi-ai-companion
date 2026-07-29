@@ -52,7 +52,6 @@ const Hero = ({ onStartTrial, onSignIn }: HeroProps) => {
             alt="Nova voice chat interface in the TalkEasi app, showing credits, speaking time and the Nova Live button"
             loading="lazy"
             className="block w-[300px] max-w-full motion-safe:animate-[floatPhone_6s_ease-in-out_infinite]"
-            style={{ transform: "rotate(-3deg)" }}
           />
         </div>
       </div>
@@ -60,8 +59,8 @@ const Hero = ({ onStartTrial, onSignIn }: HeroProps) => {
 
       <style>{`
         @keyframes floatPhone {
-          0%, 100% { transform: rotate(-3deg) translateY(0); }
-          50% { transform: rotate(-3deg) translateY(-10px); }
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-10px); }
         }
       `}</style>
     </header>
