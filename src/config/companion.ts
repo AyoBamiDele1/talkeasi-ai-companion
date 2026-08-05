@@ -9,6 +9,9 @@ export const AI_COMPANION = {
   supportedLanguages: [
     { code: 'en', name: 'English', default: true },
     { code: 'yo', name: 'Yoruba' },
+    { code: 'ha', name: 'Hausa' },
+    { code: 'ig', name: 'Igbo' },
+    { code: 'sw', name: 'Swahili' },
   ],
   
   // Safety and content guidelines

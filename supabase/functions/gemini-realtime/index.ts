@@ -86,8 +86,17 @@ function buildSystemInstruction(lessonContext: any): string {
   if (!lessonContext) return instructions;
   
   const { lessonTitle, lessonContent, coveredScenarios, userMemories } = lessonContext;
-  const autoLanguages = lessonContext?.autoLanguages || ['en'];
-  const yorubaEnabled = autoLanguages.includes('yo');
+  const autoLanguages: string[] = lessonContext?.autoLanguages || ['en'];
+  const LANGUAGE_NAMES: Record<string, string> = {
+    en: 'English',
+    yo: 'Yoruba',
+    ha: 'Hausa',
+    ig: 'Igbo',
+    sw: 'Swahili',
+  };
+  const extraLanguages = autoLanguages
+    .filter((c) => c !== 'en' && LANGUAGE_NAMES[c])
+    .map((c) => LANGUAGE_NAMES[c]);
   
   if (lessonTitle === 'AI Companion') {
     const topics = lessonContent?.topics?.join(', ') || 'life, interests, feelings';
@@ -107,13 +116,15 @@ NIGERIAN ENGLISH (use naturally when appropriate):
 - "Abeg" = "Please"
 - Mix these naturally into conversation.` : '';
 
-    const yorubaContext = yorubaEnabled ? `
+    const yorubaContext = extraLanguages.length > 0 ? `
 
 LANGUAGE DETECTION:
 - Default language is English.
-- When the user speaks in Yoruba, understand and reply in Yoruba.
-- If the user switches back to English, reply in English.
-- Do not mix English and Yoruba in the same reply unless the user does first.` : ''; 
+- You also fully understand and speak ${extraLanguages.join(', ')}.
+- The moment the user speaks or greets you in one of those languages (for example "Ẹ n lẹ o", "Báwo ni", "Sannu", "Kedu", "Habari"), immediately switch and reply in that same language.
+- Stay in that language until the user switches back; if they return to English, reply in English.
+- Speak naturally and in a culturally respectful way, like a local friend.
+- Do not mix languages in the same reply unless the user does first.` : ''; 
 
     instructions = `You are Nova - that's your name. You are the user's caring AI friend, not an assistant, but a genuine companion.
 
