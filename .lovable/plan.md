@@ -1,25 +1,39 @@
 ## Goal
 
-Replace the hand-built phone contents in the landing hero with a real screenshot of the app's Nova conversation screen, rendered at mobile size inside the existing phone frame.
+Add automatic Yoruba language detection to Nova so that if a user speaks Yoruba, Nova understands and replies in Yoruba. The app UI text labels and the initial welcome greeting remain in English.
+
+## Current state
+
+- The primary voice path uses the Gemini Multimodal Live API via `supabase/functions/gemini-realtime/index.ts`.
+- The system prompt is built in `buildSystemInstruction()` and currently instructs Nova to act as a friendly English-speaking companion.
+- The fallback tap-to-talk path uses OpenAI Whisper STT and OpenAI TTS, both hardcoded to English (`utterance.lang = 'en-US'`).
+- `src/config/companion.ts` centralizes companion behavior (name, safety rules, Nigerian expressions) and is the right place for a language list.
 
 ## Steps
 
-1. **Capture the real screen**
-   - Run the app locally via Playwright at a mobile viewport (390x844, dpr 2), restore the injected Supabase session, and navigate to the AI companion conversation route (`/lesson/ai-companion`).
-   - Wait for the screen to settle in its idle/pre-session state (NovaOrb, credits pill, Nova Live button visible) and screenshot only the app viewport — no browser chrome.
-   - If the authenticated session isn't available, fall back to capturing `/trial`, which renders the same voice interface publicly.
+1. **Language support map**
+   - Add a `supportedLanguages` array in `src/config/companion.ts` with `{ code: 'yo', name: 'Yoruba' }`. Design it so Hausa, Igbo, and others can be appended later.
 
-2. **Add the image to the project**
-   - Save the capture as `src/assets/nova-screen.png` (kept as a normal image import).
+2. **Update Gemini Live system prompt for auto-detection**
+   - In `supabase/functions/gemini-realtime/index.ts`, extend the `buildSystemInstruction()` function so the AI Companion prompt explicitly tells Nova:
+     - Default to English.
+     - When the user speaks in Yoruba, understand and reply in Yoruba.
+     - Do not mix languages unless the user does.
+   - Keep the existing English welcome greeting unchanged; the only change is Nova's willingness to converse in Yoruba.
 
-3. **Update `src/components/landing/Hero.tsx`**
-   - Keep the phone frame: rounded bezel, notch, rotation, float animation, shadow.
-   - Delete the fake inner markup (credits pill, "AI Companion" title, speaking-time chip, greeting bubble, Session Inactive, Nova Live card).
-   - Replace it with the screenshot inside the rounded inner area: `object-cover object-top`, `w-full`, clipped by the `rounded-[30px]` mask, with descriptive alt text ("Nova conversation screen in the TalkEasi app").
-   - Keep the notch layered above the image.
+3. **Pass language detection intent to the backend**
+   - In `src/utils/RealtimeAudio.ts`, ensure the `lessonContextToSend` payload can carry a `languageDetection: true` flag or an `autoLanguage: ['yo', 'en']` list. The server already receives the lesson context, so no new WebSocket protocol is required.
+
+4. **Fallback STT/TTS path (English-only hardcoding)**
+   - In `src/components/RealtimeVoiceInterface.tsx` and `src/pages/LessonSession.tsx`, the non-realtime fallback sends audio to `speech-to-text` and speaks via `text-to-speech`. For this phase, leave the fallback as-is because the main experience already uses Gemini Live, and adding Yoruba to the fallback would require a Yoruba-capable TTS provider. Note this as a future improvement rather than a deliverable now.
+
+5. **Validation**
+   - Add a small test harness in the edge function or a manual checklist: start a session, speak "Bawo ni?" and verify Nova replies in Yoruba.
+   - Confirm that speaking English still receives an English reply.
 
 ## Notes
 
-- Purely presentational — no routing, backend, or conversation-logic changes.
-- Screenshot is static; if the conversation UI changes later, it needs a re-capture.
-- Reduced-motion behavior on the float animation is preserved.
+- No UI labels or welcome greeting will be translated; this is purely a runtime behavior change in the conversation layer.
+- The system prompt change is the primary lever; Gemini Live already supports multilingual audio natively.
+- The change is scoped to Yoruba first. The companion config and context payload are designed to make adding Hausa, Igbo, etc. a one-line addition later.
+- After the plan is approved, the implementation will be limited to the edge function system prompt and the companion config, plus a minor payload update in `RealtimeAudio.ts`.
