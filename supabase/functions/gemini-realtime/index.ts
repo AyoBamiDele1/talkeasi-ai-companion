@@ -258,6 +258,8 @@ serve(async (req) => {
     console.log("Configuring Gemini session with lesson context:", lessonContext.lessonTitle);
     
     const systemInstruction = buildSystemInstruction(lessonContext);
+    console.log("[lang] autoLanguages:", JSON.stringify(lessonContext?.autoLanguages ?? null),
+      "| LANGUAGE DETECTION block present:", systemInstruction.includes("LANGUAGE DETECTION"));
     
     // Gemini Multimodal Live API setup message
     // We allow overriding via GEMINI_MODEL env var for quick switching without code changes.
