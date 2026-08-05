@@ -358,6 +358,7 @@ export class RealtimeChat {
       userMemories?: Array<{ content: string; memory_type: string; importance: number }>;
       userCountry?: string;
       isNigerian?: boolean;
+      autoLanguages?: string[];
     },
     onProviderChange?: (provider: AIProvider) => void,
     onConnectionStateChange?: (isConnected: boolean) => void,
