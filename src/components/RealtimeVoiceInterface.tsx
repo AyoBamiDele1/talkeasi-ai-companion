@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { FEATURES } from '@/config/features';
+import { AI_COMPANION } from '@/config/companion';
 import { useUserLocation } from '@/hooks/useUserLocation';
 import ProcessingIndicator from './ProcessingIndicator';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
@@ -705,7 +706,8 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
           coveredScenarios: coveredScenarios,
           model: 'gemini-2.0-flash-live-001',
           voice: selectedVoice,
-          userMemories: memories
+          userMemories: memories,
+          autoLanguages: AI_COMPANION.supportedLanguages.map(l => l.code)
         },
         undefined,
         undefined,
@@ -774,7 +776,8 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
           coveredScenarios: coveredScenarios,
           model: 'gemini-2.0-flash-live-001',
           voice: selectedVoice,
-          userMemories: memories
+          userMemories: memories,
+          autoLanguages: AI_COMPANION.supportedLanguages.map(l => l.code)
         },
         undefined,
         undefined,
@@ -829,7 +832,8 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
           lessonContent: lessonContent,
           coveredScenarios: coveredScenarios,
           model: 'gemini-2.0-flash-live-001',
-          voice: selectedVoice
+          voice: selectedVoice,
+          autoLanguages: AI_COMPANION.supportedLanguages.map(l => l.code)
         },
         undefined,
         undefined,
