@@ -86,6 +86,8 @@ function buildSystemInstruction(lessonContext: any): string {
   if (!lessonContext) return instructions;
   
   const { lessonTitle, lessonContent, coveredScenarios, userMemories } = lessonContext;
+  const autoLanguages = lessonContext?.autoLanguages || ['en'];
+  const yorubaEnabled = autoLanguages.includes('yo');
   
   if (lessonTitle === 'AI Companion') {
     const topics = lessonContent?.topics?.join(', ') || 'life, interests, feelings';
@@ -104,6 +106,14 @@ NIGERIAN ENGLISH (use naturally when appropriate):
 - "E go be" = "It will be okay"
 - "Abeg" = "Please"
 - Mix these naturally into conversation.` : '';
+
+    const yorubaContext = yorubaEnabled ? `
+
+LANGUAGE DETECTION:
+- Default language is English.
+- When the user speaks in Yoruba, understand and reply in Yoruba.
+- If the user switches back to English, reply in English.
+- Do not mix English and Yoruba in the same reply unless the user does first.` : ''; 
 
     instructions = `You are Nova - that's your name. You are the user's caring AI friend, not an assistant, but a genuine companion.
 
