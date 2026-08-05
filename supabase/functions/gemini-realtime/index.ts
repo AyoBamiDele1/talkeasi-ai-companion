@@ -86,8 +86,17 @@ function buildSystemInstruction(lessonContext: any): string {
   if (!lessonContext) return instructions;
   
   const { lessonTitle, lessonContent, coveredScenarios, userMemories } = lessonContext;
-  const autoLanguages = lessonContext?.autoLanguages || ['en'];
-  const yorubaEnabled = autoLanguages.includes('yo');
+  const autoLanguages: string[] = lessonContext?.autoLanguages || ['en'];
+  const LANGUAGE_NAMES: Record<string, string> = {
+    en: 'English',
+    yo: 'Yoruba',
+    ha: 'Hausa',
+    ig: 'Igbo',
+    sw: 'Swahili',
+  };
+  const extraLanguages = autoLanguages
+    .filter((c) => c !== 'en' && LANGUAGE_NAMES[c])
+    .map((c) => LANGUAGE_NAMES[c]);
   
   if (lessonTitle === 'AI Companion') {
     const topics = lessonContent?.topics?.join(', ') || 'life, interests, feelings';
