@@ -3,6 +3,13 @@ export const AI_COMPANION = {
   emoji: '✦',
   tagline: 'Your AI Friend',
   voice: 'shimmer',
+
+  // Languages Nova should automatically detect and respond to.
+  // Keep English as the default; other languages activate when the user speaks them.
+  supportedLanguages: [
+    { code: 'en', name: 'English', default: true },
+    { code: 'yo', name: 'Yoruba' },
+  ],
   
   // Safety and content guidelines
   safetyRules: {
