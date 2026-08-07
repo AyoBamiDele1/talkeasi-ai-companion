@@ -29,10 +29,10 @@ const HowItWorks = () => {
           </h2>
         </div>
 
-        <div className="relative mx-auto flex max-w-3xl flex-col items-start gap-8 md:flex-row md:justify-between md:gap-2">
+        <div className="relative mx-auto flex max-w-3xl flex-col items-stretch gap-8 md:flex-row md:justify-between md:gap-2">
           <div className="pointer-events-none absolute left-[60px] right-[60px] top-[26px] hidden h-px md:block" style={{ backgroundImage: 'repeating-linear-gradient(90deg, hsl(var(--foreground) / 0.15) 0 6px, transparent 6px 14px)' }} />
           {steps.map((s) => (
-            <div key={s.n} className="relative z-10 flex-1 px-3 text-center">
+            <div key={s.n} className="relative z-10 w-full flex-1 px-3 text-center">
               <div className="mx-auto mb-5 flex h-[52px] w-[52px] items-center justify-center rounded-full border border-border bg-card font-serif italic text-[19px] text-accent">
                 {s.n}
               </div>
