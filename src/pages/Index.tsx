@@ -34,9 +34,9 @@ const Index = () => {
       <LandingNav onStartTrial={startTrial} onSignIn={signIn} />
       <main>
         <Hero onStartTrial={startTrial} onSignIn={signIn} />
+        <WhyNova />
         <HowItWorks />
         <UseCases />
-        <WhyNova />
         <SafetySection />
         <FAQ />
         <FinalCTA onStartTrial={startTrial} />
