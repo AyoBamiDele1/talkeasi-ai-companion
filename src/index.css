@@ -66,6 +66,13 @@ All colors MUST be HSL.
     --overlay-card: hsl(300 25% 97% / 0.1);
     --glow-coral: hsl(332 86% 77% / 0.4);
 
+    /* Landing page surfaces */
+    --gradient-surface: linear-gradient(180deg, hsl(300 25% 97% / 0.06), hsl(300 25% 97% / 0.02));
+    --gradient-hero-glow: radial-gradient(circle at 50% 45%, hsl(var(--primary) / 0.28), transparent 65%);
+    --shadow-card: 0 20px 60px -30px hsl(212 82% 6% / 0.9);
+
+
+
     --sidebar-background: 212 82% 16%;
     --sidebar-foreground: 300 25% 97%;
     --sidebar-primary: 332 86% 77%;
