@@ -1,4 +1,4 @@
-import NovaOrb from "@/components/NovaOrb";
+import personaAsset from "@/assets/nova-persona.jpg.asset.json";
 import SectionShell from "./SectionShell";
 
 const steps = [
@@ -43,14 +43,21 @@ const HowItWorks = () => {
           ))}
         </ol>
 
-        {/* Orb aura visual */}
+        {/* Persona visual */}
         <div className="relative flex min-h-[240px] items-center justify-center">
           <div
             className="pointer-events-none absolute inset-0"
             style={{ backgroundImage: "var(--gradient-hero-glow)" }}
           />
-          <div className="pointer-events-none relative">
-            <NovaOrb size="lg" isActive isConnected={false} className="cursor-default" />
+          <div className="pointer-events-none relative h-48 w-48 md:h-56 md:w-56 animate-float">
+            <img
+              src={personaAsset.url}
+              alt="Friendly Nova companion"
+              className="h-full w-full rounded-full object-cover shadow-[0_0_40px_hsl(var(--primary)/0.35),0_0_80px_hsl(var(--accent)/0.25)] ring-4 ring-primary/20"
+              loading="lazy"
+              width={448}
+              height={448}
+            />
           </div>
         </div>
       </div>
