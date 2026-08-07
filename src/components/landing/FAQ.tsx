@@ -1,3 +1,4 @@
+import { ChevronRight } from "lucide-react";
 import SectionShell from "./SectionShell";
 
 export const faqs = [
@@ -30,22 +31,18 @@ export const faqs = [
 
 const FAQ = () => {
   return (
-    <SectionShell
-      id="faq"
-      eyebrow="Questions"
-      heading="Frequently asked questions"
-      maxWidth="max-w-3xl"
-    >
-      <div className="mx-auto max-w-2xl">
+    <SectionShell id="faq" rule heading="Frequently asked questions">
+      <div className="mx-auto max-w-2xl space-y-3">
         {faqs.map((faq, i) => (
-          <details key={i} className="group border-b border-border px-1 py-5">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-[15.5px] font-semibold text-foreground [&::-webkit-details-marker]:hidden">
+          <details
+            key={i}
+            className="group rounded-xl border border-border bg-card/40 px-5 py-4"
+          >
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-[15px] font-semibold text-foreground [&::-webkit-details-marker]:hidden">
               {faq.question}
-              <span className="shrink-0 font-serif text-[22px] text-accent transition-transform group-open:rotate-45">
-                +
-              </span>
+              <ChevronRight className="h-4 w-4 shrink-0 text-accent transition-transform group-open:rotate-90" />
             </summary>
-            <p className="mt-3.5 max-w-xl text-[14.5px] text-muted-foreground">
+            <p className="mt-3 text-[14px] text-muted-foreground">
               {faq.answer}
             </p>
           </details>
