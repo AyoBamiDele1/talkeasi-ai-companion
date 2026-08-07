@@ -49,7 +49,7 @@ const HowItWorks = () => {
             className="pointer-events-none absolute inset-0"
             style={{ backgroundImage: "var(--gradient-hero-glow)" }}
           />
-          <div className="pointer-events-none relative h-48 w-48 md:h-56 md:w-56 animate-[float_6s_ease-in-out_infinite]">
+          <div className="pointer-events-none relative h-48 w-48 md:h-56 md:w-56 animate-float">
             <img
               src={personaAsset.url}
               alt="Friendly Nova companion"
