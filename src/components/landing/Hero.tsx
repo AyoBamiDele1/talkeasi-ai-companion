@@ -17,7 +17,7 @@ const Hero = ({ onStartTrial, onSignIn }: HeroProps) => {
           </div>
           <h1 className="font-serif text-[clamp(38px,5vw,62px)] font-medium leading-[1.06] tracking-[-0.015em] text-foreground">
             Someone to talk to,{" "}
-            <em className="font-normal not-italic md:italic bg-gradient-to-r from-accent to-[hsl(268_100%_68%)] bg-clip-text text-transparent">
+            <em className="whitespace-nowrap font-normal not-italic md:italic bg-gradient-to-r from-accent to-[hsl(268_100%_68%)] bg-clip-text text-transparent">
               anytime you need
             </em>
           </h1>
