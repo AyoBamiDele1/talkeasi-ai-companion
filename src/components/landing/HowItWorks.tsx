@@ -20,7 +20,7 @@ const HowItWorks = () => {
   return (
     <section className="border-t border-border py-20 md:py-24">
       <div className="mx-auto max-w-5xl px-6">
-        <div className="mx-auto mb-13 max-w-xl text-center">
+        <div className="mx-auto mb-16 max-w-xl text-center md:mb-20">
           <div className="mb-3.5 font-mono text-[14px] uppercase tracking-[0.1em] text-accent">
             How it works
           </div>
