@@ -30,7 +30,7 @@ const FAQ = () => {
   return (
     <section id="faq" className="border-t border-border py-20 md:py-24">
       <div className="mx-auto max-w-3xl px-6">
-        <div className="mb-13 text-center">
+        <div className="mb-16 text-center md:mb-20">
           <div className="mb-3.5 font-mono text-[14px] uppercase tracking-[0.1em] text-accent">
             Questions
           </div>
