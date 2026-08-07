@@ -5,15 +5,28 @@ interface LandingNavProps {
   onSignIn: () => void;
 }
 
+const links = [
+  { label: "Features", href: "#features" },
+  { label: "How it works", href: "#how-it-works" },
+  { label: "FAQ", href: "#faq" },
+];
+
 const LandingNav = ({ onStartTrial, onSignIn }: LandingNavProps) => {
   return (
-    <nav className="sticky top-0 z-20 border-b border-border bg-background/70 backdrop-blur-md">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
+    <nav className="sticky top-0 z-20 bg-background/70 backdrop-blur-md">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-6 py-5">
         <LandingLogo />
+        <div className="hidden items-center gap-8 text-sm text-muted-foreground md:flex">
+          {links.map((l) => (
+            <a key={l.href} href={l.href} className="hover:text-foreground">
+              {l.label}
+            </a>
+          ))}
+        </div>
         <div className="flex items-center gap-5 text-sm">
           <button
             onClick={onSignIn}
-            className="text-muted-foreground hover:text-foreground"
+            className="hidden text-muted-foreground hover:text-foreground sm:block"
           >
             Sign in
           </button>
