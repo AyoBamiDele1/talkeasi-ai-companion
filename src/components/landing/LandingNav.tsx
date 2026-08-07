@@ -1,3 +1,5 @@
+import LandingLogo from "./LandingLogo";
+
 interface LandingNavProps {
   onStartTrial: () => void;
   onSignIn: () => void;
@@ -7,9 +9,7 @@ const LandingNav = ({ onStartTrial, onSignIn }: LandingNavProps) => {
   return (
     <nav className="sticky top-0 z-20 border-b border-border bg-background/70 backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
-        <div className="font-serif text-[21px] font-medium tracking-[-0.01em]">
-          talk<span className="text-primary">easi</span>
-        </div>
+        <LandingLogo />
         <div className="flex items-center gap-5 text-sm">
           <button
             onClick={onSignIn}

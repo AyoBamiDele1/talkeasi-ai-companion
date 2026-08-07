@@ -1,12 +1,11 @@
 import { Link } from "react-router-dom";
+import LandingLogo from "./LandingLogo";
 
 const LandingFooter = () => {
   return (
     <footer className="border-t border-border">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-6 py-9">
-        <div className="font-serif text-base font-medium">
-          talk<span className="text-primary">easi</span>
-        </div>
+        <LandingLogo size="sm" />
         <nav className="flex gap-5 text-[13.5px] text-muted-foreground">
           <Link to="/trial" className="hover:text-foreground">Try free</Link>
           <Link to="/auth" className="hover:text-foreground">Sign in</Link>
