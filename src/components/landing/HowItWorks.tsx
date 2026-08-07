@@ -1,4 +1,4 @@
-import personaAsset from "@/assets/nova-persona.jpg.asset.json";
+import personaAsset from "@/assets/nova-persona.png.asset.json";
 import SectionShell from "./SectionShell";
 
 const steps = [
