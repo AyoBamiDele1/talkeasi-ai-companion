@@ -53,10 +53,22 @@ const HowItWorks = () => {
             <img
               src={personaAsset.url}
               alt="Friendly Nova companion"
-              className="h-full w-full rounded-full object-cover shadow-[0_0_40px_hsl(var(--primary)/0.35),0_0_80px_hsl(var(--accent)/0.25)] ring-4 ring-primary/20"
+              className="h-full w-full rounded-full object-cover object-[center_25%] shadow-[0_0_40px_hsl(var(--primary)/0.35),0_0_80px_hsl(var(--accent)/0.25)] ring-4 ring-primary/20"
               loading="lazy"
               width={448}
               height={448}
+            />
+            {/* Soft vignette to fade the hard circular edge into the background */}
+            <div
+              className="absolute inset-0 rounded-full"
+              style={{
+                background:
+                  "radial-gradient(circle, transparent 55%, hsl(var(--background)/0.75) 78%, hsl(var(--background)/0.98) 95%)",
+              }}
+            />
+            {/* Subtle inner rim light to keep the circular shape elegant */}
+            <div
+              className="absolute inset-0 rounded-full ring-1 ring-inset ring-primary/10"
             />
           </div>
         </div>
