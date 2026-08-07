@@ -1,4 +1,4 @@
-import NovaOrb from "@/components/NovaOrb";
+import personaAsset from "@/assets/nova-persona.jpg.asset.json";
 import SectionShell from "./SectionShell";
 
 const steps = [
