@@ -7,7 +7,6 @@ import { useEffect } from "react";
 import Hero from "@/components/landing/Hero";
 import HowItWorks from "@/components/landing/HowItWorks";
 import UseCases from "@/components/landing/UseCases";
-import WhyNova from "@/components/landing/WhyNova";
 import SafetySection from "@/components/landing/SafetySection";
 import FAQ, { faqs } from "@/components/landing/FAQ";
 import FinalCTA from "@/components/landing/FinalCTA";
@@ -34,7 +33,6 @@ const Index = () => {
       <LandingNav onStartTrial={startTrial} onSignIn={signIn} />
       <main>
         <Hero onStartTrial={startTrial} onSignIn={signIn} />
-        <WhyNova />
         <HowItWorks />
         <UseCases />
         <SafetySection />
@@ -47,3 +45,4 @@ const Index = () => {
 };
 
 export default Index;
+
