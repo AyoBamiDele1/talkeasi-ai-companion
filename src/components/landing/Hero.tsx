@@ -14,7 +14,7 @@ const trustItems = [
 
 const Hero = ({ onStartTrial }: HeroProps) => {
   return (
-    <header className="relative overflow-hidden bg-background px-6 pb-16 pt-12 md:pb-24 md:pt-20">
+    <header className="relative overflow-hidden bg-[hsl(var(--section-base))] px-6 pb-16 pt-12 md:pb-24 md:pt-20">
       <div className="mx-auto grid max-w-6xl items-center gap-14 md:grid-cols-[1.05fr_0.95fr]">
         {/* Copy */}
         <div>

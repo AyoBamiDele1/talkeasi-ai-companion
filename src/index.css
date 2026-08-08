@@ -40,8 +40,9 @@ All colors MUST be HSL.
     --card: 212 82% 16%;
     --card-foreground: 300 25% 97%;
 
-    /* Landing page alternating section surface + divider */
-    --section-alt: 213 66% 18.5%;
+    /* Landing page alternating section surfaces + divider */
+    --section-base: 215 72% 14%; /* #0A1F3D */
+    --section-alt: 218 64% 20%; /* #122A52 */
     --section-divider: 0 0% 100% / 0.08;
 
 
