@@ -13,7 +13,7 @@ const links = [
 
 const LandingNav = ({ onStartTrial, onSignIn }: LandingNavProps) => {
   return (
-    <nav className="sticky top-0 z-20 bg-background/70 backdrop-blur-md">
+    <nav className="z-20 bg-background/70 backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-6 py-5">
         <LandingLogo />
         <div className="hidden items-center gap-8 text-sm text-muted-foreground md:flex">
