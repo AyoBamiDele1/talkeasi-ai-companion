@@ -12,6 +12,7 @@ const LandingFooter = () => {
           <a href="#features" className="hover:text-foreground">Features</a>
           <a href="#how-it-works" className="hover:text-foreground">How it works</a>
           <a href="#faq" className="hover:text-foreground">FAQ</a>
+          <a href="mailto:info@novadelatech.com" className="hover:text-foreground">Contact</a>
         </nav>
         <nav className="flex flex-wrap justify-center gap-6 text-[13.5px] text-muted-foreground md:justify-end">
           <Link to="/trial" className="hover:text-foreground">Try free</Link>
@@ -20,7 +21,11 @@ const LandingFooter = () => {
         </nav>
       </div>
       <div className="px-6 pb-9 text-center font-mono text-[12.5px] text-muted-foreground">
-        © {new Date().getFullYear()} TalkEasi. All rights reserved.
+        © {new Date().getFullYear()} TalkEasi. All rights reserved. A product of{" "}
+        <a href="https://novadelatech.com" target="_blank" rel="noopener noreferrer" className="hover:text-foreground underline underline-offset-2">
+          NovaDela Technologies
+        </a>
+        .
       </div>
     </footer>
   );
