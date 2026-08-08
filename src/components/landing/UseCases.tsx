@@ -12,6 +12,7 @@ const UseCases = () => {
   return (
     <SectionShell
       tinted
+      eyebrow="When Nova helps"
       heading={
         <>
           Whatever's on your mind —{" "}

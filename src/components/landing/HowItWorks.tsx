@@ -21,7 +21,7 @@ const steps = [
 
 const HowItWorks = () => {
   return (
-    <SectionShell id="how-it-works" rule heading="How it works">
+    <SectionShell id="how-it-works" rule eyebrow="How it works" heading="Three taps to feeling heard">
       <div className="mx-auto grid max-w-5xl items-center gap-14 md:grid-cols-2">
         {/* Timeline */}
         <ol className="relative mx-auto w-full max-w-md">
