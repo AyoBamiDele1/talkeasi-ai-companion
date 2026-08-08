@@ -7,7 +7,7 @@ interface FinalCTAProps {
 
 const FinalCTA = ({ onStartTrial }: FinalCTAProps) => {
   return (
-    <section className="px-6 py-16 md:py-20">
+    <section className="border-t border-[hsl(var(--section-divider))] bg-background px-6 py-16 md:py-20">
       <div
         className="mx-auto grid max-w-5xl items-center gap-10 overflow-hidden rounded-[28px] border border-border px-8 py-12 md:grid-cols-[0.8fr_1.2fr] md:px-14"
         style={{

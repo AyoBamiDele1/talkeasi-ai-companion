@@ -31,7 +31,7 @@ export const faqs = [
 
 const FAQ = () => {
   return (
-    <SectionShell id="faq" rule heading="Frequently asked questions">
+    <SectionShell id="faq" rule tinted eyebrow="Questions" heading="Frequently asked questions">
       <div className="mx-auto max-w-2xl space-y-3">
         {faqs.map((faq, i) => (
           <details
