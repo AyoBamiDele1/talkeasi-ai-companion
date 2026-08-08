@@ -3,6 +3,7 @@ import SectionShell from "./SectionShell";
 const SafetySection = () => {
   return (
     <SectionShell
+      tinted
       eyebrow="Private & safe"
       heading="A space you can trust with what's on your mind"
       maxWidth="max-w-4xl"

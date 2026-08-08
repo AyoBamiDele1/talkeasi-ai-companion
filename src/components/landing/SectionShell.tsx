@@ -29,7 +29,7 @@ const SectionShell = ({
       id={id}
       className={cn(
         "border-t border-[hsl(var(--section-divider))] px-6 py-16 md:py-24",
-        tinted ? "bg-[hsl(var(--section-alt))]" : "bg-background",
+        tinted ? "bg-[hsl(var(--section-alt))]" : "bg-[hsl(var(--section-base))]",
         className
       )}
     >
