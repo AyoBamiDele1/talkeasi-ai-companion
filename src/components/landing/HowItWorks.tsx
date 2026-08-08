@@ -35,7 +35,7 @@ const HowItWorks = () => {
                 <h3 className="mb-1.5 text-[16.5px] font-bold text-foreground">
                   {s.title}
                 </h3>
-                <p className="text-[13.5px] text-muted-foreground">
+                <p className="text-[15px] leading-relaxed text-muted-foreground md:text-[16px]">
                   {s.description}
                 </p>
               </div>
