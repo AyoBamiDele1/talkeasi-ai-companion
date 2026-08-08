@@ -42,7 +42,7 @@ const FAQ = () => {
               {faq.question}
               <ChevronRight className="h-4 w-4 shrink-0 text-accent transition-transform group-open:rotate-90" />
             </summary>
-            <p className="mt-3 text-[14px] text-muted-foreground">
+            <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground md:text-[16px]">
               {faq.answer}
             </p>
           </details>
