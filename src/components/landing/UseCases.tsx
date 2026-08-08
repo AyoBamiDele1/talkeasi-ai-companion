@@ -29,7 +29,7 @@ const UseCases = () => {
             <h3 className="mb-1.5 text-[15.5px] font-bold text-foreground">
               {item.title}
             </h3>
-            <p className="text-[13.5px] text-muted-foreground">
+            <p className="text-[14px] leading-relaxed text-muted-foreground md:text-[15px]">
               {item.description}
             </p>
           </div>

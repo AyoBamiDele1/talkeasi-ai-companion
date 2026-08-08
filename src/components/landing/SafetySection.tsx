@@ -13,7 +13,7 @@ const SafetySection = () => {
           <h3 className="mb-2 text-[15.5px] font-bold text-foreground">
             Your conversations stay private
           </h3>
-          <p className="text-[13.5px] text-muted-foreground">
+          <p className="text-[15px] leading-relaxed text-muted-foreground md:text-[16px]">
             Talk freely. Your chats with Nova are yours, kept private and family-friendly.
           </p>
         </div>
@@ -21,7 +21,7 @@ const SafetySection = () => {
           <h3 className="mb-2 text-[15.5px] font-bold text-foreground">
             Caring, with clear limits
           </h3>
-          <p className="text-[13.5px] text-muted-foreground">
+          <p className="text-[15px] leading-relaxed text-muted-foreground md:text-[16px]">
             Nova offers everyday support and gently points you to professionals for medical, legal, or financial matters.
           </p>
         </div>

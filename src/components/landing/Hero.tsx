@@ -40,11 +40,11 @@ const Hero = ({ onStartTrial }: HeroProps) => {
             >
               Start 2-minute free talk
             </button>
-            <span className="text-sm text-muted-foreground">
+            <span className="text-[13px] text-muted-foreground md:text-[14px] leading-relaxed">
               no sign-up needed
             </span>
           </div>
-          <div className="mt-5 flex items-center gap-2 font-mono text-xs text-muted-foreground/80">
+          <div className="mt-5 flex items-center gap-2 font-mono text-[14px] text-muted-foreground/80 md:text-[15px] leading-relaxed">
             <Check className="h-4 w-4 text-accent" strokeWidth={2.5} />
             Free to try — 1 credit = 1 minute
           </div>
@@ -52,7 +52,7 @@ const Hero = ({ onStartTrial }: HeroProps) => {
             {trustItems.map((item) => (
               <div
                 key={item.label}
-                className="flex items-center gap-1.5 text-[13px] text-muted-foreground/90"
+                className="flex items-center gap-1.5 text-[14px] text-muted-foreground/90 md:text-[15px] leading-relaxed"
               >
                 <item.icon className="h-3.5 w-3.5 text-accent" strokeWidth={2} />
                 <span>{item.label}</span>
