@@ -8,10 +8,12 @@ const LandingFooter = () => {
         <div className="flex justify-center md:justify-start">
           <LandingLogo size="sm" />
         </div>
+        <nav className="flex flex-wrap justify-center gap-6 text-[13.5px] text-muted-foreground">
           <a href="#features" className="hover:text-foreground">Features</a>
           <a href="#how-it-works" className="hover:text-foreground">How it works</a>
           <a href="#faq" className="hover:text-foreground">FAQ</a>
           <a href="mailto:info@novadelatech.com" className="hover:text-foreground">Contact</a>
+        </nav>
         <nav className="flex flex-wrap justify-center gap-6 text-[13.5px] text-muted-foreground md:justify-end">
           <Link to="/trial" className="hover:text-foreground">Try free</Link>
           <Link to="/auth" className="hover:text-foreground">Sign in</Link>
@@ -24,6 +26,7 @@ const LandingFooter = () => {
           NovaDela Technologies
         </a>
         .
+      </div>
     </footer>
   );
 };
