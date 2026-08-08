@@ -19,8 +19,11 @@ const LandingFooter = () => {
         </nav>
       </div>
       <div className="px-6 pb-9 text-center font-mono text-[12.5px] text-muted-foreground">
-        © {new Date().getFullYear()} TalkEasi. All rights reserved.
-      </div>
+        © {new Date().getFullYear()} TalkEasi. All rights reserved. A product of{" "}
+        <a href="https://novadelatech.com" target="_blank" rel="noopener noreferrer" className="hover:text-foreground underline underline-offset-2">
+          NovaDela Technologies
+        </a>
+        .
     </footer>
   );
 };
