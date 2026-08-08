@@ -40,9 +40,6 @@ const Hero = ({ onStartTrial }: HeroProps) => {
             >
               Start 2-minute free talk
             </button>
-            <span className="text-[13px] text-muted-foreground md:text-[14px] leading-relaxed">
-              no sign-up needed
-            </span>
           </div>
           <div className="mt-5 flex items-center gap-2 font-mono text-[14px] text-muted-foreground/80 md:text-[15px] leading-relaxed">
             <Check className="h-4 w-4 text-accent" strokeWidth={2.5} />
