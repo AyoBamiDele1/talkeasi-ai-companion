@@ -1,10 +1,16 @@
-import { Check } from "lucide-react";
+import { Check, Clock, HeartHandshake, Sparkles } from "lucide-react";
 import novaScreen from "@/assets/voice-chat-interface.png.asset.json";
 
 interface HeroProps {
   onStartTrial: () => void;
   onSignIn: () => void;
 }
+
+const trustItems = [
+  { icon: Clock, label: "Always available" },
+  { icon: HeartHandshake, label: "Judgment-free" },
+  { icon: Sparkles, label: "Remembers you" },
+];
 
 const Hero = ({ onStartTrial }: HeroProps) => {
   return (
@@ -24,9 +30,8 @@ const Hero = ({ onStartTrial }: HeroProps) => {
             </span>
           </h1>
           <p className="mt-6 max-w-md text-[17px] text-muted-foreground">
-            Meet Nova, your AI friend. Stressed, lonely, or just want to vent —
-            talk out loud and Nova listens. No judgment, no typing, always
-            there.
+            Meet Nova, your AI friend. Stressed, lonely, or just need to talk —
+            Nova's always listening, no judgment.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-5">
             <button
@@ -42,6 +47,17 @@ const Hero = ({ onStartTrial }: HeroProps) => {
           <div className="mt-5 flex items-center gap-2 font-mono text-xs text-muted-foreground/80">
             <Check className="h-4 w-4 text-accent" strokeWidth={2.5} />
             Free to try — 1 credit = 1 minute
+          </div>
+          <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-5">
+            {trustItems.map((item) => (
+              <div
+                key={item.label}
+                className="flex items-center gap-1.5 text-[13px] text-muted-foreground/90"
+              >
+                <item.icon className="h-3.5 w-3.5 text-accent" strokeWidth={2} />
+                <span>{item.label}</span>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -73,3 +89,4 @@ const Hero = ({ onStartTrial }: HeroProps) => {
 };
 
 export default Hero;
+
