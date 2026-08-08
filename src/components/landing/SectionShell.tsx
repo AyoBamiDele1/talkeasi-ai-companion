@@ -28,8 +28,8 @@ const SectionShell = ({
     <section
       id={id}
       className={cn(
-        "px-6 py-16 md:py-24",
-        tinted && "bg-[hsl(var(--foreground)/0.03)]",
+        "border-t border-[hsl(var(--section-divider))] px-6 py-16 md:py-24",
+        tinted ? "bg-[hsl(var(--section-alt))]" : "bg-background",
         className
       )}
     >
