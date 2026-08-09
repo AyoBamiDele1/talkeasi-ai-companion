@@ -1,57 +1,27 @@
-# Enable Google Sign-In for TalkEasi
+# Fix the Google sign-in 403
 
-## Goal
-Allow users to sign up and sign in with Google so TalkEasi bypasses the shared-SMTP email rate limit and registration friction. The front-end button and handler are already added; only the provider-side configuration remains.
+The 403 "you do not have access to this document" comes from Google, before Supabase is ever reached. The app code is fine — `signInWithOAuth({ provider: 'google' })` already redirects correctly (the Supabase auth log shows a successful 302 to Google). The block is in the Google Cloud Console OAuth configuration.
 
-## What you must do manually
-These steps are performed in Google Cloud Console and the Supabase Dashboard — Lovable cannot automate them for you.
+## Most likely causes, in order
 
-### Step 1: Create or choose a Google Cloud project
-- Go to https://console.cloud.google.com/projectcreate
-- Create a new project (recommended) or select an existing one.
+1. **Consent screen audience is "Internal"** — only accounts inside a Google Workspace org can sign in; everyone else gets exactly this 403.
+2. **Consent screen is in "Testing"** and the account signing in is not on the test-user list.
+3. **The OAuth client was created in a different Google Cloud project** than the consent screen you configured.
 
-### Step 2: Configure the OAuth consent screen
-- In the same project, go to **APIs & Services > OAuth consent screen**.
-- Choose **External** (required for any user with a Google account).
-- Fill in the app name, user support email, and developer contact email.
-- Under **Authorized domains**, add your Supabase project domain: `https://<project-ref>.supabase.co` (replace `<project-ref>` with your actual Supabase project reference).
-- Add the non-sensitive scopes: `.../auth/userinfo.email`, `.../auth/userinfo.profile`, `openid`.
-- Save.
+## Steps to run in Google Cloud Console (project: TalkEasi Project v052026)
 
-### Step 3: Create OAuth 2.0 Web Client credentials
-- Go to **APIs & Services > Credentials > Create credentials > OAuth client ID**.
-- Choose **Web application**.
-- Under **Authorized JavaScript origins**, add:
-  - `https://id-preview--ffaa8be9-9e82-4f37-9ffa-0ba2bc3ce036.lovable.app`
-  - `https://talkeasi-ai-companion.lovable.app`
-  - `https://talkeasi.com`
-  - `https://www.talkeasi.com`
-  - `http://localhost:8080` (for local preview)
-- Under **Authorized redirect URIs**, add the exact redirect URL shown in Supabase under **Authentication > Providers > Google**. It typically looks like `https://<project-ref>.supabase.co/auth/v1/callback`.
-- Save. Copy the **Client ID** and **Client Secret**.
+1. APIs & Services → OAuth consent screen → **Audience**
+   - Set User type to **External**.
+   - If status is **Testing**, either click **Publish app** (recommended, so anyone can sign in) or add the test accounts under **Test users**.
+2. Same screen → **Branding**: app name, support email, and developer contact email must all be filled in, otherwise publishing is blocked.
+3. APIs & Services → **Credentials** → your Web application OAuth client:
+   - Authorized JavaScript origins: `https://talkeasi.com`, `https://www.talkeasi.com`, `https://talkeasi-ai-companion.lovable.app`, `https://id-preview--ffaa8be9-9e82-4f37-9ffa-0ba2bc3ce036.lovable.app`
+   - Authorized redirect URI (exactly one, no wildcard): `https://qcxjjhgfgyfhwacxppcp.supabase.co/auth/v1/callback`
+4. Supabase → Authentication → Providers → Google: Client ID and Client Secret pasted from that same OAuth client, provider enabled.
+5. Supabase → Authentication → URL Configuration: Site URL `https://talkeasi.com`, plus the wildcard redirect URLs already listed.
 
-### Step 4: Enable Google provider in Supabase
-- In your Supabase Dashboard, go to **Authentication > Providers > Google**.
-- Toggle it on.
-- Paste the **Client ID** and **Client Secret** from Step 3.
-- Save.
+Google config changes can take a few minutes to propagate; retry in a fresh incognito window.
 
-### Step 5: Set Site URL and Redirect URLs in Supabase
-- Go to **Authentication > URL Configuration** in Supabase.
-- Set **Site URL** to your production URL: `https://talkeasi.com` (or `https://talkeasi-ai-companion.lovable.app` if you are not using the custom domain).
-- Add the same Lovable preview, production, and localhost URLs to **Redirect URLs**.
-- Save.
+## Code changes
 
-### Step 6: Test in preview
-- Open the Lovable preview at `https://id-preview--ffaa8be9-9e82-4f37-9ffa-0ba2bc3ce036.lovable.app/auth`.
-- Click the **Continue with Google** button on the Sign Up or Sign In tab.
-- Complete the Google flow and confirm a new user row appears in Supabase Auth and a profile is created with 5 credits.
-
-### Step 7: Publish the app
-- Once testing works in preview, publish the app from Lovable so the live site receives the same front-end code.
-- Re-test on the published domain.
-
-## Notes
-- Google AI Studio is **not** needed for this setup. AI Studio is for Gemini API keys; OAuth credentials come from Google Cloud Console.
-- Keep the consent screen as **External**. Do not switch to Internal unless you want to restrict sign-in to users inside a Google Workspace organization.
-- If you add a new custom domain later, you must come back to Step 3 and Step 5 to add it.
+None required. If, after the console fixes, sign-in returns to the app but drops the session, the next step would be adding a dedicated `/auth/callback` handling path — but that is only worth doing once the 403 clears.
