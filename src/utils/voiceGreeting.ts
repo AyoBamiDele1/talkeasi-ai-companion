@@ -73,9 +73,10 @@ export const getUserDisplayName = async (userId: string): Promise<string> => {
 
     // Fallback to user metadata if profile doesn't have display_name
     const { data: { user } } = await supabase.auth.getUser();
+    const metadataName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.user_metadata?.display_name;
     
-    if (user?.user_metadata?.display_name) {
-      return user.user_metadata.display_name;
+    if (metadataName) {
+      return metadataName;
     }
     
     // Final fallback - use email first name or "friend"

@@ -52,7 +52,11 @@ const Home = () => {
   };
 
   const getPersonalizedGreeting = () => {
-    const userName = userProfile?.display_name || user?.user_metadata?.display_name || "there";
+    const metadataName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.user_metadata?.display_name;
+    let userName = userProfile?.display_name;
+    if (!userName || userName === user?.email) {
+      userName = metadataName || "there";
+    }
     const hour = new Date().getHours();
     const timeGreeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
