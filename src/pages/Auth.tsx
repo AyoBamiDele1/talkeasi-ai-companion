@@ -161,9 +161,12 @@ export default function Auth() {
     if (error) {
       toast({
         title: "Password reset failed",
-        description: error.message,
+        description: isEmailRateLimitError(error)
+          ? "We're having trouble sending emails right now. Please try again in a few minutes."
+          : error.message,
         variant: "destructive"
       });
+
     } else {
       setResetEmailSent(true);
       toast({
