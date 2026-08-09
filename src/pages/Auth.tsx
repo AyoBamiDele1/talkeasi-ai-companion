@@ -10,6 +10,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import NovaOrb from '@/components/NovaOrb';
+import GoogleSignInButton from '@/components/GoogleSignInButton';
+
 
 // Supabase/GoTrue returns HTTP 429 `over_email_send_rate_limit` when the
 // project's hourly auth-email cap is hit. Surface a friendly message instead.
@@ -242,7 +244,13 @@ export default function Auth() {
                   <CardDescription className="text-xs sm:text-sm">Sign in to continue talking with Nova</CardDescription>
                 </CardHeader>
                 <CardContent className="p-3 sm:p-6 pt-2 sm:pt-6">
+                  <GoogleSignInButton />
+                  <div className="relative my-3 sm:my-4">
+                    <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border" /></div>
+                    <div className="relative flex justify-center"><span className="bg-card px-2 text-xs text-muted-foreground">or</span></div>
+                  </div>
                   <form onSubmit={handleSignIn} className="space-y-2.5 sm:space-y-4">
+
                     <div className="space-y-1 sm:space-y-2">
                       <Label htmlFor="signin-email" className="text-xs sm:text-sm">Email</Label>
                       <Input
@@ -289,7 +297,13 @@ export default function Auth() {
                   <CardDescription className="text-xs sm:text-sm">Start talking with Nova, your AI friend</CardDescription>
                 </CardHeader>
                 <CardContent className="p-3 sm:p-6 pt-1.5 sm:pt-6">
+                  <GoogleSignInButton label="Sign up with Google" />
+                  <div className="relative my-3 sm:my-4">
+                    <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border" /></div>
+                    <div className="relative flex justify-center"><span className="bg-card px-2 text-xs text-muted-foreground">or</span></div>
+                  </div>
                   <form onSubmit={handleSignUp} className="space-y-2 sm:space-y-4">
+
                     <div className="space-y-0.5 sm:space-y-2">
                       <Label htmlFor="signup-name" className="text-xs sm:text-sm">Display Name</Label>
                       <Input
