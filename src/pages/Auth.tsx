@@ -11,6 +11,20 @@ import { Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import NovaOrb from '@/components/NovaOrb';
 
+// Supabase/GoTrue returns HTTP 429 `over_email_send_rate_limit` when the
+// project's hourly auth-email cap is hit. Surface a friendly message instead.
+const isEmailRateLimitError = (error: any) => {
+  const code = String(error?.code ?? '').toLowerCase();
+  const message = String(error?.message ?? '').toLowerCase();
+  return (
+    error?.status === 429 ||
+    code.includes('over_email_send_rate_limit') ||
+    code.includes('over_request_rate_limit') ||
+    message.includes('email rate limit') ||
+    message.includes('rate limit exceeded')
+  );
+};
+
 
 export default function Auth() {
   const { user, signIn, signUp, loading } = useAuth();
