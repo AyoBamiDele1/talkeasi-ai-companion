@@ -1,5 +1,7 @@
 import { Check, Clock, HeartHandshake, Sparkles } from "lucide-react";
 import novaScreen from "@/assets/voice-chat-interface.png.asset.json";
+import GoogleSignInButton from "@/components/GoogleSignInButton";
+
 
 interface HeroProps {
   onStartTrial: () => void;
@@ -33,14 +35,16 @@ const Hero = ({ onStartTrial }: HeroProps) => {
             Meet Nova, your AI friend. Stressed, lonely, or just need to talk —
             Nova's always listening, no judgment.
           </p>
-          <div className="mt-8 flex flex-wrap items-center gap-5">
+          <div className="mt-8 flex flex-wrap items-center gap-4">
             <button
               onClick={onStartTrial}
               className="rounded-full bg-primary px-6 py-[15px] text-[15px] font-bold text-primary-foreground transition-all hover:-translate-y-0.5 hover:shadow-[0_10px_28px_hsl(var(--primary)/0.35)] focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-accent"
             >
               Start 2-minute free talk
             </button>
+            <GoogleSignInButton variant="hero" />
           </div>
+
           <div className="mt-5 flex items-center gap-2 font-mono text-[14px] text-muted-foreground/80 md:text-[15px] leading-relaxed">
             <Check className="h-4 w-4 text-accent" strokeWidth={2.5} />
             Free to try — 1 credit = 1 minute
