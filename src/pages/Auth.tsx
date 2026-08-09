@@ -110,9 +110,12 @@ export default function Auth() {
     if (error) {
       toast({
         title: "Sign up failed",
-        description: error.message,
+        description: isEmailRateLimitError(error)
+          ? "We're having trouble sending confirmation emails right now. Please try again in a few minutes."
+          : error.message,
         variant: "destructive"
       });
+
     } else {
       toast({
         title: "Account created! 🎉",
