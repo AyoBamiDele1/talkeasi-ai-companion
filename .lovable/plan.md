@@ -1,27 +1,54 @@
-# Fix the Google sign-in 403
+Use a Supabase custom auth domain for talkeasi.com
 
-The 403 "you do not have access to this document" comes from Google, before Supabase is ever reached. The app code is fine — `signInWithOAuth({ provider: 'google' })` already redirects correctly (the Supabase auth log shows a successful 302 to Google). The block is in the Google Cloud Console OAuth configuration.
+Goal
+Make the Google sign-in flow display `talkeasi.com` (or a dedicated auth subdomain) instead of `qcxjjhgfgyfhwacxppcp.supabase.co` on the consent/callback screens.
 
-## Most likely causes, in order
+Why this is needed
+The TalkEasi app is connected to an external Supabase project (qcxjjhgfgyfhwacxppcp). The Google OAuth consent screen currently shows the default Supabase auth URL because Supabase is the OAuth callback target. Lovable's custom-domain feature only controls where the app is hosted, not where Supabase handles auth. To brand the auth flow, we must configure a custom auth domain inside Supabase itself.
 
-1. **Consent screen audience is "Internal"** — only accounts inside a Google Workspace org can sign in; everyone else gets exactly this 403.
-2. **Consent screen is in "Testing"** and the account signing in is not on the test-user list.
-3. **The OAuth client was created in a different Google Cloud project** than the consent screen you configured.
+What we will do
+1. Choose an auth domain
+   - Option A (recommended): `auth.talkeasi.com` — clean, dedicated, and avoids conflicts with the Lovable-hosted app at `talkeasi.com`.
+   - Option B: `talkeasi.com` — only possible if the root domain is not already used for the app; currently it is used by Lovable hosting, so this is not practical.
 
-## Steps to run in Google Cloud Console (project: TalkEasi Project v052026)
+2. Verify the Supabase plan supports custom auth domains
+   - Custom auth domains require a paid Supabase plan (Pro/Team/Enterprise). The free tier does not support this feature.
+   - If the project is on a free plan, we must upgrade first or accept the default Supabase URL.
 
-1. APIs & Services → OAuth consent screen → **Audience**
-   - Set User type to **External**.
-   - If status is **Testing**, either click **Publish app** (recommended, so anyone can sign in) or add the test accounts under **Test users**.
-2. Same screen → **Branding**: app name, support email, and developer contact email must all be filled in, otherwise publishing is blocked.
-3. APIs & Services → **Credentials** → your Web application OAuth client:
-   - Authorized JavaScript origins: `https://talkeasi.com`, `https://www.talkeasi.com`, `https://talkeasi-ai-companion.lovable.app`, `https://id-preview--ffaa8be9-9e82-4f37-9ffa-0ba2bc3ce036.lovable.app`
-   - Authorized redirect URI (exactly one, no wildcard): `https://qcxjjhgfgyfhwacxppcp.supabase.co/auth/v1/callback`
-4. Supabase → Authentication → Providers → Google: Client ID and Client Secret pasted from that same OAuth client, provider enabled.
-5. Supabase → Authentication → URL Configuration: Site URL `https://talkeasi.com`, plus the wildcard redirect URLs already listed.
+3. Add the required DNS record
+   - Supabase will provide a CNAME target for the chosen auth domain.
+   - Add a CNAME record at the domain registrar/DNS provider for `auth.talkeasi.com` pointing to that Supabase target.
+   - If the domain was bought through Lovable, DNS records are managed in **Project Settings → Project → Domains → ⋯ → Configure → Manage DNS records**. If the domain is managed externally, add the CNAME at that registrar.
 
-Google config changes can take a few minutes to propagate; retry in a fresh incognito window.
+4. Configure the custom auth domain in Supabase
+   - Open the Supabase dashboard for project `qcxjjhgfgyfhwacxppcp`.
+   - Go to **Authentication → Settings → URL Configuration**.
+   - Under **Custom Auth Domain**, add `auth.talkeasi.com` and verify ownership (Supabase checks the DNS CNAME).
 
-## Code changes
+5. Update the Google OAuth redirect URI
+   - In Google Cloud Console, open the OAuth 2.0 Web Client ID used for TalkEasi.
+   - Under **Authorized redirect URIs**, replace or add:
+     `https://auth.talkeasi.com/auth/v1/callback`
+   - Keep the existing `https://qcxjjhgfgyfhwacxppcp.supabase.co/auth/v1/callback` during the transition, then remove it once the new domain is verified and working.
 
-None required. If, after the console fixes, sign-in returns to the app but drops the session, the next step would be adding a dedicated `/auth/callback` handling path — but that is only worth doing once the 403 clears.
+6. Update Supabase redirect URLs
+   - In Supabase → Authentication → URL Configuration, ensure the redirect URL list includes the new auth domain:
+     - `https://auth.talkeasi.com/**`
+     - `https://talkeasi.com/**`
+     - `https://www.talkeasi.com/**`
+     - `https://talkeasi-ai-companion.lovable.app/**`
+     - `https://id-preview--ffaa8be9-9e82-4f37-9ffa-0ba2bc3ce036.lovable.app/**`
+
+7. No code changes required
+   - The existing `signInWithGoogle` call in `src/hooks/useAuth.tsx` uses `window.location.origin` for the final redirect and relies on Supabase to handle the OAuth callback.
+   - Once Supabase recognizes the custom auth domain, the Google OAuth flow will automatically use it for the callback and consent screens.
+
+Verification
+- After DNS propagates, visit `https://auth.talkeasi.com` and confirm it resolves to Supabase.
+- Click the Google sign-in button in the app and confirm the browser shows `auth.talkeasi.com` (or a Google URL that redirects to it) instead of the raw Supabase project URL.
+- Confirm the final redirect still lands on `https://talkeasi.com/home`.
+
+Notes and risks
+- DNS propagation can take up to 72 hours but usually completes in minutes.
+- During the transition, keep both redirect URIs in Google Cloud Console to avoid locking users out.
+- If the custom auth domain setup fails, the app can fall back to the default Supabase URL, which is already working today.
