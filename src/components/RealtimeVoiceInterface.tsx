@@ -1205,9 +1205,24 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       : 'listening';
 
   return (
+   <>
+    {/* Live audio-reactive visual (display only) — centered on screen */}
+    {isSessionActive && (
+      <div className="fixed inset-0 z-40 flex flex-col items-center justify-center gap-4 pointer-events-none">
+        <NovaOrb
+          size="lg"
+          isConnected
+          isActive
+          reactiveMode={voiceVisualMode}
+          className="cursor-default pointer-events-none"
+        />
+        <VoiceWaveform mode={voiceVisualMode} />
+      </div>
+    )}
 
     <div className="fixed bottom-0 left-0 right-0 bg-card border-t p-4 z-50">
       <div className="max-w-md mx-auto">
+
 
         {/* Low Balance Warning */}
         {!isTrialMode && userCredits < 20 && userCredits > 0 && <Alert className="mb-4 bg-warning/10 border-warning/20">
@@ -1221,19 +1236,6 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
             </AlertDescription>
           </Alert>}
 
-        {/* Live audio-reactive visual (display only) */}
-        {isSessionActive && (
-          <div className="flex flex-col items-center gap-3 mb-4">
-            <NovaOrb
-              size="md"
-              isConnected
-              isActive
-              reactiveMode={voiceVisualMode}
-              className="cursor-default pointer-events-none"
-            />
-            <VoiceWaveform mode={voiceVisualMode} />
-          </div>
-        )}
 
         {/* Status */}
         <div className="text-center mb-4">
@@ -1336,7 +1338,9 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
         )}
       </div>
     </div>
+   </>
   );
+
 };
 
 export default RealtimeVoiceInterface;
