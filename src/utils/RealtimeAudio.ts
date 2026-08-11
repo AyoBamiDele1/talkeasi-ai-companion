@@ -199,6 +199,7 @@ const GEMINI_OUTPUT_SAMPLE_RATE = 24000;
 class AudioStreamPlayer {
   private audioContext: AudioContext;
   private gainNode: GainNode;
+  private analyser: AnalyserNode;
   private nextStartTime = 0;
   private scheduledSources: Set<AudioBufferSourceNode> = new Set();
   // Small lead so the first buffer of a turn isn't scheduled in the past.
@@ -209,7 +210,19 @@ class AudioStreamPlayer {
     this.gainNode = audioContext.createGain();
     this.gainNode.gain.value = 1.0;
     this.gainNode.connect(audioContext.destination);
+    // VISUAL-ONLY TAP: a parallel analyser branch off the gain node.
+    // It is never connected onward to the destination, so it cannot affect
+    // playback timing, volume, or the gap-free scheduling below.
+    this.analyser = audioContext.createAnalyser();
+    this.analyser.fftSize = 256;
+    this.analyser.smoothingTimeConstant = 0.75;
+    this.gainNode.connect(this.analyser);
   }
+
+  getAnalyser(): AnalyserNode {
+    return this.analyser;
+  }
+
 
   /** Append a raw PCM chunk (Int16 LE @ 24kHz mono) to the continuous timeline. */
   async enqueue(pcmData: Uint8Array) {
