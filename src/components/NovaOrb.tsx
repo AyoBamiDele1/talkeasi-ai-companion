@@ -42,8 +42,15 @@ const NovaOrb: React.FC<NovaOrbProps> = ({
 
   useEffect(() => {
     if (!reactive) {
-      if (orbRef.current) orbRef.current.style.transform = '';
-      if (glowRef.current) glowRef.current.style.opacity = '';
+      if (orbRef.current) {
+        orbRef.current.style.transform = '';
+        orbRef.current.style.filter = '';
+        orbRef.current.style.boxShadow = '';
+      }
+      if (glowRef.current) {
+        glowRef.current.style.opacity = '';
+        glowRef.current.style.transform = '';
+      }
       return;
     }
 
