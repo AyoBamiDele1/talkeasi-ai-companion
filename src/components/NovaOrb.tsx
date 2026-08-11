@@ -57,20 +57,34 @@ const NovaOrb: React.FC<NovaOrbProps> = ({
       if (document.hidden) return;
 
       const level = levelsRef.current.level;
+      const breath = 0.5 + 0.5 * Math.sin(now / 1500);
 
-      if (reactiveMode === 'speaking') {
-        // Expand/contract with Nova's actual voice amplitude.
-        smoothed = smoothed * 0.75 + level * 0.25;
-        const scale = 1 + smoothed * 0.16;
-        if (orbRef.current) orbRef.current.style.transform = `scale(${scale.toFixed(3)})`;
-        if (glowRef.current) glowRef.current.style.opacity = `${(0.45 + smoothed * 0.55).toFixed(3)}`;
+      if (level > 0.02) {
+        // Nova's voice is audible — expand/contract and glow with her amplitude.
+        smoothed = smoothed * 0.7 + level * 0.3;
+        const scale = 1 + smoothed * 0.22;
+        if (orbRef.current) {
+          orbRef.current.style.transform = `scale(${scale.toFixed(3)})`;
+          orbRef.current.style.filter = `brightness(${(1 + smoothed * 0.5).toFixed(3)})`;
+          orbRef.current.style.boxShadow = `0 0 ${(40 + smoothed * 90).toFixed(0)}px rgba(236,72,153,${(0.45 + smoothed * 0.5).toFixed(2)}), 0 0 ${(80 + smoothed * 160).toFixed(0)}px rgba(139,92,246,${(0.35 + smoothed * 0.5).toFixed(2)})`;
+        }
+        if (glowRef.current) {
+          glowRef.current.style.opacity = `${(0.5 + smoothed * 0.5).toFixed(3)}`;
+          glowRef.current.style.transform = `scale(${(1.5 + smoothed * 0.6).toFixed(3)})`;
+        }
       } else {
-        // Listening: soft, slow pulse with a very subtle glow bloom.
-        const breath = 0.5 + 0.5 * Math.sin(now / 1500);
+        // Listening/quiet: soft, slow pulse with a very subtle glow bloom.
         smoothed = smoothed * 0.9 + level * 0.1;
         const scale = 1 + breath * 0.02 + smoothed * 0.03;
-        if (orbRef.current) orbRef.current.style.transform = `scale(${scale.toFixed(3)})`;
-        if (glowRef.current) glowRef.current.style.opacity = `${(0.3 + breath * 0.15 + smoothed * 0.2).toFixed(3)}`;
+        if (orbRef.current) {
+          orbRef.current.style.transform = `scale(${scale.toFixed(3)})`;
+          orbRef.current.style.filter = '';
+          orbRef.current.style.boxShadow = '';
+        }
+        if (glowRef.current) {
+          glowRef.current.style.opacity = `${(0.3 + breath * 0.15 + smoothed * 0.2).toFixed(3)}`;
+          glowRef.current.style.transform = `scale(${(1.5 + breath * 0.05).toFixed(3)})`;
+        }
       }
     };
 
