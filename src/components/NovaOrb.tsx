@@ -1,11 +1,17 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
+import { useAudioLevels, prefersReducedMotion, type VoiceVisualMode } from '@/hooks/useAudioLevels';
 
 interface NovaOrbProps {
   isActive?: boolean;
   isListening?: boolean;
   isSpeaking?: boolean;
   isConnected?: boolean; // WebSocket OPEN state
+  /**
+   * When set to 'listening' or 'speaking', the orb reacts to live audio levels
+   * (read-only sampling — it never touches the audio pipeline).
+   */
+  reactiveMode?: VoiceVisualMode;
   size?: 'xs' | 'sm' | 'md' | 'lg';
   onClick?: () => void;
   className?: string;
@@ -17,6 +23,7 @@ const NovaOrb: React.FC<NovaOrbProps> = ({
   isSpeaking = false,
   // Default to false so the orb only animates when a realtime WebSocket is actually OPEN.
   isConnected = false,
+  reactiveMode = 'idle',
   size = 'lg',
   onClick,
   className
@@ -27,6 +34,53 @@ const NovaOrb: React.FC<NovaOrbProps> = ({
     md: 'w-16 h-16',
     lg: 'w-32 h-32'
   };
+
+  const levelsRef = useAudioLevels(reactiveMode);
+  const orbRef = useRef<HTMLDivElement>(null);
+  const glowRef = useRef<HTMLDivElement>(null);
+  const reactive = reactiveMode !== 'idle' && !prefersReducedMotion();
+
+  useEffect(() => {
+    if (!reactive) {
+      if (orbRef.current) orbRef.current.style.transform = '';
+      if (glowRef.current) glowRef.current.style.opacity = '';
+      return;
+    }
+
+    let raf = 0;
+    let cancelled = false;
+    let smoothed = 0;
+
+    const paint = (now: number) => {
+      if (cancelled) return;
+      raf = requestAnimationFrame(paint);
+      if (document.hidden) return;
+
+      const level = levelsRef.current.level;
+
+      if (reactiveMode === 'speaking') {
+        // Expand/contract with Nova's actual voice amplitude.
+        smoothed = smoothed * 0.75 + level * 0.25;
+        const scale = 1 + smoothed * 0.16;
+        if (orbRef.current) orbRef.current.style.transform = `scale(${scale.toFixed(3)})`;
+        if (glowRef.current) glowRef.current.style.opacity = `${(0.45 + smoothed * 0.55).toFixed(3)}`;
+      } else {
+        // Listening: soft, slow pulse with a very subtle glow bloom.
+        const breath = 0.5 + 0.5 * Math.sin(now / 1500);
+        smoothed = smoothed * 0.9 + level * 0.1;
+        const scale = 1 + breath * 0.02 + smoothed * 0.03;
+        if (orbRef.current) orbRef.current.style.transform = `scale(${scale.toFixed(3)})`;
+        if (glowRef.current) glowRef.current.style.opacity = `${(0.3 + breath * 0.15 + smoothed * 0.2).toFixed(3)}`;
+      }
+    };
+
+    raf = requestAnimationFrame(paint);
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(raf);
+    };
+  }, [reactive, reactiveMode, levelsRef]);
+
 
   return (
     <div 
