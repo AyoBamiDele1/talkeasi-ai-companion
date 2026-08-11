@@ -1351,7 +1351,9 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
         )}
       </div>
     </div>
+   </>
   );
+
 };
 
 export default RealtimeVoiceInterface;
