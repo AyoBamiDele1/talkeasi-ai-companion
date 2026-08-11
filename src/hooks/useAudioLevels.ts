@@ -56,7 +56,7 @@ export const useAudioLevels = (mode: VoiceVisualMode) => {
       const analyser = getNovaOutputAnalyser();
       const novaLevel = getNovaOutputLevel();
       let novaEnergy = 0;
-      let freq: Uint8Array | null = null;
+      let freq: Uint8Array<ArrayBuffer> | null = null;
       if (analyser) {
         freq = new Uint8Array(analyser.frequencyBinCount);
         analyser.getByteFrequencyData(freq);
