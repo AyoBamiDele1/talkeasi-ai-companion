@@ -1209,13 +1209,15 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     {/* Live audio-reactive visual (display only) — centered on screen */}
     {isSessionActive && (
       <div className="fixed inset-0 z-40 flex flex-col items-center justify-center gap-6 sm:gap-8 pt-24 sm:pt-32 pointer-events-none">
-        <NovaOrb
-          size="lg"
-          isConnected
-          isActive
-          reactiveMode={voiceVisualMode}
-          className="cursor-default pointer-events-none"
-        />
+        <div className="scale-[0.85] sm:scale-100">
+          <NovaOrb
+            size="lg"
+            isConnected
+            isActive
+            reactiveMode={voiceVisualMode}
+            className="cursor-default pointer-events-none"
+          />
+        </div>
         <VoiceWaveform mode={voiceVisualMode} />
       </div>
     )}
