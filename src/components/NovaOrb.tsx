@@ -92,15 +92,17 @@ const NovaOrb: React.FC<NovaOrbProps> = ({
     >
       {/* Outer glow ring - pulses when active */}
       <div 
+        ref={glowRef}
         className={cn(
           "absolute rounded-full transition-all duration-500",
           sizeClasses[size],
-          isActive && "animate-pulse",
-          isActive 
+          isActive && !reactive && "animate-pulse",
+          isActive || reactive
             ? "bg-gradient-to-r from-primary/30 to-accent/30 blur-xl scale-150" 
             : "bg-primary/10 blur-lg scale-125"
         )}
       />
+
       
       {/* Ping effect when listening */}
       {isListening && (
