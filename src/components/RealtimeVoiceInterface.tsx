@@ -1236,19 +1236,6 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
             </AlertDescription>
           </Alert>}
 
-        {/* Live audio-reactive visual (display only) */}
-        {isSessionActive && (
-          <div className="flex flex-col items-center gap-3 mb-4">
-            <NovaOrb
-              size="md"
-              isConnected
-              isActive
-              reactiveMode={voiceVisualMode}
-              className="cursor-default pointer-events-none"
-            />
-            <VoiceWaveform mode={voiceVisualMode} />
-          </div>
-        )}
 
         {/* Status */}
         <div className="text-center mb-4">
