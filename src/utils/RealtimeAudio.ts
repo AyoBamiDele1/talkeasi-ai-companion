@@ -616,6 +616,9 @@ export class RealtimeChat {
     }
 
     const rms = this.calculateRms(audioData);
+    // Visual-only tap: record the latest mic level so the UI can animate.
+    // Purely a write to a module variable — does not alter the audio path.
+    reportMicLevel(rms);
 
     if (!this.isUserSpeaking) {
       this.prefixAudioChunks.push(audioData);
