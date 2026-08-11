@@ -199,6 +199,7 @@ const GEMINI_OUTPUT_SAMPLE_RATE = 24000;
 class AudioStreamPlayer {
   private audioContext: AudioContext;
   private gainNode: GainNode;
+  private analyser: AnalyserNode;
   private nextStartTime = 0;
   private scheduledSources: Set<AudioBufferSourceNode> = new Set();
   // Small lead so the first buffer of a turn isn't scheduled in the past.
@@ -209,7 +210,19 @@ class AudioStreamPlayer {
     this.gainNode = audioContext.createGain();
     this.gainNode.gain.value = 1.0;
     this.gainNode.connect(audioContext.destination);
+    // VISUAL-ONLY TAP: a parallel analyser branch off the gain node.
+    // It is never connected onward to the destination, so it cannot affect
+    // playback timing, volume, or the gap-free scheduling below.
+    this.analyser = audioContext.createAnalyser();
+    this.analyser.fftSize = 256;
+    this.analyser.smoothingTimeConstant = 0.75;
+    this.gainNode.connect(this.analyser);
   }
+
+  getAnalyser(): AnalyserNode {
+    return this.analyser;
+  }
+
 
   /** Append a raw PCM chunk (Int16 LE @ 24kHz mono) to the continuous timeline. */
   async enqueue(pcmData: Uint8Array) {
@@ -290,6 +303,47 @@ class AudioStreamPlayer {
 }
 
 let audioStreamPlayer: AudioStreamPlayer | null = null;
+
+/* ------------------------------------------------------------------
+ * VISUAL-ONLY AUDIO LEVEL TAPS
+ * These helpers exist purely so the UI can animate the orb/waveform.
+ * Nothing here participates in capture, encoding, transport or playback.
+ * ------------------------------------------------------------------ */
+
+let lastMicRms = 0;
+let lastMicRmsAt = 0;
+
+/** Called from the mic pipeline with the already-computed RMS (no extra work). */
+export const reportMicLevel = (rms: number) => {
+  lastMicRms = rms;
+  lastMicRmsAt = performance.now();
+};
+
+/** Normalised 0..1 mic level, decaying to 0 when the mic goes quiet/stops. */
+export const getMicLevel = (): number => {
+  if (!lastMicRmsAt || performance.now() - lastMicRmsAt > 400) return 0;
+  // Typical speech RMS sits around 0.02–0.2 — scale into a usable visual range.
+  return Math.min(1, lastMicRms * 6);
+};
+
+/** Analyser tapped off Nova's playback graph (read-only), if playback exists. */
+export const getNovaOutputAnalyser = (): AnalyserNode | null =>
+  audioStreamPlayer?.getAnalyser() ?? null;
+
+/** Normalised 0..1 amplitude of Nova's current output audio. */
+export const getNovaOutputLevel = (): number => {
+  const analyser = audioStreamPlayer?.getAnalyser();
+  if (!analyser || !audioStreamPlayer?.isPlaying()) return 0;
+  const data = new Uint8Array(analyser.fftSize);
+  analyser.getByteTimeDomainData(data);
+  let sum = 0;
+  for (let i = 0; i < data.length; i++) {
+    const v = (data[i] - 128) / 128;
+    sum += v * v;
+  }
+  return Math.min(1, Math.sqrt(sum / data.length) * 3.5);
+};
+
 
 export const playAudioData = async (audioContext: AudioContext, audioData: Uint8Array) => {
   if (!audioStreamPlayer) {
@@ -616,6 +670,9 @@ export class RealtimeChat {
     }
 
     const rms = this.calculateRms(audioData);
+    // Visual-only tap: record the latest mic level so the UI can animate.
+    // Purely a write to a module variable — does not alter the audio path.
+    reportMicLevel(rms);
 
     if (!this.isUserSpeaking) {
       this.prefixAudioChunks.push(audioData);

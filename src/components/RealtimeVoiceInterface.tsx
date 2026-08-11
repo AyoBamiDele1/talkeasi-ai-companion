@@ -15,6 +15,9 @@ import { useUserLocation } from '@/hooks/useUserLocation';
 import ProcessingIndicator from './ProcessingIndicator';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { RealtimeChat } from '@/utils/RealtimeAudio';
+import NovaOrb from './NovaOrb';
+import VoiceWaveform from './VoiceWaveform';
+import type { VoiceVisualMode } from '@/hooks/useAudioLevels';
 
 interface ConversationMessage {
   id: string;
@@ -1194,7 +1197,15 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     }
   };
 
+  // Display-only visual state: derived from existing flags, never written back.
+  const voiceVisualMode: VoiceVisualMode = !isSessionActive
+    ? 'idle'
+    : (isAISpeaking || isSpeaking)
+      ? 'speaking'
+      : 'listening';
+
   return (
+
     <div className="fixed bottom-0 left-0 right-0 bg-card border-t p-4 z-50">
       <div className="max-w-md mx-auto">
 
@@ -1210,8 +1221,23 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
             </AlertDescription>
           </Alert>}
 
+        {/* Live audio-reactive visual (display only) */}
+        {isSessionActive && (
+          <div className="flex flex-col items-center gap-3 mb-4">
+            <NovaOrb
+              size="md"
+              isConnected
+              isActive
+              reactiveMode={voiceVisualMode}
+              className="cursor-default pointer-events-none"
+            />
+            <VoiceWaveform mode={voiceVisualMode} />
+          </div>
+        )}
+
         {/* Status */}
         <div className="text-center mb-4">
+
 
           
           <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">
