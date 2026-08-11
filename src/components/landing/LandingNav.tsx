@@ -26,15 +26,9 @@ const LandingNav = ({ onStartTrial, onSignIn }: LandingNavProps) => {
         <div className="flex items-center gap-5 text-sm">
           <button
             onClick={onSignIn}
-            className="hidden text-muted-foreground hover:text-foreground sm:block"
-          >
-            Sign in
-          </button>
-          <button
-            onClick={onStartTrial}
             className="rounded-full bg-primary px-5 py-2.5 font-bold text-primary-foreground transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_20px_hsl(var(--primary)/0.35)]"
           >
-            Start free talk
+            Sign in / Sign up
           </button>
         </div>
       </div>
