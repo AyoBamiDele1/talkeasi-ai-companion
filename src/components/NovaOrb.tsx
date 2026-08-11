@@ -128,23 +128,29 @@ const NovaOrb: React.FC<NovaOrbProps> = ({
       
       {/* Main orb */}
       <div 
+        ref={orbRef}
         className={cn(
-          "relative rounded-full transition-all duration-300 flex items-center justify-center",
+          "relative rounded-full flex items-center justify-center",
+          !reactive && "transition-all duration-300",
           "bg-gradient-to-br from-[hsl(var(--primary))] via-[hsl(var(--accent))] to-[hsl(280,70%,50%)]",
           "shadow-[0_0_40px_rgba(236,72,153,0.4),0_0_80px_rgba(139,92,246,0.3)]",
           sizeClasses[size],
-          isConnected && isActive && "scale-105",
-          !isConnected && "opacity-70",
-          isConnected && !isActive && "hover:scale-105"
+          !reactive && isConnected && isActive && "scale-105",
+          !isConnected && !reactive && "opacity-70",
+          !reactive && isConnected && !isActive && "hover:scale-105"
         )}
         style={{
-          // Only animate when WebSocket is OPEN (connected)
-          animation: isConnected 
-            ? (isActive 
-                ? 'novaBreathing 3s ease-in-out infinite' 
-                : 'novaBreathingSlow 4s ease-in-out infinite')
-            : 'none'
+          // When reacting to live audio, scale is driven per-frame via the ref
+          // below, so the CSS keyframe breathing is disabled to avoid conflict.
+          animation: reactive
+            ? 'none'
+            : isConnected 
+              ? (isActive 
+                  ? 'novaBreathing 3s ease-in-out infinite' 
+                  : 'novaBreathingSlow 4s ease-in-out infinite')
+              : 'none'
         }}
+
       >
         {/* Inner glow */}
         <div className={cn(
