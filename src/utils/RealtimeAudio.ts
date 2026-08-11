@@ -274,7 +274,7 @@ class AudioStreamPlayer {
 
   /** True while there is audio scheduled/playing for the current turn. */
   isPlaying(): boolean {
-    return this.scheduledSources.size > 0 && this.nextStartTime > this.audioContext.currentTime;
+    return this.scheduledSources.size > 0;
   }
 
   /**
@@ -333,7 +333,7 @@ export const getNovaOutputAnalyser = (): AnalyserNode | null =>
 /** Normalised 0..1 amplitude of Nova's current output audio. */
 export const getNovaOutputLevel = (): number => {
   const analyser = audioStreamPlayer?.getAnalyser();
-  if (!analyser || !audioStreamPlayer?.isPlaying()) return 0;
+  if (!analyser) return 0;
   const data = new Uint8Array(analyser.fftSize);
   analyser.getByteTimeDomainData(data);
   let sum = 0;
@@ -341,7 +341,7 @@ export const getNovaOutputLevel = (): number => {
     const v = (data[i] - 128) / 128;
     sum += v * v;
   }
-  return Math.min(1, Math.sqrt(sum / data.length) * 3.5);
+  return Math.min(1, Math.sqrt(sum / data.length) * 6);
 };
 
 
