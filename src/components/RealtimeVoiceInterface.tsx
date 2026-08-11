@@ -1208,7 +1208,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
    <>
     {/* Live audio-reactive visual (display only) — centered on screen */}
     {isSessionActive && (
-      <div className="fixed inset-0 z-40 flex flex-col items-center justify-center gap-4 pointer-events-none">
+      <div className="fixed inset-0 z-40 flex flex-col items-center justify-center gap-6 sm:gap-8 pt-24 sm:pt-32 pointer-events-none">
         <NovaOrb
           size="lg"
           isConnected
