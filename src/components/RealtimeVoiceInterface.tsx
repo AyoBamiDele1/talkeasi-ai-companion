@@ -1197,7 +1197,15 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
     }
   };
 
+  // Display-only visual state: derived from existing flags, never written back.
+  const voiceVisualMode: VoiceVisualMode = !isSessionActive
+    ? 'idle'
+    : (isAISpeaking || isSpeaking)
+      ? 'speaking'
+      : 'listening';
+
   return (
+
     <div className="fixed bottom-0 left-0 right-0 bg-card border-t p-4 z-50">
       <div className="max-w-md mx-auto">
 
