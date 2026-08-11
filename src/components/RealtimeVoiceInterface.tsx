@@ -15,6 +15,9 @@ import { useUserLocation } from '@/hooks/useUserLocation';
 import ProcessingIndicator from './ProcessingIndicator';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { RealtimeChat } from '@/utils/RealtimeAudio';
+import NovaOrb from './NovaOrb';
+import VoiceWaveform from './VoiceWaveform';
+import type { VoiceVisualMode } from '@/hooks/useAudioLevels';
 
 interface ConversationMessage {
   id: string;
