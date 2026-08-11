@@ -49,27 +49,38 @@ export const useAudioLevels = (mode: VoiceVisualMode) => {
       if (now - last < FRAME_INTERVAL_MS) return;
       last = now;
 
-      const current = modeRef.current;
       const prev = levelsRef.current;
 
-      if (current === 'speaking') {
-        const analyser = getNovaOutputAnalyser();
+      // Detect Nova's actual output energy directly from the analyser, so the
+      // visuals react even if the UI "speaking" flag lags behind the audio.
+      const analyser = getNovaOutputAnalyser();
+      const novaLevel = getNovaOutputLevel();
+      let novaEnergy = 0;
+      let freq: Uint8Array<ArrayBuffer> | null = null;
+      if (analyser) {
+        freq = new Uint8Array(analyser.frequencyBinCount);
+        analyser.getByteFrequencyData(freq);
+        for (let i = 0; i < freq.length; i++) novaEnergy += freq[i];
+        novaEnergy = novaEnergy / freq.length / 255;
+      }
+
+      const speaking = modeRef.current === 'speaking' || novaEnergy > 0.01 || novaLevel > 0.02;
+
+      if (speaking) {
         const bars = new Array(BAR_COUNT).fill(0);
-        if (analyser) {
-          const freq = new Uint8Array(analyser.frequencyBinCount);
-          analyser.getByteFrequencyData(freq);
+        if (freq) {
           // Use the lower ~70% of bins (speech energy) spread across the bars.
           const usable = Math.floor(freq.length * 0.7);
           const step = Math.max(1, Math.floor(usable / BAR_COUNT));
           for (let i = 0; i < BAR_COUNT; i++) {
             let sum = 0;
             for (let j = 0; j < step; j++) sum += freq[i * step + j] ?? 0;
-            const value = sum / step / 255;
+            const value = Math.min(1, (sum / step / 255) * 1.8);
             // smooth against the previous frame for a fluid, non-jittery motion
-            bars[i] = prev.bars[i] * 0.55 + value * 0.45;
+            bars[i] = prev.bars[i] * 0.5 + value * 0.5;
           }
         }
-        const level = prev.level * 0.6 + getNovaOutputLevel() * 0.4;
+        const level = prev.level * 0.5 + Math.max(novaLevel, novaEnergy * 2) * 0.5;
         levelsRef.current = { level, bars };
       } else {
         // Listening: soft, calm response to the user's own voice.
