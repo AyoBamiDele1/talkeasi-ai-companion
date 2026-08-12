@@ -3,8 +3,8 @@ import SectionShell from "./SectionShell";
 
 const useCases = [
   { icon: CloudRain, title: "Just want to vent", description: "Talk through any situation and say what's on your mind freely. Nova won't judge you." },
-  { icon: Moon, title: "Feeling lonely", description: "Company whenever you want it — day or night, no waiting." },
   { icon: Lightbulb, title: "Need advice", description: "Think out loud and get practical, down-to-earth suggestions." },
+  { icon: Moon, title: "Feeling lonely", description: "Company whenever you want it — day or night, no waiting." },
   { icon: Mic, title: "Building confidence", description: "Practice real conversations — big talks or hard topics. Nova helps you get comfortable speaking up." },
 ];
 
