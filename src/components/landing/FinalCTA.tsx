@@ -47,7 +47,7 @@ const FinalCTA = ({ onStartTrial }: FinalCTAProps) => {
             Try 2-minute free talk
           </button>
           <div className="mt-4 font-mono text-[13px] uppercase tracking-[0.1em] text-accent">
-            Start free · 1 credit = 1 minute
+            Free to start — no card, no cost
           </div>
         </div>
       </div>
