@@ -32,8 +32,8 @@ const Hero = ({ onStartTrial }: HeroProps) => {
             </span>
           </h1>
           <p className="mt-6 max-w-md text-[17px] text-muted-foreground">
-            Meet Nova, your AI friend. Need to talk, need advice, or just want
-            to practice a conversation? Nova is always listening, no judgment.
+            Meet Nova, your AI friend. Need to talk, get advice, or practice a
+            conversation? Nova is always listening, no judgment.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-4">
             <button
