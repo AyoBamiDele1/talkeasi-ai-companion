@@ -691,11 +691,15 @@ export class RealtimeChat {
 
       // While Nova is speaking, require a louder, longer burst to barge in so
       // background voices/TV can't interrupt her — only deliberate close-up
-      // speech from the user crosses the gate.
+      // speech from the user crosses the gate. Within the grace window right
+      // after the user's turn ended, use the normal gate: they're most likely
+      // continuing the same thought.
       const novaSpeaking = isNovaSpeaking();
-      const startRms = novaSpeaking ? this.speechStartRms * 1.6 : this.speechStartRms;
-      const startChunks = novaSpeaking
-        ? this.speechStartChunksRequired + 3
+      const withinGrace = Date.now() - this.lastActivityEndAt <= this.resumeGraceMs;
+      const strictGate = novaSpeaking && !withinGrace;
+      const startRms = strictGate ? this.speechStartRms * 1.35 : this.speechStartRms;
+      const startChunks = strictGate
+        ? this.speechStartChunksRequired + 2
         : this.speechStartChunksRequired;
 
       this.speechStartChunks = rms >= startRms ? this.speechStartChunks + 1 : 0;
@@ -703,7 +707,14 @@ export class RealtimeChat {
       if (this.speechStartChunks >= startChunks) {
         this.isUserSpeaking = true;
         this.silenceChunks = 0;
-        console.log(`[ClientVAD] speech started rms=${rms.toFixed(4)} (novaSpeaking=${novaSpeaking})`);
+        console.log(
+          `[ClientVAD] speech started rms=${rms.toFixed(4)} (novaSpeaking=${novaSpeaking}, withinGrace=${withinGrace})`
+        );
+        // The user resumed mid-thought (or deliberately barged in) — stop Nova's
+        // audio immediately so she isn't talking over them.
+        if (novaSpeaking) {
+          interruptAudioStream();
+        }
         this.sendActivityStart();
         for (const chunk of this.prefixAudioChunks) {
           this.sendAudioChunk(chunk);
