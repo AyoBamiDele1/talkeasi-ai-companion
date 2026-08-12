@@ -731,6 +731,7 @@ export class RealtimeChat {
       if (this.silenceChunks >= this.silenceChunksToEnd) {
         console.log(`[ClientVAD] speech ended after ${this.silenceChunks} quiet chunks`);
         this.sendActivityEnd();
+        this.lastActivityEndAt = Date.now();
         this.isUserSpeaking = false;
         this.speechStartChunks = 0;
         this.silenceChunks = 0;
