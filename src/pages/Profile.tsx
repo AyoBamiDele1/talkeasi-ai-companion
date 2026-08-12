@@ -179,7 +179,7 @@ const Profile = () => {
               <h3 className="text-lg font-semibold">
                 {profile?.display_name || user?.email?.split('@')[0] || 'User'}
               </h3>
-              <p className="text-muted-foreground text-sm">{user?.email}</p>
+              <p className="text-muted-foreground text-sm break-all" title={user?.email || undefined}>{user?.email}</p>
               <div className="flex items-center gap-2 mt-2">
                 
                 
