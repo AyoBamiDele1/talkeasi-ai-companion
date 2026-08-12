@@ -396,10 +396,19 @@ export class RealtimeChat {
   // longer sustained burst stops Nova from reacting to ambient chatter and
   // interrupting herself.
   private readonly speechStartRms = 0.018;
-  private readonly speechEndRms = 0.009;
+  // Soft trailing speech ("...and, um, I think") sits well under 0.009, so a
+  // lower floor keeps it counted as speech instead of silence.
+  private readonly speechEndRms = 0.006;
   private readonly speechStartChunksRequired = 5;
-  private readonly silenceChunksToEnd = 18;
+  // 512 samples @ 16kHz = 32ms per chunk. 36 chunks ≈ 1.15s of silence, which
+  // tolerates ordinary mid-sentence thinking pauses (0.7–1.5s) so Nova stops
+  // cutting people off mid-thought.
+  private readonly silenceChunksToEnd = 36;
   private readonly prefixChunksToKeep = 5;
+  // If the user resumes speaking within this window after their turn ended,
+  // treat it as a continued thought: interrupt Nova instead of talking over them.
+  private readonly resumeGraceMs = 400;
+  private lastActivityEndAt = 0;
 
   constructor(
     private onMessage: (message: any) => void,
