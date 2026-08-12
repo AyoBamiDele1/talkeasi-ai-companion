@@ -175,11 +175,11 @@ const Profile = () => {
                 {profile?.display_name ? profile.display_name.split(' ').map(n => n[0]).join('').toUpperCase() : user?.email?.slice(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold">
+            <div className="flex-1 min-w-0">
+              <h3 className="text-lg font-semibold truncate">
                 {profile?.display_name || user?.email?.split('@')[0] || 'User'}
               </h3>
-              <p className="text-muted-foreground text-sm">{user?.email}</p>
+              <p className="text-muted-foreground text-sm break-all" title={user?.email || undefined}>{user?.email}</p>
               <div className="flex items-center gap-2 mt-2">
                 
                 
