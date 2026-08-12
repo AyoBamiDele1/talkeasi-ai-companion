@@ -47,7 +47,7 @@ const Hero = ({ onStartTrial }: HeroProps) => {
 
           <div className="mt-5 flex items-center gap-2 font-mono text-[14px] text-muted-foreground/80 md:text-[15px] leading-relaxed">
             <Check className="h-4 w-4 text-accent" strokeWidth={2.5} />
-            Free to try — 1 credit = 1 minute
+            Free to start — no card, no cost
           </div>
           <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-5">
             {trustItems.map((item) => (
