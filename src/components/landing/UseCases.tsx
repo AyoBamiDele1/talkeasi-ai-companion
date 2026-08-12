@@ -1,11 +1,11 @@
-import { CloudRain, Moon, Lightbulb, MessageCircleHeart } from "lucide-react";
+import { CloudRain, Moon, Lightbulb, Mic } from "lucide-react";
 import SectionShell from "./SectionShell";
 
 const useCases = [
-  { icon: CloudRain, title: "Feeling stressed", description: "Talk through a hard day and let some of the pressure out." },
+  { icon: CloudRain, title: "Just want to vent", description: "Talk through any situation and say what's on your mind freely. Nova won't judge you." },
   { icon: Moon, title: "Feeling lonely", description: "Company whenever you want it — day or night, no waiting." },
   { icon: Lightbulb, title: "Need advice", description: "Think out loud and get practical, down-to-earth suggestions." },
-  { icon: MessageCircleHeart, title: "Just want to vent", description: "Say what's on your mind freely. Nova won't judge you." },
+  { icon: Mic, title: "Building confidence", description: "Practice real conversations — big talks or hard topics. Nova helps you get comfortable speaking up." },
 ];
 
 const UseCases = () => {
