@@ -396,10 +396,19 @@ export class RealtimeChat {
   // longer sustained burst stops Nova from reacting to ambient chatter and
   // interrupting herself.
   private readonly speechStartRms = 0.018;
-  private readonly speechEndRms = 0.009;
+  // Soft trailing speech ("...and, um, I think") sits well under 0.009, so a
+  // lower floor keeps it counted as speech instead of silence.
+  private readonly speechEndRms = 0.006;
   private readonly speechStartChunksRequired = 5;
-  private readonly silenceChunksToEnd = 18;
+  // 512 samples @ 16kHz = 32ms per chunk. 36 chunks ≈ 1.15s of silence, which
+  // tolerates ordinary mid-sentence thinking pauses (0.7–1.5s) so Nova stops
+  // cutting people off mid-thought.
+  private readonly silenceChunksToEnd = 36;
   private readonly prefixChunksToKeep = 5;
+  // If the user resumes speaking within this window after their turn ended,
+  // treat it as a continued thought: interrupt Nova instead of talking over them.
+  private readonly resumeGraceMs = 400;
+  private lastActivityEndAt = 0;
 
   constructor(
     private onMessage: (message: any) => void,
@@ -682,11 +691,15 @@ export class RealtimeChat {
 
       // While Nova is speaking, require a louder, longer burst to barge in so
       // background voices/TV can't interrupt her — only deliberate close-up
-      // speech from the user crosses the gate.
+      // speech from the user crosses the gate. Within the grace window right
+      // after the user's turn ended, use the normal gate: they're most likely
+      // continuing the same thought.
       const novaSpeaking = isNovaSpeaking();
-      const startRms = novaSpeaking ? this.speechStartRms * 1.6 : this.speechStartRms;
-      const startChunks = novaSpeaking
-        ? this.speechStartChunksRequired + 3
+      const withinGrace = Date.now() - this.lastActivityEndAt <= this.resumeGraceMs;
+      const strictGate = novaSpeaking && !withinGrace;
+      const startRms = strictGate ? this.speechStartRms * 1.35 : this.speechStartRms;
+      const startChunks = strictGate
+        ? this.speechStartChunksRequired + 2
         : this.speechStartChunksRequired;
 
       this.speechStartChunks = rms >= startRms ? this.speechStartChunks + 1 : 0;
@@ -694,7 +707,14 @@ export class RealtimeChat {
       if (this.speechStartChunks >= startChunks) {
         this.isUserSpeaking = true;
         this.silenceChunks = 0;
-        console.log(`[ClientVAD] speech started rms=${rms.toFixed(4)} (novaSpeaking=${novaSpeaking})`);
+        console.log(
+          `[ClientVAD] speech started rms=${rms.toFixed(4)} (novaSpeaking=${novaSpeaking}, withinGrace=${withinGrace})`
+        );
+        // The user resumed mid-thought (or deliberately barged in) — stop Nova's
+        // audio immediately so she isn't talking over them.
+        if (novaSpeaking) {
+          interruptAudioStream();
+        }
         this.sendActivityStart();
         for (const chunk of this.prefixAudioChunks) {
           this.sendAudioChunk(chunk);
@@ -711,6 +731,7 @@ export class RealtimeChat {
       if (this.silenceChunks >= this.silenceChunksToEnd) {
         console.log(`[ClientVAD] speech ended after ${this.silenceChunks} quiet chunks`);
         this.sendActivityEnd();
+        this.lastActivityEndAt = Date.now();
         this.isUserSpeaking = false;
         this.speechStartChunks = 0;
         this.silenceChunks = 0;
