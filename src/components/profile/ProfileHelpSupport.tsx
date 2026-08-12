@@ -132,9 +132,9 @@ const ProfileHelpSupport = ({
               <span className="text-muted-foreground">Developer</span>
               <span>NovaDela Technologies</span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between gap-3">
               <span className="text-muted-foreground">Support</span>
-              <a href="mailto:support@novadelatech.com" className="text-primary hover:underline">
+              <a href="mailto:support@novadelatech.com" className="text-primary hover:underline text-xs sm:text-sm">
                 support@novadelatech.com
               </a>
             </div>
