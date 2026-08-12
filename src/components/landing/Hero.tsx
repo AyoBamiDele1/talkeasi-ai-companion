@@ -40,7 +40,7 @@ const Hero = ({ onStartTrial }: HeroProps) => {
               onClick={onStartTrial}
               className="rounded-full bg-primary px-6 py-[15px] text-[15px] font-bold text-primary-foreground transition-all hover:-translate-y-0.5 hover:shadow-[0_10px_28px_hsl(var(--primary)/0.35)] focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-accent"
             >
-              Start 2-minute free talk
+              Try 2-minute free talk
             </button>
             <GoogleSignInButton variant="hero" />
           </div>
