@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Mic, MicOff, Volume2, VolumeX, ArrowLeft, Phone, PhoneOff, Coins, AlertCircle, Lightbulb } from 'lucide-react';
+import { Mic, MicOff, Volume2, VolumeX, ArrowLeft, PhoneOff, Coins, AlertCircle, Lightbulb } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/hooks/useAuth';
@@ -1293,11 +1293,11 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
               disabled={isConnecting}
             >
               <div className="flex items-center w-full mb-1">
-                <Phone className="w-5 h-5 mr-2" />
-                <span className="font-semibold text-lg">Nova Live</span>
+                <Mic className="w-5 h-5 mr-2" />
+                <span className="font-semibold text-lg">Talk to Nova Live</span>
                 <Badge variant="secondary" className="ml-auto bg-background/20">1 credit/min</Badge>
               </div>
-              <p className="text-xs opacity-90 text-left">Natural conversation flow with instant responses</p>
+              <p className="text-xs opacity-90 text-left">Natural voice conversation with instant responses</p>
             </Button>
           </div>
         )}
