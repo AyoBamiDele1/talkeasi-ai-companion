@@ -17,7 +17,7 @@ export const getTimeBasedGreeting = (): string => {
 export const speakGreeting = async (userName: string): Promise<void> => {
   try {
     const greeting = getTimeBasedGreeting();
-    const message = `${greeting}, ${userName}! It's Nova. Welcome back!`;
+    const message = `${greeting}, ${userName}! It's Nova. Welcome back! Ready to talk, get advice, or practice something?`;
     
     console.log('Speaking greeting:', message);
     
