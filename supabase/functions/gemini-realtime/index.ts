@@ -288,7 +288,7 @@ serve(async (req) => {
     const modelFromEnv = Deno.env.get('GEMINI_MODEL');
     const model = modelFromEnv && modelFromEnv.trim().length > 0
       ? modelFromEnv.trim()
-      : "gemini-3.1-flash-live-preview";
+      : "gemini-3.8-live";
 
     // Resolve the prebuilt voice. Female = Aoede (default), Male = Charon.
     // Validate against an allowlist and fall back to Aoede so an unexpected
@@ -625,7 +625,7 @@ serve(async (req) => {
           console.error(`[GEMINI_REJECTED] Likely causes:
   1. GEMINI_API_KEY is on FREE tier — Live API requires a PAID key (https://aistudio.google.com/apikey)
   2. Billing not enabled on the GCP project that owns the key
-  3. Model "${sessionConfigured ? 'see setup log above' : '(setup never sent)'}" not available to this key (current target: gemini-3.1-flash-live-preview)
+  3. Model "${sessionConfigured ? 'see setup log above' : '(setup never sent)'}" not available to this key (current target: gemini-3.8-live)
   4. Generative Language API not enabled in the GCP project`);
         }
 
