@@ -1235,17 +1235,6 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
       <div className="max-w-md mx-auto">
 
 
-        {/* Low Balance Warning */}
-        {!isTrialMode && userCredits < 20 && userCredits > 0 && <Alert className="mb-4 bg-warning/10 border-warning/20">
-            <AlertCircle className="h-4 w-4 text-warning" />
-            <AlertTitle>Low Credits</AlertTitle>
-            <AlertDescription>
-              You have {userCredits} credits remaining.
-              <Button variant="link" onClick={() => navigate('/profile?view=subscription')} className="ml-2 p-0 h-auto">
-                Top Up Now
-              </Button>
-            </AlertDescription>
-          </Alert>}
 
 
         {/* Status */}
