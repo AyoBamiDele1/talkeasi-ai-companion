@@ -51,6 +51,7 @@ serve(async (req) => {
       const priceToCredits: Record<string, number> = {
         // Credit packages
         "price_1Tkkwg2dz9WA913sFdlN2QlO": 60,    // Snack Pack
+        "price_1UYssX2dz9WA913sq7Bx37Ej": 60,    // Snack Pack welcome offer ($0.99)
         "price_1Tkkx02dz9WA913st6y7nD1W": 200,   // Buddy Pack
         "price_1TkkxO2dz9WA913sHcx7fygk": 500,   // Bestie Pack
         // Super Fan subscription (1000 credits/month)

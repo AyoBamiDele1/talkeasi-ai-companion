@@ -79,6 +79,20 @@ serve(async (req) => {
     if (!priceId) throw new Error("Price ID is required");
     if (!currency) throw new Error("Currency is required");
 
+    const INTRO_PRICE_ID = "price_1UYssX2dz9WA913sq7Bx37Ej";
+    if (priceId === INTRO_PRICE_ID) {
+      const { count } = await supabaseAdmin
+        .from("credit_purchases")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id);
+      if ((count ?? 0) > 0) {
+        return new Response(
+          JSON.stringify({ error: "The welcome offer is only for your first purchase." }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+        );
+      }
+    }
+
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2025-08-27.basil",
     });

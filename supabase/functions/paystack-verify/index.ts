@@ -13,6 +13,7 @@ const logStep = (step: string, details?: any) => {
 
 // Credit package mappings (1 credit = 1 minute)
 const PACKAGE_CREDITS: Record<string, number> = {
+  "intro": 60,
   "snack": 60,
   "buddy": 200,
   "bestie": 500,

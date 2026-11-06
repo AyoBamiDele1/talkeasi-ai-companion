@@ -16,6 +16,8 @@ import ProcessingIndicator from './ProcessingIndicator';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { RealtimeChat } from '@/utils/RealtimeAudio';
 import NovaOrb from './NovaOrb';
+import IntroOfferModal from './IntroOfferModal';
+import { useIntroOffer } from '@/hooks/useIntroOffer';
 import VoiceWaveform from './VoiceWaveform';
 import type { VoiceVisualMode } from '@/hooks/useAudioLevels';
 
@@ -241,6 +243,8 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
   const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
   const [currentMode, setCurrentMode] = useState<'tap' | 'standard' | 'premium'>('tap');
   const [userCredits, setUserCredits] = useState<number>(0);
+  const [showIntroOffer, setShowIntroOffer] = useState(false);
+  const { eligible: introEligible } = useIntroOffer();
   const [isAISpeaking, setIsAISpeaking] = useState(false);
   const [currentTranscript, setCurrentTranscript] = useState('');
   const [userMemories, setUserMemories] = useState<Array<{ content: string; memory_type: string; importance: number }>>([]);
@@ -1030,6 +1034,11 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
 
       creditLimitTimeoutRef.current = setTimeout(() => {
         console.log('[DEBUG] Credit limit reached - ending session automatically');
+        if (introEligible) {
+          endSession();
+          setShowIntroOffer(true);
+          return;
+        }
         toast({
           title: "Out of Credits",
           description: "You've used all your available credits. Top up to keep talking with Nova.",
@@ -1045,7 +1054,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
         creditLimitTimeoutRef.current = null;
       }
     };
-  }, [isSessionActive, isTrialMode, sessionStartTime, userCredits, CREDITS_PER_MINUTE]);
+  }, [isSessionActive, isTrialMode, sessionStartTime, userCredits, CREDITS_PER_MINUTE, introEligible]);
 
 
   const handleRealtimeMessage = async (message: any) => {
@@ -1340,6 +1349,7 @@ const RealtimeVoiceInterface: React.FC<RealtimeVoiceInterfaceProps> = ({
         )}
       </div>
     </div>
+    <IntroOfferModal open={showIntroOffer} onOpenChange={setShowIntroOffer} />
    </>
   );
 

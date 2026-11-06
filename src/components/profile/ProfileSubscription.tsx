@@ -15,6 +15,8 @@ import { Separator } from "@/components/ui/separator";
 import { useState, useEffect } from "react";
 import { FEATURES } from "@/config/features";
 import { useSearchParams } from "react-router-dom";
+import { useIntroOffer } from "@/hooks/useIntroOffer";
+import { formatIntroPrices } from "@/config/introOffer";
 
 type PaymentProvider = 'stripe' | 'paystack';
 
@@ -90,6 +92,23 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
   const [pendingPackage, setPendingPackage] = useState<string | null>(null);
   const [pendingType, setPendingType] = useState<'credits' | 'subscription'>('credits');
   const [searchParams] = useSearchParams();
+  const { eligible: introEligible, isNigeria, startCheckout: startIntroCheckout } = useIntroOffer();
+  const introPrices = formatIntroPrices(isNigeria);
+
+  const handleIntroPurchase = async () => {
+    if (processingPayment) return;
+    setProcessingPayment('snack');
+    try {
+      await startIntroCheckout();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to start payment. Please try again.",
+        variant: "destructive"
+      });
+      setProcessingPayment(null);
+    }
+  };
 
   // Handle Paystack callback verification
   useEffect(() => {
@@ -385,9 +404,9 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
         <div className="grid gap-4 sm:grid-cols-3">
           {/* Snack Pack */}
           <Card className="border-primary/50 relative overflow-hidden">
-            {CREDIT_PACKAGES.snack.badge && (
+            {(introEligible || CREDIT_PACKAGES.snack.badge) && (
               <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-bl-lg font-medium">
-                {CREDIT_PACKAGES.snack.badge}
+                {introEligible ? "First-Purchase Welcome Offer" : CREDIT_PACKAGES.snack.badge}
               </div>
             )}
             <CardHeader>
@@ -396,7 +415,12 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
                 {CREDIT_PACKAGES.snack.credits} Credits • {CREDIT_PACKAGES.snack.talkTime}
               </CardDescription>
               <CardDescription className="text-lg font-semibold">
-                {formatPrice(
+                {introEligible ? (
+                  <>
+                    {introPrices.price}{" "}
+                    <span className="text-sm text-muted-foreground line-through font-normal">{introPrices.regular}</span>
+                  </>
+                ) : formatPrice(
                   CREDIT_PACKAGES.snack.priceNGN,
                   CREDIT_PACKAGES.snack.priceUSD,
                   CREDIT_PACKAGES.snack.priceGBP
@@ -405,7 +429,7 @@ const ProfileSubscription = ({ onBack }: ProfileSubscriptionProps) => {
             </CardHeader>
             <CardContent className="space-y-3">
               <Button 
-                onClick={() => openPaymentDialog('snack', 'credits')} 
+                onClick={() => introEligible ? handleIntroPurchase() : openPaymentDialog('snack', 'credits')} 
                 className="w-full"
                 disabled={processingPayment !== null}
               >

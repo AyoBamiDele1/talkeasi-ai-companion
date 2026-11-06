@@ -13,6 +13,7 @@ const logStep = (step: string, details?: any) => {
 
 // Credit packages with relationship-based naming (NGN)
 const CREDIT_PACKAGES: Record<string, { credits: number; amountKobo: number; name: string }> = {
+  "intro": { credits: 60, amountKobo: 50000, name: "Welcome Offer - 60 Credits (1 Hour)" },   // ₦500, first purchase only
   "snack": { credits: 60, amountKobo: 70000, name: "Snack Pack - 60 Credits (1 Hour)" },      // ₦700
   "buddy": { credits: 200, amountKobo: 195000, name: "Buddy Pack - 200 Credits (3.3 Hours)" }, // ₦1,950
   "bestie": { credits: 500, amountKobo: 450000, name: "Bestie Pack - 500 Credits (8.3 Hours)" } // ₦4,500
@@ -89,6 +90,19 @@ serve(async (req) => {
     const pkg = CREDIT_PACKAGES[packageKey];
     if (!pkg) throw new Error("Invalid package selected");
     logStep("Package selected", { packageKey, pkg });
+
+    if (packageKey === "intro") {
+      const { count } = await supabaseAdmin
+        .from("credit_purchases")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id);
+      if ((count ?? 0) > 0) {
+        return new Response(
+          JSON.stringify({ error: "The welcome offer is only for your first purchase." }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+        );
+      }
+    }
 
     const paystackKey = Deno.env.get("PAYSTACK_SECRET_KEY");
     if (!paystackKey) throw new Error("PAYSTACK_SECRET_KEY is not set");

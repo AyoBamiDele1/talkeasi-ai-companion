@@ -11,6 +11,7 @@ const log = (step: string, details?: any) => {
 };
 
 const PACKAGE_CREDITS: Record<string, number> = {
+  intro: 60,
   snack: 60,
   buddy: 200,
   bestie: 500,
