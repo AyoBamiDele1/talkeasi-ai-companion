@@ -1,0 +1,1 @@
+- Google sign-in uses `brandedAuthClient` (auth.talkeasi.com custom Supabase domain); the generated client keeps the raw project URL because it is auto-generated.
